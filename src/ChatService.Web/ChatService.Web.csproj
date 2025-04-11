@@ -7,8 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="MicroElements.Swashbuckle.FluentValidation" Version="6.1.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="7.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ChatService.Application\ChatService.Application.csproj" />
+        <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
+        <ProjectReference Include="..\ChatService.Infrastructure\ChatService.Infrastructure.csproj" />
+        <ProjectReference Include="..\ChatService.Persistence\ChatService.Persistence.csproj" />
+        <ProjectReference Include="..\ChatService.Presentation\ChatService.Presentation.csproj" />
     </ItemGroup>
 
 </Project>

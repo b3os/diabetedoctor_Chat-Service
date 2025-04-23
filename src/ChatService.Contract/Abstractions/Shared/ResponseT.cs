@@ -1,11 +1,11 @@
 ﻿namespace ChatService.Contract.Abstractions.Shared;
 
-public class Success<T> : IEquatable<Success<T>>
+public class Response<T> : IEquatable<Response<T>>
 {
-    public static readonly Success<T> None = new(string.Empty, string.Empty, default);
-    public static readonly Success<T> OperationCompleted = new("Success.OperationCompleted", "The operation was successfully completed.", default);
+    public static readonly Response<T> None = new(string.Empty, string.Empty, default);
+    public static readonly Response<T> OperationCompleted = new("Response.OperationCompleted", "The operation was successfully completed.", default);
 
-    public Success(string code, string message, T? data)
+    public Response(string code, string message, T? data)
     {
         Code = code;
         Message = message;
@@ -16,9 +16,9 @@ public class Success<T> : IEquatable<Success<T>>
     public string Message { get; }
     public T? Data { get; } // The data can be null
 
-    public static implicit operator string(Success<T> success) => success.Code;
+    public static implicit operator string(Response<T> response) => response.Code;
 
-    public static bool operator ==(Success<T>? a, Success<T>? b)
+    public static bool operator ==(Response<T>? a, Response<T>? b)
     {
         if (a is null && b is null)
         {
@@ -33,9 +33,9 @@ public class Success<T> : IEquatable<Success<T>>
         return a.Equals(b);
     }
 
-    public static bool operator !=(Success<T>? a, Success<T>? b) => !(a == b);
+    public static bool operator !=(Response<T>? a, Response<T>? b) => !(a == b);
 
-    public virtual bool Equals(Success<T>? other)
+    public virtual bool Equals(Response<T>? other)
     {
         if (other is null)
         {
@@ -45,7 +45,7 @@ public class Success<T> : IEquatable<Success<T>>
         return Code == other.Code && Message == other.Message && EqualityComparer<T?>.Default.Equals(Data, other.Data);
     }
 
-    public override bool Equals(object? obj) => obj is Success<T> success && Equals(success);
+    public override bool Equals(object? obj) => obj is Response<T> success && Equals(success);
 
     public override int GetHashCode() => HashCode.Combine(Code, Message, Data);
 

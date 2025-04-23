@@ -12,3 +12,8 @@ global using ChatService.Contract.Abstractions.Shared;
 global using ChatService.Contract.Common.Messages;
 global using ChatService.Contract.Settings;
 global using ChatService.Contract.Exceptions.BussinessExceptions;
+global using MongoDB.Bson;
+global using ChatService.Domain.Abstractions.Repositories;
+global using ChatService.Contract.Services.Group.Commands;
+global using ChatService.Contract.Services.Message.Commands;
+

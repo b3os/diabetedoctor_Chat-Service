@@ -2,7 +2,7 @@
 
 namespace ChatService.Contract.DTOs.UserDTOs;
 
-public record UserDTO
+public record UserDto
     (Guid? Id,
     string Email = "",
     string FullName = "",

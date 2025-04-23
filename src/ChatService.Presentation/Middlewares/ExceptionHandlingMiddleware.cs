@@ -1,8 +1,9 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using ChatService.Contract.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace ChatService.Contract.Exceptions.Middlewares;
+namespace ChatService.Presentation.Middlewares;
 
 public class ExceptionHandlingMiddleware : IMiddleware
 {
@@ -20,7 +21,6 @@ public class ExceptionHandlingMiddleware : IMiddleware
         catch (Exception e)
         {
             _logger.LogError(e, e.Message);
-
             await HandleExceptionAsync(context, e);
         }
     }
@@ -51,7 +51,6 @@ public class ExceptionHandlingMiddleware : IMiddleware
             BadRequestException => StatusCodes.Status400BadRequest,
             NotFoundException => StatusCodes.Status404NotFound,
             AuthorizeException => StatusCodes.Status401Unauthorized,
-            //Application.Exceptions.ValidationException => StatusCodes.Status422UnprocessableEntity,
             ValidationException => StatusCodes.Status400BadRequest,
             FormatException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError

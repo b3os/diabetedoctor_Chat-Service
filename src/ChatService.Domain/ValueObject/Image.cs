@@ -1,9 +1,13 @@
-﻿namespace ChatService.Domain.ValueObject;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
-public record Image(string PublicUrl)
+namespace ChatService.Domain.ValueObject;
+
+public record Image()
 {
+    [BsonElement("public_url")]
+    public string PublicUrl { get; init; } = default!;
     public static Image Of(string publicUrl)
     {
-        return new Image(publicUrl);
+        return new Image{PublicUrl = publicUrl};
     }
 }

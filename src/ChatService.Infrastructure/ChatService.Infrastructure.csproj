@@ -7,7 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\ChatService.Application\ChatService.Application.csproj" />
         <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="EventBus\Kafka\EventHandlers\" />
     </ItemGroup>
     
 </Project>

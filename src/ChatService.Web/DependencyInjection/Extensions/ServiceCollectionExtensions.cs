@@ -1,4 +1,5 @@
 ﻿using ChatService.Contract.Settings;
+using ChatService.Presentation.Middlewares;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,6 +26,8 @@ public static class ServiceCollectionExtensions
 
         builder.Services.AddScoped<ExceptionHandlingMiddleware>();
 
+        builder.Services.AddHttpContextAccessor();
+        
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication();
 

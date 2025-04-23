@@ -29,9 +29,9 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         return await _dbSet.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
     }
 
-    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, ProjectionDefinition<TEntity>? projection = default,CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Find(filter).SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await _dbSet.Find(filter).Project<TEntity>(projection).SingleOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<TEntity?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default)
@@ -49,9 +49,9 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         return  _dbSet.AsQueryable();
     }
 
-    public async Task CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.InsertOneAsync(entity, cancellationToken: cancellationToken);
+        await _dbSet.InsertOneAsync(session: session, entity, cancellationToken: cancellationToken);
     }
 
     public async Task CreateManyAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ChatService.Domain.Abstractions;
+﻿using ChatService.Domain.Abstractions;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Domain.Models;
@@ -23,19 +21,20 @@ public class Group : DomainEntity<ObjectId>
         return new Group()
         {
             Id = id,
+            Name = name,
             Avatar = avatar, 
             Owner= owner,
             Admins = [owner],
             Members = members,
-            CreatedDate = DateTime.UtcNow,
-            ModifiedDate = DateTime.UtcNow,
+            CreatedDate = CurrentTimeService.GetCurrentTime(),
+            ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
         };
     }
 
-    public void Modify(string name, Image avatar)
+    public void Modify(string? name, Image? avatar)
     {
-        Name = name;
-        Avatar = avatar;
+        Name = name ?? Name;
+        Avatar = avatar ?? Avatar;
     }
 }

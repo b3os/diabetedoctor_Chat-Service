@@ -1,3 +1,5 @@
+using ChatService.Domain.Abstractions;
+using ChatService.Persistence.Repositories;
 using Microsoft.Extensions.Hosting;
 
 namespace ChatService.Persistence.DependencyInjection.Extensions;
@@ -9,6 +11,11 @@ public static class ServiceCollectionExtensions
         
         builder.AddDatabaseConfiguration(builder.Configuration);
         builder.AddConfigurationService(builder.Configuration);
+        
+        builder.Services
+            .AddScoped<IUnitOfWork, UnitOfWork>()
+            .AddScoped<IGroupRepository, GroupRepository>()
+            .AddScoped<IUserRepository, UserRepository>();
     }
 
     private static void AddConfigurationService(this IHostApplicationBuilder builder, IConfiguration configuration)
@@ -19,6 +26,6 @@ public static class ServiceCollectionExtensions
 
     private static void AddDatabaseConfiguration(this IHostApplicationBuilder builder, IConfiguration configuration)
     {
-        builder.Services.AddSingleton<MongoDbContext>();
+        builder.Services.AddScoped<MongoDbContext>();
     }
 }

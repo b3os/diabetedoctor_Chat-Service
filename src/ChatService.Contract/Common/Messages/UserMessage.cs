@@ -2,8 +2,7 @@
 
 public enum UserMessage
 {
-    [Message("Đã lấy thông tin người dùng thành công", "user01")]
-    GetUserSuccessfully,
-    [Message("Tạo thông tin người dùng thành công", "user02")]
-    CreateUserSuccessfully,
+    //Exception
+    [Message("Người dùng không tồn tại", "user01")]
+    UserNotFound,
 }

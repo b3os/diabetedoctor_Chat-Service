@@ -9,11 +9,11 @@ namespace ChatService.Domain.Abstractions.Repositories;
 public interface IRepositoryBase<TEntity> where TEntity : DomainEntity<ObjectId>
 {
     Task<long> CountAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default);
-    Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default);
+    Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, ProjectionDefinition<TEntity>? definition = default,CancellationToken cancellationToken = default);
     Task<TEntity?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default);
     Task<IEnumerable<TEntity>> FindListAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default);
     IQueryable<TEntity> FindAll();
-    Task CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
+    Task CreateAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default);
     Task CreateManyAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
     Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default);
     Task<UpdateResult> SoftDeleteAsync(ObjectId id, CancellationToken cancellationToken = default);

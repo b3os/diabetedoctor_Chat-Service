@@ -10,9 +10,6 @@ global using MediatR;
 // Assembly
 global using ChatService.Contract.EventBus.Abstractions;
 global using ChatService.Contract.EventBus.Abstractions.Message;
-global using ChatService.Contract.Infrastructure.Services;
 global using ChatService.Contract.Settings;
 global using ChatService.Infrastructure.EventBus;
 global using ChatService.Infrastructure.EventBus.Kafka;
-global using ChatService.Infrastructure.Services;
-

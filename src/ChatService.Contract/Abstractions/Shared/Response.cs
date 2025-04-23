@@ -1,11 +1,11 @@
 ﻿namespace ChatService.Contract.Abstractions.Shared;
 
-public class Success : IEquatable<Success>
+public class Response : IEquatable<Response>
 {
-    public static readonly Success None = new(string.Empty, string.Empty);
-    public static readonly Success OperationCompleted = new("Success.OperationCompleted", "The operation was successfully completed.");
+    public static readonly Response None = new(string.Empty, string.Empty);
+    public static readonly Response OperationCompleted = new("Response.OperationCompleted", "The operation was successfully completed.");
 
-    public Success(string code, string message)
+    public Response(string code, string message)
     {
         Code = code;
         Message = message;
@@ -15,9 +15,9 @@ public class Success : IEquatable<Success>
 
     public string Message { get; }
 
-    public static implicit operator string(Success success) => success.Code;
+    public static implicit operator string(Response response) => response.Code;
 
-    public static bool operator ==(Success? a, Success? b)
+    public static bool operator ==(Response? a, Response? b)
     {
         if (a is null && b is null)
         {
@@ -32,9 +32,9 @@ public class Success : IEquatable<Success>
         return a.Equals(b);
     }
 
-    public static bool operator !=(Success? a, Success? b) => !(a == b);
+    public static bool operator !=(Response? a, Response? b) => !(a == b);
 
-    public virtual bool Equals(Success? other)
+    public virtual bool Equals(Response? other)
     {
         if (other is null)
         {
@@ -44,7 +44,7 @@ public class Success : IEquatable<Success>
         return Code == other.Code && Message == other.Message;
     }
 
-    public override bool Equals(object? obj) => obj is Success success && Equals(success);
+    public override bool Equals(object? obj) => obj is Response success && Equals(success);
 
     public override int GetHashCode() => HashCode.Combine(Code, Message);
 

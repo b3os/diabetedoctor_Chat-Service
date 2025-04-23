@@ -1,4 +1,5 @@
-﻿using ChatService.Infrastructure.EventBus;
+﻿using ChatService.Application.Infrastructure.Abstractions;
+using ChatService.Infrastructure.EventBus;
 using ChatService.Infrastructure.EventBus.Kafka;
 using ChatService.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
@@ -15,10 +16,8 @@ public static class ServiceCollectionExtensions
         // builder.AddKafkaEventPublisher();
         // builder.AddKafkaConsumer();
         
-        builder.Services.AddSingleton(typeof(IntegrationEventFactory<>));
-
-        builder.Services
-          .AddSingleton<ICurrentTimeService, CurrentTimeService>();
+        builder.Services.AddSingleton(typeof(IntegrationEventFactory));
+        builder.Services.AddScoped<IClaimsService, ClaimsService>();
     }
 
     private static void AddConfigurationService(this IHostApplicationBuilder builder)

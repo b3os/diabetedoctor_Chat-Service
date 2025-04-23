@@ -9,6 +9,6 @@ public sealed class TestCommandHandler
 {
     public async Task<Result> Handle(TestCommand request, CancellationToken cancellationToken)
     {
-        return Result.Success(new Success("123", "Success"));
+        return Result.Success(new Response("123", "Response"));
     }
 }

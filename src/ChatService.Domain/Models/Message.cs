@@ -25,8 +25,8 @@ public class Message : DomainEntity<ObjectId>
             SenderId = senderId,
             Content = content,
             ReadBy = [],
-            CreatedDate = DateTime.UtcNow,
-            ModifiedDate = DateTime.UtcNow,
+            CreatedDate = CurrentTimeService.GetCurrentTime(),
+            ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
         };
     }

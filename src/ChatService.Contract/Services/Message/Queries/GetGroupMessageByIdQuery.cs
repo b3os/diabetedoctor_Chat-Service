@@ -1,6 +1,9 @@
-﻿namespace ChatService.Contract.Services.Message.Queries;
+﻿using ChatService.Contract.Services.Group.Responses;
 
-public record GetGroupMessageByIdQuery : IQuery<string>
+namespace ChatService.Contract.Services.Message.Queries;
+
+public record GetGroupMessageByIdQuery : IQuery<PagedList<GetUserGroupResponse>>
 {
-    
+    public string GroupId { get; init; } = string.Empty;
+    public QueryFilter Filter { get; init; } = new();
 };

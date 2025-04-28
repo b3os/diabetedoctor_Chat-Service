@@ -9,25 +9,27 @@ using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Message;
 
-public class CreateMessageCommandHandler(IEventPublisher eventPublisher, IClaimsService claimsService, IMessageRepository messageRepository, IGroupRepository groupRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
+public class CreateMessageCommandHandler(IClaimsService claimsService, IMessageRepository messageRepository, IGroupRepository groupRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
     : ICommandHandler<CreateMessageCommand>
 {
+    // IEventPublisher eventPublisher, 
     public async Task<Result> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        var userId = claimsService.GetCurrentUserId;
-        
-        var userAndGroup = await FindUserAndGround(userId, request.GroupId, cancellationToken);
+        // var userId = claimsService.GetCurrentUserId;
+        var userId = "aaaa";
+        var groupId = ObjectId.Parse(request.GroupId);
+        var userAndGroup = await FindUserAndGround(userId, groupId, cancellationToken);
 
-        var message = MapToMessage(userId, request);
+        var message = MapToMessage(groupId, userId, request);
 
         await unitOfWork.StartTransactionAsync();
         try
         {
             await messageRepository.CreateAsync(unitOfWork.ClientSession, message, cancellationToken);
             
-            var integrationEvent = MapToIntegrationEvent(message, userAndGroup.Group, userAndGroup.User);
+            // var integrationEvent = MapToIntegrationEvent(message, userAndGroup.Group, userAndGroup.User);
 
-            await eventPublisher.PublishAsync(TopicConstraints.ChatTopic, integrationEvent);
+            // await eventPublisher.PublishAsync(TopicConstraints.ChatTopic, integrationEvent);
             
             await unitOfWork.CommitTransactionAsync();
         }
@@ -41,20 +43,20 @@ public class CreateMessageCommandHandler(IEventPublisher eventPublisher, IClaims
             GroupMessage.CreatedGroupSuccessfully.GetMessage().Message));
     }
 
-    private async Task<(Domain.Models.User User, Domain.Models.Group Group)> FindUserAndGround(string userId, string groupId, CancellationToken cancellationToken)
+    private async Task<(Domain.Models.User User, Domain.Models.Group Group)> FindUserAndGround(string userId, ObjectId groupId, CancellationToken cancellationToken)
     {
-        var user = await userRepository.FindSingleAsync(x => x.UserId.Equals(userId),
-            Builders<Domain.Models.User>.Projection
-                .Include(user => user.Fullname),
-            cancellationToken: cancellationToken);
-
-        if (user is null)
-        {
-            throw new UserExceptions.UserNotFoundException();
-        }
-        
-        var group = await groupRepository.FindSingleAsync(x => x.Id == ObjectId.Parse(groupId)
-                                                               && x.Members.Any(a => a.Equals(userId)),
+        // var user = await userRepository.FindSingleAsync(x => x.UserId.Equals(userId),
+        //     Builders<Domain.Models.User>.Projection
+        //         .Include(user => user.Fullname),
+        //     cancellationToken: cancellationToken);
+        //
+        // if (user is null)
+        // {
+        //     throw new UserExceptions.UserNotFoundException();
+        // }
+        // && x.Members.Any(a => a.Equals(userId))
+        var group = await groupRepository.FindSingleAsync(x => x.Id == groupId
+                                                               ,
             Builders<Domain.Models.Group>.Projection
                 .Include(group => group.Id)
                 .Include(group => group.Name),
@@ -65,13 +67,15 @@ public class CreateMessageCommandHandler(IEventPublisher eventPublisher, IClaims
             throw new GroupExceptions.GroupNotFoundException();
         }
         
-        return (user, group);
+        // return (user, group);
+        return (new Domain.Models.User(), group);
     }
+    
 
-    private Domain.Models.Message MapToMessage(string userId, CreateMessageCommand command)
+    private Domain.Models.Message MapToMessage(ObjectId groupId, string userId, CreateMessageCommand command)
     {
         var id = ObjectId.GenerateNewId();
-        return Domain.Models.Message.Create(id, userId, command.Content);
+        return Domain.Models.Message.Create(id, groupId ,userId, command.Message.Content);
     }
 
     private ChatCreatedIntegrationEvent MapToIntegrationEvent(Domain.Models.Message message, Domain.Models.Group group, Domain.Models.User user)

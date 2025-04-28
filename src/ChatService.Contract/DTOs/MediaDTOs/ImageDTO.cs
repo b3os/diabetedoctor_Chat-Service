@@ -1,3 +1,9 @@
-﻿namespace ChatService.Contract.DTOs.MediaDTOs;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
-public record ImageDTO(string? PublicUrl = null);
+namespace ChatService.Contract.DTOs.MediaDTOs;
+
+public record ImageDTO
+{
+    [BsonElement("public_url")]
+    public string ImageUrl { get; set; }
+}

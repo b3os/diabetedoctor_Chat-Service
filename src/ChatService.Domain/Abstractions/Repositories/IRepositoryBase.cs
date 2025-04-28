@@ -14,7 +14,7 @@ public interface IRepositoryBase<TEntity> where TEntity : DomainEntity<ObjectId>
     Task<IEnumerable<TEntity>> FindListAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default);
     IQueryable<TEntity> FindAll();
     Task CreateAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default);
-    Task CreateManyAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
+    Task CreateManyAsync(IClientSessionHandle session, IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
     Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default);
     Task<UpdateResult> SoftDeleteAsync(ObjectId id, CancellationToken cancellationToken = default);
     Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default);

@@ -16,11 +16,11 @@ public class Message : DomainEntity<ObjectId>
     [BsonElement("read_by")]
     public List<string> ReadBy { get; private set; } = default!;
 
-    public static Message Create (ObjectId groupId, string senderId, string content)
+    public static Message Create (ObjectId id, ObjectId groupId, string senderId, string content)
     {
         return new Message()
         {
-            Id = ObjectId.GenerateNewId(),
+            Id = id,
             GroupId = groupId,
             SenderId = senderId,
             Content = content,

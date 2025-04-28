@@ -1,5 +1,7 @@
-﻿using Asp.Versioning.Builder;
+﻿using System.ComponentModel.DataAnnotations;
+using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
+using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.Services.Message.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -17,14 +19,14 @@ public static class ChatEndpoints
     {
         var chat = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        chat.MapPost("", CreateMessage);
+        chat.MapPost("groups/{groupId}/messages", CreateMessage);
 
         return builder;
     }
 
-    private static async Task<IResult> CreateMessage(ISender sender, [FromBody] CreateMessageCommand request)
+    private static async Task<IResult> CreateMessage(ISender sender, [Required] string groupId, [FromBody] MessageCreateDto dto)
     {
-        var result = await sender.Send(request);
+        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, Message = dto});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     

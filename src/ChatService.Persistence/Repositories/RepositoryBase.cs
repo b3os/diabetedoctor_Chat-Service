@@ -54,9 +54,9 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         await _dbSet.InsertOneAsync(session: session, entity, cancellationToken: cancellationToken);
     }
 
-    public async Task CreateManyAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+    public async Task CreateManyAsync(IClientSessionHandle session, IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        await _dbSet.InsertManyAsync(entities, cancellationToken: cancellationToken);
+        await _dbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
     }
 
     public async Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default)

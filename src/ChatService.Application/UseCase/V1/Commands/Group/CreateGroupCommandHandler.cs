@@ -33,6 +33,7 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
     private Domain.Models.Group MapToGroup(CreateGroupCommand command)
     {
         var id = ObjectId.GenerateNewId();
-        return Domain.Models.Group.Create(id, command.Name, Image.Of(command.Avatar), command.Owner, command.Members);
+        return Domain.Models.Group.Create(id, command.Group.Name, Image.Of(command.Group.Avatar), command.Group.Owner,
+            command.Group.Members);
     }
 }

@@ -11,4 +11,7 @@ public class MongoDbContext
     public IMongoDatabase Database { get; }
     public MongoClient Client { get; }    
     public IMongoCollection<User> Users => Database.GetCollection<User>(nameof(User));    
+    public IMongoCollection<Message> Messages => Database.GetCollection<Message>(nameof(Message));
+    public IMongoCollection<Group> Groups => Database.GetCollection<Group>(nameof(Group));
+    // public IMongoCollection<>
 }

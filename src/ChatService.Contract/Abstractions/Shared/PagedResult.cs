@@ -34,6 +34,6 @@ public class PagedResult<T>
     //    return new(items, pageIndex, pageSize, totalCount);
     //}
 
-    //public static PagedResult<T> Create(List<T> items, int pageIndex, int pageSize, int totalCount)
-    //    => new(items, pageIndex, pageSize, totalCount);
+    // public static PagedResult<T> Create(List<T> items, int pageIndex, int pageSize, int totalCount)
+    //     => new(items, pageIndex, pageSize, totalCount);
 }

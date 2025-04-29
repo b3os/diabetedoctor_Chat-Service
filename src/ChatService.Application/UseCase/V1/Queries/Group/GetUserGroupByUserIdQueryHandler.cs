@@ -68,7 +68,7 @@ public class
         var result = await _mongoDbContext.Groups.Aggregate<GroupDto>(pipeline, cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        return Result.Success(new GetUserGroupResponse{Groups = PagedList<GroupDto>.Create(result, result.Count, pageSize, result[^1].Id)});
+        return Result.Success(new GetUserGroupResponse{Groups = PagedList<GroupDto>.Create(result, result.Count, pageSize, result.Count > 0 ? result[^1].Id : string.Empty)});
     }
     
     private BsonDocument GetNewestMessageOfEachGroup(string userId)

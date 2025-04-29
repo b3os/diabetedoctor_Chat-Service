@@ -74,6 +74,6 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
         result.Reverse();
 
         return Result.Success(new GetGroupMessageResponse()
-            { Messages = PagedList<MessageDto>.Create(result, result.Count, pageSize, result[0].Id) });
+            { Messages = PagedList<MessageDto>.Create(result, result.Count, pageSize, result.Count > 0 ? result[0].Id : string.Empty) });
     }
 }

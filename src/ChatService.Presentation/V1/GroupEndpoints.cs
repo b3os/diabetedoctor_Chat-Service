@@ -54,7 +54,7 @@ public static class GroupEndpoints
     {
         var result = await sender.Send(new GetUserGroupByUserIdQuery() {Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
-    } 
+    }
     
     private static IResult HandlerFailure(Result result) =>
         result switch

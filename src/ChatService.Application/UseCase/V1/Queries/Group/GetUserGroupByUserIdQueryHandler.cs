@@ -19,20 +19,19 @@ public class
         _claimsService = claimsService;
     }
 
-
     public async Task<Result<GetUserGroupResponse>> Handle(GetUserGroupByUserIdQuery request,
         CancellationToken cancellationToken)
     {
-        var pipeline = new List<BsonDocument>();
-        
-        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 10;
-
         var userId = _claimsService.GetCurrentUserId;
+        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 10;
         
-        pipeline.Add(new BsonDocument
+        var pipeline = new List<BsonDocument>
         {
-            { "$match", new BsonDocument { { "members", new BsonDocument { { "$in", new BsonArray { userId } } } } } }
-        });
+            new()
+            {
+                { "$match", new BsonDocument { { "members", new BsonDocument { { "$in", new BsonArray { userId } } } } } }
+            }
+        };
 
         if (!string.IsNullOrWhiteSpace(request.Filter.Search))
         {
@@ -64,9 +63,9 @@ public class
             { "preserveNullAndEmptyArrays", true }
         }));
 
-        pipeline.Add(new BsonDocument("$limit", 10));
+        pipeline.Add(new BsonDocument("$limit", pageSize));
         
-        var result = await _mongoDbContext.Groups.Aggregate<GroupDto>(pipeline)
+        var result = await _mongoDbContext.Groups.Aggregate<GroupDto>(pipeline, cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken: cancellationToken);
 
         return Result.Success(new GetUserGroupResponse{Groups = PagedList<GroupDto>.Create(result, result.Count, pageSize, result[^1].Id)});

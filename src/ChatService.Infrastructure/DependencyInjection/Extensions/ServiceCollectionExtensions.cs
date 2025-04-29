@@ -10,7 +10,6 @@ public static class ServiceCollectionExtensions
 {
     public static void AddInfrastructureService(this IHostApplicationBuilder builder)
     {
-        builder.AddConfigurationService();
         // builder.AddKafkaConfiguration();
         // builder.AddKafkaProducer();
         // builder.AddKafkaEventPublisher();
@@ -19,9 +18,5 @@ public static class ServiceCollectionExtensions
         builder.Services.AddSingleton(typeof(IntegrationEventFactory));
         builder.Services.AddScoped<IClaimsService, ClaimsService>();
     }
-
-    private static void AddConfigurationService(this IHostApplicationBuilder builder)
-    {
-        builder.Services.Configure<KafkaSetting>(builder.Configuration.GetSection(KafkaSetting.SectionName));
-    }
+    
 }

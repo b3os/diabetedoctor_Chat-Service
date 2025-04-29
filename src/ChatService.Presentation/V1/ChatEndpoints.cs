@@ -2,7 +2,9 @@
 using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.DTOs.MessageDtos;
+using ChatService.Contract.Services;
 using ChatService.Contract.Services.Message.Commands;
+using ChatService.Contract.Services.Message.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +22,8 @@ public static class ChatEndpoints
         var chat = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
         chat.MapPost("groups/{groupId}/messages", CreateMessage);
+        chat.MapGet("messages", GetGroupMessages);
+
 
         return builder;
     }
@@ -29,6 +33,12 @@ public static class ChatEndpoints
         var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, Message = dto});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
+    
+    private static async Task<IResult> GetGroupMessages(ISender sender, [FromQuery] string groupId, [AsParameters] QueryFilter filter)
+    {
+        var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, Filter = filter});
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    } 
     
     private static IResult HandlerFailure(Result result) =>
         result switch

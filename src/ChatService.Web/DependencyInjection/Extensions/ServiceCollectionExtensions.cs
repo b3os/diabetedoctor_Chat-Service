@@ -1,26 +1,68 @@
-﻿using ChatService.Contract.Settings;
+﻿using System.Text;
+using ChatService.Contract.Settings;
 using ChatService.Presentation.Middlewares;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ChatService.Web.DependencyInjection.Extensions;
 
 public static class ServiceCollectionExtensions 
 {
-    public static IServiceCollection AddConfigurationAppSetting
-     (this IServiceCollection services, IConfiguration configuration)
+    private static void AddConfigurationAppSetting(this IHostApplicationBuilder builder)
     {
-        services
-            .Configure<KafkaSetting>(configuration.GetSection(KafkaSetting.SectionName))
-            .Configure<MongoDbSetting>(configuration.GetSection(MongoDbSetting.SectionName));
+        builder.Services
+            .Configure<KafkaSetting>(builder.Configuration.GetSection(KafkaSetting.SectionName))
+            .Configure<MongoDbSetting>(builder.Configuration.GetSection(MongoDbSetting.SectionName))
+            .Configure<AuthSetting>(builder.Configuration.GetSection(AuthSetting.SectionName));
+    }
 
-        return services;
+    private static void AddAuthenticationAndAuthorization(this IHostApplicationBuilder builder)
+    {
+        var authSettings = builder.Configuration.GetSection(AuthSetting.SectionName).Get<AuthSetting>() ?? new AuthSetting();
+
+
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = authSettings.Issuer,
+                    ValidAudience = authSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authSettings.AccessSecretToken)),
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        {
+                            context.Response.Headers.Append("IS-TOKEN-EXPIRED", "true");
+                        }
+                        return Task.CompletedTask;
+                    },
+                };
+            });
+
+        builder.Services.AddAuthorizationBuilder();
     }
 
     public static void AddWebService(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddConfigurationAppSetting(builder.Configuration);
+        builder.AddConfigurationAppSetting();
 
         builder.Services.AddCarter();
 
@@ -28,8 +70,7 @@ public static class ServiceCollectionExtensions
 
         builder.Services.AddHttpContextAccessor();
         
-        builder.Services.AddAuthorization();
-        builder.Services.AddAuthentication();
+        builder.AddAuthenticationAndAuthorization();
 
         builder.Services
             .AddSwaggerGenNewtonsoftSupport()

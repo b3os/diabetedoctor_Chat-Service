@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace ChatService.Domain.ValueObject;
+namespace ChatService.Domain.ValueObjects;
 
 public record Image()
 {
@@ -8,6 +8,6 @@ public record Image()
     public string PublicUrl { get; init; } = default!;
     public static Image Of(string publicUrl)
     {
-        return new Image{PublicUrl = publicUrl};
+        return new Image {PublicUrl = publicUrl};
     }
 }

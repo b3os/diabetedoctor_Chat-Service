@@ -1,7 +1,9 @@
 ﻿using System.Text;
+using System.Text.Json;
 using ChatService.Contract.Settings;
 using ChatService.Presentation.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -64,6 +66,11 @@ public static class ServiceCollectionExtensions
     {
         builder.AddConfigurationAppSetting();
 
+        builder.Services.Configure<JsonOptions>(options =>
+        {
+            options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        });
+        
         builder.Services.AddCarter();
 
         builder.Services.AddScoped<ExceptionHandlingMiddleware>();

@@ -6,19 +6,18 @@ public class PagedList<T>
     public int TotalItems { get; init; }
     public int PageSize { get; init; }
     public string NextCursor { get; init; }
-    public bool HasNext { get; init; }
+    public bool HasNextPage { get; init; }
 
-    private PagedList(List<T> items, int total, int pageSize, string nextCursor)
+    private PagedList(List<T> items, int total, int pageSize, string nextCursor, bool hasNextPage)
     {
         Items = items;
         TotalItems = total;
         PageSize = pageSize;
         NextCursor = nextCursor;
-        HasNext = total < 10;
-        // AddRange(items);
+        HasNextPage = hasNextPage;
     }
     
-    public static PagedList<T> Create(List<T> items, int total, int pageSize, string nextCursor)
-        => new(items, total, pageSize, nextCursor);
+    public static PagedList<T> Create(List<T> items, int total, int pageSize, string nextCursor, bool hasNext)
+        => new(items, total, pageSize, nextCursor, hasNext);
     
 }

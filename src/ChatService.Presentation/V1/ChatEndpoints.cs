@@ -2,6 +2,7 @@
 using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.DTOs.MessageDtos;
+using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services;
 using ChatService.Contract.Services.Message.Commands;
 using ChatService.Contract.Services.Message.Queries;
@@ -28,15 +29,17 @@ public static class ChatEndpoints
         return builder;
     }
 
-    private static async Task<IResult> CreateMessage(ISender sender, [Required] string groupId, [FromBody] MessageCreateDto dto)
+    private static async Task<IResult> CreateMessage(ISender sender, IClaimsService claimsService, [Required] string groupId, [FromBody] MessageCreateDto dto)
     {
-        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, Message = dto});
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, UserId = userId, Message = dto});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     
-    private static async Task<IResult> GetGroupMessages(ISender sender, [FromQuery] string groupId, [AsParameters] QueryFilter filter)
+    private static async Task<IResult> GetGroupMessages(ISender sender, IClaimsService claimsService, [FromQuery] string groupId, [AsParameters] QueryFilter filter)
     {
-        var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, Filter = filter});
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, UserId = userId, Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     } 
     

@@ -1,7 +1,7 @@
 ﻿using ChatService.Contract.Services.User;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
-using ChatService.Domain.ValueObject;
+using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;
 
 namespace ChatService.Application.UseCase.V1.Commands.User;
@@ -33,6 +33,8 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
         ArgumentNullException.ThrowIfNull(command);
         
         var id = ObjectId.GenerateNewId();
-        return Domain.Models.User.Create(id: id, command.UserId.ToString(), command.FullName, Image.Of(command.Avatar));
+        var userId = UserId.Of(command.UserId);
+        var avatar = Image.Of(command.Avatar);
+        return Domain.Models.User.Create(id: id, userId, command.FullName, avatar);
     }
 }

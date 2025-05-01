@@ -7,18 +7,24 @@ public abstract class DomainEntity<TKey>
 {
     [BsonId]
     [BsonElement("_id"), BsonRepresentation(BsonType.ObjectId)]
-    public TKey Id { get; set; } = default!;
+    public TKey Id { get; protected set; } = default!;
 
     [BsonElement("created_date")]
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
-    public DateTime? CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; protected set; }
 
     [BsonElement("modified_date")]
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
-    public DateTime? ModifiedDate { get; set; }
+    public DateTime? ModifiedDate { get; protected set; }
 
     [BsonElement("is_deleted"), BsonRepresentation(BsonType.Boolean)]
-    public bool? IsDeleted { get; set; }
+    public bool? IsDeleted { get; protected set; }
+    
+    [BsonIgnore]
+    public Dictionary<string, object> Changes { get; protected set; }
+    
+    public void ClearChanges() => Changes.Clear(); 
+    
     // /// <summary>
     // /// True if domain entity has an identity
     // /// </summary>

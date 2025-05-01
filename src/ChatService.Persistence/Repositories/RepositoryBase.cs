@@ -11,12 +11,12 @@ namespace ChatService.Persistence.Repositories;
 
 public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable where TEntity : DomainEntity<ObjectId>
 {
-    private readonly IMongoCollection<TEntity> _dbSet;
+    protected readonly IMongoCollection<TEntity> DbSet;
 
     public RepositoryBase(MongoDbContext context)
     {
         var database = context.Database;
-        _dbSet = database.GetCollection<TEntity>(typeof(TEntity).Name);
+        DbSet = database.GetCollection<TEntity>(typeof(TEntity).Name);
     }
 
     public void Dispose()
@@ -26,56 +26,66 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
 
     public async Task<long> CountAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+        return await DbSet.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
     }
 
-    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, ProjectionDefinition<TEntity>? projection = default,CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Find(filter).Project<TEntity>(projection).SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await DbSet.Find(filter).AnyAsync(cancellationToken);
+    }
+
+    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, ProjectionDefinition<TEntity> projection = default!,CancellationToken cancellationToken = default)
+    {
+        return projection switch
+        {
+            default(ProjectionDefinition<TEntity>) => await DbSet.Find(filter).FirstOrDefaultAsync(cancellationToken),
+            _ => await DbSet.Find(filter).Project<TEntity>(projection).SingleOrDefaultAsync(cancellationToken: cancellationToken)
+        };
     }
 
     public async Task<TEntity?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Find(Builders<TEntity>.Filter.Eq("_id", id)).SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await DbSet.Find(Builders<TEntity>.Filter.Eq("_id", id)).FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<IEnumerable<TEntity>> FindListAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Find(filter).ToListAsync(cancellationToken: cancellationToken);
+        return await DbSet.Find(filter).ToListAsync(cancellationToken: cancellationToken);
     }
-
-    public IQueryable<TEntity> FindAll()
-    {
-        return  _dbSet.AsQueryable();
-    }
-
+    
     public async Task CreateAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.InsertOneAsync(session: session, entity, cancellationToken: cancellationToken);
+        await DbSet.InsertOneAsync(session: session, entity, cancellationToken: cancellationToken);
     }
 
     public async Task CreateManyAsync(IClientSessionHandle session, IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        await _dbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
+        await DbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
+    }
+
+    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
+    {
+        var updates = entity.Changes.Select(change => Builders<TEntity>.Update.Set(change.Key, change.Value)).ToList();
+
+        var combineUpdate = Builders<TEntity>.Update.Combine(updates);
+        
+        return await DbSet.UpdateOneAsync(session,
+            Builders<TEntity>.Filter.Eq(x => x.Id, id),
+            combineUpdate,
+            new UpdateOptions { IsUpsert = false }, cancellationToken
+        ); 
     }
 
     public async Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq("_id", id);
-        return await _dbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
+        return await DbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
     }
-
-    public async Task<UpdateResult> SoftDeleteAsync(ObjectId id, CancellationToken cancellationToken = default)
-    {
-        var filter = Builders<TEntity>.Filter.Eq("_id", id);
-        var update = Builders<TEntity>.Update.Set(x => x.IsDeleted, true);
-        return await _dbSet.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
-    }
-
+    
     public async Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq("_id", id);
-        return await _dbSet.DeleteOneAsync(filter, cancellationToken: cancellationToken);
+        return await DbSet.DeleteOneAsync(filter, cancellationToken: cancellationToken);
     }
 
     public async Task<DeleteResult> DeleteManyAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
@@ -93,6 +103,6 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
             return DeleteResult.Unacknowledged.Instance;
         
         var filter = Builders<TEntity>.Filter.In("_id", deleteIds);
-        return await _dbSet.DeleteManyAsync(filter, cancellationToken: cancellationToken);
+        return await DbSet.DeleteManyAsync(filter, cancellationToken: cancellationToken);
     }
 }

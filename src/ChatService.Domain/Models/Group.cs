@@ -1,4 +1,5 @@
 ﻿using ChatService.Domain.Abstractions;
+using ChatService.Domain.ValueObjects;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Domain.Models;
@@ -10,13 +11,13 @@ public class Group : DomainEntity<ObjectId>
     [BsonElement("avatar")]
     public Image Avatar { get; private set; } = default!;
     [BsonElement("owner_by")]
-    public string Owner { get; private set; } = default!;
+    public UserId Owner { get; private set; } = default!;
     [BsonElement("admins")]
-    public List<string> Admins { get; private set; } = default!;
+    public List<UserId> Admins { get; private set; } = default!;
     [BsonElement("members")]
-    public List<string> Members {get; private set;} = default!;
+    public List<UserId> Members {get; private set;} = default!;
 
-    public static Group Create(ObjectId id, string name, Image avatar, string owner, List<string> members)
+    public static Group Create(ObjectId id, string name, Image avatar, UserId owner, List<UserId> members)
     {
         return new Group()
         {
@@ -36,5 +37,11 @@ public class Group : DomainEntity<ObjectId>
     {
         Name = name ?? Name;
         Avatar = avatar ?? Avatar;
+    }
+
+    public bool AddAdmin(UserId admin)
+    {
+        return !Admins.Contains(admin);
+        // Admins.Add(admin);
     }
 }

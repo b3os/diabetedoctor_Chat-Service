@@ -16,4 +16,8 @@
         <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
     </ItemGroup>
     
+    <ItemGroup>
+      <Folder Include="Infrastructure\Abstractions\" />
+    </ItemGroup>
+    
 </Project>

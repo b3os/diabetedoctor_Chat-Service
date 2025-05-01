@@ -11,4 +11,6 @@ public enum GroupMessage
     //Exception
     [Message("Nhóm không tồn tại", "group04")]
     GroupNotFound,
+    [Message("Không có quyền truy cập nhóm", "group05")]
+    GroupAccessDenied,
 }

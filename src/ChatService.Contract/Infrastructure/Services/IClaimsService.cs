@@ -1,4 +1,4 @@
-﻿namespace ChatService.Application.Infrastructure.Abstractions;
+﻿namespace ChatService.Contract.Infrastructure.Services;
 
 public interface IClaimsService
 {

@@ -1,9 +1,9 @@
-﻿using ChatService.Application.Infrastructure.Abstractions;
-using ChatService.Contract.Exceptions;
+﻿using ChatService.Contract.Exceptions;
+using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Group;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
-using ChatService.Domain.ValueObject;
+using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
@@ -13,9 +13,7 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
 {
     public async Task<Result> Handle(CreateGroupCommand request, CancellationToken cancellationToken)
     {
-        var ownerId = claimsService.GetCurrentUserId;
-        
-        var group = MapToGroup(ownerId, request);
+        var group = MapToGroup(request.OwnerId, request);
         
         await unitOfWork.StartTransactionAsync();
         try
@@ -36,7 +34,10 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
     private Domain.Models.Group MapToGroup(string ownerId, CreateGroupCommand command)
     {
         var id = ObjectId.GenerateNewId();
-        return Domain.Models.Group.Create(id, command.Group.Name, Image.Of(command.Group.Avatar), ownerId,
-            command.Group.Members);
+        var avatar = Image.Of(command.Group.Avatar);
+        var ownerUserId = UserId.Of(ownerId);
+        var memberIds = UserId.All(command.Group.Members);
+        memberIds.Add(ownerUserId);
+        return Domain.Models.Group.Create(id, command.Group.Name, avatar, ownerUserId, memberIds);
     }
 }

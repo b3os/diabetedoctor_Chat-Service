@@ -2,6 +2,7 @@
 using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.DTOs.GroupDtos;
+using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services;
 using ChatService.Contract.Services.Group;
 using ChatService.Contract.Services.Group.Commands;
@@ -44,15 +45,17 @@ public static class GroupEndpoints
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     
-    private static async Task<IResult> PromoteGroupMember(ISender sender, [Required] string groupId, [Required] string userId, [FromBody] GroupUpdateDto dto)
+    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, [Required] string groupId, [Required] string userId)
     {
-        var result = await sender.Send(new PromoteGroupMemberCommand {GroupId = groupId, MemberId = userId});
+        var ownerId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new PromoteGroupMemberCommand {OwnerId = ownerId, GroupId = groupId, MemberId = userId});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     
-    private static async Task<IResult> GetUserGroup(ISender sender, [AsParameters] QueryFilter filter)
+    private static async Task<IResult> GetUserGroup(ISender sender, IClaimsService claimsService, [AsParameters] QueryFilter filter)
     {
-        var result = await sender.Send(new GetUserGroupByUserIdQuery() {Filter = filter});
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new GetUserGroupByUserIdQuery() {UserId = userId, Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     

@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using ChatService.Contract.Services.Test;
 using ChatService.Contract.Services.User;
 
 namespace ChatService.Application.UseCase.V1.Commands.Test;

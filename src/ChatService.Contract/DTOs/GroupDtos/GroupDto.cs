@@ -14,7 +14,7 @@ public record GroupDto
     [BsonElement("name")]
     public string Name { get; init; } = default!;
     [BsonElement("avatar")]
-    public ImageDTO Avatar { get; init; } = default!;
+    public string Avatar { get; init; } = default!;
     [BsonElement("message")]
-    public MessageDto Messages { get; init; } = default!;
+    public MessageDto Message { get; init; } = default!;
 }

@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using ChatService.Application.Infrastructure.Abstractions;
+using ChatService.Contract.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace ChatService.Infrastructure.Services;

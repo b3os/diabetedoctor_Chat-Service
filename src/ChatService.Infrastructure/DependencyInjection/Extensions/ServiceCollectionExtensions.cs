@@ -1,4 +1,4 @@
-﻿using ChatService.Application.Infrastructure.Abstractions;
+﻿using ChatService.Contract.Infrastructure.Services;
 using ChatService.Infrastructure.EventBus;
 using ChatService.Infrastructure.EventBus.Kafka;
 using ChatService.Infrastructure.Services;

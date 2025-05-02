@@ -13,5 +13,5 @@ public class MongoDbContext
     public IMongoCollection<User> Users => Database.GetCollection<User>(nameof(User));    
     public IMongoCollection<Message> Messages => Database.GetCollection<Message>(nameof(Message));
     public IMongoCollection<Group> Groups => Database.GetCollection<Group>(nameof(Group));
-    // public IMongoCollection<>
+    public IMongoCollection<MessageReadStatus> MessageReadStatuses => Database.GetCollection<MessageReadStatus>(nameof(MessageReadStatus));
 }

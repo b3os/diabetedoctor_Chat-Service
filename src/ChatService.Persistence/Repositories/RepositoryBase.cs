@@ -39,7 +39,7 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         return projection switch
         {
             default(ProjectionDefinition<TEntity>) => await DbSet.Find(filter).FirstOrDefaultAsync(cancellationToken),
-            _ => await DbSet.Find(filter).Project<TEntity>(projection).SingleOrDefaultAsync(cancellationToken: cancellationToken)
+            _ => await DbSet.Find(filter).Project<TEntity>(projection).FirstOrDefaultAsync(cancellationToken)
         };
     }
 

@@ -33,7 +33,7 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
         ArgumentNullException.ThrowIfNull(command);
         
         var id = ObjectId.GenerateNewId();
-        var userId = UserId.Of(command.UserId);
+        var userId = UserId.Of(command.Id);
         var avatar = Image.Of(command.Avatar);
         return Domain.Models.User.Create(id: id, userId, command.FullName, avatar);
     }

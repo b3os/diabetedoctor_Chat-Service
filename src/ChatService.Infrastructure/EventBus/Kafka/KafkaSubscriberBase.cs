@@ -11,14 +11,14 @@ namespace ChatService.Infrastructure.EventBus.Kafka;
 public abstract class KafkaSubscriberBase<T> : BackgroundService
 {
     private readonly IConsumer<string, EventEnvelope> _consumer;
-    private readonly ILogger<KafkaSubscriberBase<T>> _logger;
+    protected readonly ILogger<KafkaSubscriberBase<T>> Logger;
     private readonly string _topicName;
     
     protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase<T>> logger, IOptions<KafkaSetting> kafkaSetting, string topicName, string groupId)
     {
-        _logger = logger;
+        Logger = logger;
         _topicName = topicName;
-        
+
         var consumerConfig = new ConsumerConfig
         {
             BootstrapServers = kafkaSetting.Value.BootstrapServer,
@@ -36,7 +36,7 @@ public abstract class KafkaSubscriberBase<T> : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Subscribing to topics [{topic}]...", _topicName);
+        Logger.LogInformation("Subscribing to topics [{topic}]...", _topicName);
         
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -58,23 +58,23 @@ public abstract class KafkaSubscriberBase<T> : BackgroundService
                         }
                         else
                         {
-                            _logger.LogInformation("No message found in topic [{topic}].", _topicName);
+                            Logger.LogInformation("No message found in topic [{topic}].", _topicName);
                             await Task.Delay(1000, stoppingToken);
                         }
                     }
                     catch (ConsumeException ex)
                     {
-                        _logger.LogError(ex, "Consumer error: {ErrorMessage}", ex.Error.Reason);
+                        Logger.LogError(ex, "Consumer error: {ErrorMessage}", ex.Error.Reason);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error consuming message");
+                        Logger.LogError(ex, "Error consuming message");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error subscribing to topics");
+                Logger.LogError(ex, "Error subscribing to topics");
             }
             
             await Task.Delay(3000, stoppingToken);

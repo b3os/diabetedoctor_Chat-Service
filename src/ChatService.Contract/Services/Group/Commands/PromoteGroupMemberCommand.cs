@@ -2,6 +2,7 @@
 
 public record PromoteGroupMemberCommand : ICommand
 {
-    public required string GroupId { get; init; }
-    public required string MemberId { get; init; }
-};
+    public string? OwnerId { get; init; }
+    public string GroupId { get; init; } = default!;
+    public string MemberId { get; init; } = default!;
+}

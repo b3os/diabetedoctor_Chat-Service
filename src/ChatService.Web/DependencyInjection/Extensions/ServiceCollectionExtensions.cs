@@ -65,11 +65,6 @@ public static class ServiceCollectionExtensions
     public static void AddWebService(this IHostApplicationBuilder builder)
     {
         builder.AddConfigurationAppSetting();
-
-        builder.Services.Configure<JsonOptions>(options =>
-        {
-            options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-        });
         
         builder.Services.AddCarter();
 

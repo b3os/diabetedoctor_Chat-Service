@@ -1,8 +1,7 @@
-﻿namespace ChatService.Persistence.Repositories;
+﻿using System.Collections;
 
-public class GroupRepository : RepositoryBase<Group>, IGroupRepository
+namespace ChatService.Persistence.Repositories;
+
+public class GroupRepository(MongoDbContext context) : RepositoryBase<Group>(context), IGroupRepository
 {
-    public GroupRepository(MongoDbContext context) : base(context)
-    {
-    }
 }

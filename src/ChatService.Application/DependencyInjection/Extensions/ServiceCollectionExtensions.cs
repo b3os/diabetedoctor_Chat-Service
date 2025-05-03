@@ -1,18 +1,19 @@
 ﻿using ChatService.Application;
+using ChatService.Application.Behaviors;
 using ChatService.Application.DependencyInjection.Extensions;
 
 namespace ChatService.Application.DependencyInjection.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddConfigureMediatR(this IServiceCollection services)
+    private static IServiceCollection AddConfigureMediatR(this IServiceCollection services)
     => services.AddMediatR(config => config.RegisterServicesFromAssembly(AssemblyReference.Assembly))
-          //.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>))
+          .AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>))
           //.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>))
           //.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>))
           .AddValidatorsFromAssembly(Contract.AssemblyReference.Assembly, includeInternalTypes: true);
 
-    public static IServiceCollection AddMappingConfig(this IServiceCollection services)
+    private static IServiceCollection AddMappingConfig(this IServiceCollection services)
     {
         TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
         return services;

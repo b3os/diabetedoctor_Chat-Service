@@ -26,40 +26,60 @@ public static class GroupEndpoints
         var group = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
         group.MapPost("", CreateGroup);
+        group.MapPost("{groupId}/members", AddMemberToGroup);
+
         group.MapPatch("{groupId}", UpdateGroup);
         group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember);
+
         group.MapGet("", GetUserGroup);
+
 
         return builder;
     }
 
-    private static async Task<IResult> CreateGroup(ISender sender, [FromBody] GroupCreateDto dto)
-    {
-        var result = await sender.Send(new CreateGroupCommand {Group = dto});
-        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
-    }
-    
-    private static async Task<IResult> UpdateGroup(ISender sender, [Required] string groupId, [FromBody] GroupUpdateDto dto)
-    {
-        var result = await sender.Send(new UpdateGroupCommand {GroupId = groupId, GroupUpdateDto = dto});
-        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
-    }
-    
-    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, [Required] string groupId, [Required] string userId)
+    private static async Task<IResult> CreateGroup(ISender sender, IClaimsService claimsService,
+        [FromBody] CreateGroupCommand command)
     {
         var ownerId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new PromoteGroupMemberCommand {OwnerId = ownerId, GroupId = groupId, MemberId = userId});
+        var result = await sender.Send(command with { OwnerId = ownerId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
-    
-    private static async Task<IResult> GetUserGroup(ISender sender, IClaimsService claimsService, [AsParameters] QueryFilter filter)
+
+    private static async Task<IResult> UpdateGroup(ISender sender, IClaimsService claimsService, string groupId,
+        [FromBody] UpdateGroupCommand command)
     {
-        // var userId = claimsService.GetCurrentUserId;
-        var userId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
-        var result = await sender.Send(new GetUserGroupByUserIdQuery() {UserId = userId, Filter = filter});
+        var adminId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
-    
+
+    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, string groupId,
+        string userId)
+    {
+        var ownerId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
+        // var ownerId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new PromoteGroupMemberCommand
+            { OwnerId = ownerId, GroupId = groupId, MemberId = userId });
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    }
+
+    private static async Task<IResult> GetUserGroup(ISender sender, IClaimsService claimsService,
+        [AsParameters] QueryFilter filter)
+    {
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new GetUserGroupByUserIdQuery() { UserId = userId, Filter = filter });
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    }
+
+    private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, string groupId,
+        [FromBody] AddMemberToGroupCommand command)
+    {
+        var adminId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
+        // var adminId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    }
+
     private static IResult HandlerFailure(Result result) =>
         result switch
         {

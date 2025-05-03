@@ -1,19 +1,16 @@
 ﻿global using System.Reflection;
-global using System.Reflection.Metadata;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using FluentValidation;
-global using System.Linq.Expressions;
 global using ChatService.Contract.Abstractions.Message;
 global using Mapster;
 global using ChatService.Contract.Helpers;
-global using Microsoft.Extensions.Options;
 global using ChatService.Contract.Abstractions.Shared;
 global using ChatService.Contract.Common.Messages;
-global using ChatService.Contract.Settings;
 global using ChatService.Contract.Exceptions.BussinessExceptions;
 global using MongoDB.Bson;
 global using ChatService.Domain.Abstractions.Repositories;
 global using ChatService.Contract.Services.Group.Commands;
 global using ChatService.Contract.Services.Message.Commands;
+global using MediatR;
 

@@ -1,4 +1,5 @@
 ﻿using ChatService.Contract.Services.User;
+using ChatService.Contract.Services.User.Commands;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
 using ChatService.Domain.ValueObjects;
@@ -13,15 +14,15 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
     {
         var user = MapToUser(request);
         
-        await unitOfWork.StartTransactionAsync();
+        await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             await userRepository.CreateAsync(unitOfWork.ClientSession, user, cancellationToken);
-            await unitOfWork.CommitTransactionAsync();
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
         {
-            await unitOfWork.AbortTransactionAsync();
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
         

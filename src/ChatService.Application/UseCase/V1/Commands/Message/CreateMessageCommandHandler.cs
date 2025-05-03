@@ -1,7 +1,7 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.Common.Constraint;
 using ChatService.Contract.EventBus.Abstractions;
-using ChatService.Contract.EventBus.Events.ChatIntegrationEvent;
+using ChatService.Contract.EventBus.Events.ChatIntegrationEvents;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message;
 using ChatService.Domain.Abstractions;

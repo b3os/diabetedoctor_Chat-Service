@@ -1,4 +1,4 @@
-﻿namespace ChatService.Contract.EventBus.Events.ChatIntegrationEvent;
+﻿namespace ChatService.Contract.EventBus.Events.ChatIntegrationEvents;
 
 public class ChatCreatedIntegrationEvent : IntegrationEvent
 {

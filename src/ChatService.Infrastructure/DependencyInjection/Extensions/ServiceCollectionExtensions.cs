@@ -10,7 +10,6 @@ public static class ServiceCollectionExtensions
 {
     public static void AddInfrastructureService(this IHostApplicationBuilder builder)
     {
-        // builder.AddKafkaConfiguration();
         // builder.AddKafkaProducer();
         // builder.AddKafkaEventPublisher();
         // builder.AddKafkaConsumer();

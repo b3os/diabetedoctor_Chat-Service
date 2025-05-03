@@ -51,7 +51,7 @@ public static class KafkaEventBusExtensions
     
     public static void AddKafkaConsumer(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddHostedService<TodoSubscriber>();
+        builder.Services.AddHostedService<UserSubscriber>();
     }
     
     private class EventEnvelopeSerializer : ISerializer<EventEnvelope>

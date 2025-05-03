@@ -13,17 +13,17 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
 {
     public async Task<Result> Handle(CreateGroupCommand request, CancellationToken cancellationToken)
     {
-        var group = MapToGroup(request.OwnerId, request);
+        var group = MapToGroup(request.OwnerId!, request);
         
-        await unitOfWork.StartTransactionAsync();
+        await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             await groupRepository.CreateAsync(unitOfWork.ClientSession, group, cancellationToken);
-            await unitOfWork.CommitTransactionAsync();
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
         {
-            await unitOfWork.AbortTransactionAsync();
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
         
@@ -34,10 +34,10 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
     private Domain.Models.Group MapToGroup(string ownerId, CreateGroupCommand command)
     {
         var id = ObjectId.GenerateNewId();
-        var avatar = Image.Of(command.Group.Avatar);
+        var avatar = Image.Of(command.Avatar);
         var ownerUserId = UserId.Of(ownerId);
-        var memberIds = UserId.All(command.Group.Members);
+        var memberIds = UserId.All(command.Members);
         memberIds.Add(ownerUserId);
-        return Domain.Models.Group.Create(id, command.Group.Name, avatar, ownerUserId, memberIds);
+        return Domain.Models.Group.Create(id, command.Name, avatar, ownerUserId, memberIds);
     }
 }

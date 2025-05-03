@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
+using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;
 
 namespace ChatService.Persistence.Repositories;
@@ -63,14 +65,15 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         await DbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
     }
 
-    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
+        var filter = Builders<TEntity>.Filter.Eq("_id", entity.Id);
         var updates = entity.Changes.Select(change => Builders<TEntity>.Update.Set(change.Key, change.Value)).ToList();
 
         var combineUpdate = Builders<TEntity>.Update.Combine(updates);
         
         return await DbSet.UpdateOneAsync(session,
-            Builders<TEntity>.Filter.Eq(x => x.Id, id),
+            filter,
             combineUpdate,
             new UpdateOptions { IsUpsert = false }, cancellationToken
         ); 
@@ -81,7 +84,30 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         var filter = Builders<TEntity>.Filter.Eq("_id", id);
         return await DbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
     }
-    
+
+    public async Task<UpdateResult> AddToSetEach<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<TEntity>.Filter.Eq("_id", entity.Id);
+        
+        var updates = entity.Changes.Select(change =>
+        {
+            if (change.Value is not IEnumerable values) 
+            {
+                return Builders<TEntity>.Update.AddToSet(change.Key, change.Value);
+            }
+
+            var itemsList = values.Cast<TValue>().ToList();
+            return Builders<TEntity>.Update.AddToSetEach(change.Key, itemsList );
+        }).ToList();
+        
+        var combineUpdate = Builders<TEntity>.Update.Combine(updates);
+
+        return await DbSet.UpdateOneAsync(session,
+            filter,
+            combineUpdate,
+            new UpdateOptions { IsUpsert = false }, cancellationToken);
+    }
+
     public async Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq("_id", id);

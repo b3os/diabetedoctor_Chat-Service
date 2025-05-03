@@ -3,10 +3,9 @@ using ChatService.Contract.DTOs.GroupDtos;
 
 namespace ChatService.Contract.Services.Group.Commands;
 
-public record UpdateGroupCommand : ICommand
+public record AddMemberToGroupCommand : ICommand
 {
     public string? AdminId { get; init; }
     public string? GroupId { get; init; }
-    public string? Name { get; init; }
-    public string? Avatar { get; init; }
+    public IEnumerable<string> UserIds { get; init; } = [];
 }

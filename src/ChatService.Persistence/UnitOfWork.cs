@@ -9,18 +9,18 @@ public class UnitOfWork(MongoDbContext context) : IUnitOfWork
 
     public IClientSessionHandle ClientSession => _clientSession ?? throw new InvalidOperationException("Transaction has not been started.");
 
-    public async Task StartTransactionAsync()
+    public async Task StartTransactionAsync(CancellationToken cancellationToken = default)
     {
         if (_clientSession is not null)
         {
             return;
         }
 
-        _clientSession = await _client.StartSessionAsync();
+        _clientSession = await _client.StartSessionAsync(cancellationToken: cancellationToken);
         _clientSession.StartTransaction();
     }
 
-    public async Task CommitTransactionAsync()
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
         if (_clientSession is null)
         {
@@ -29,7 +29,7 @@ public class UnitOfWork(MongoDbContext context) : IUnitOfWork
         
         try
         {
-            await _clientSession.CommitTransactionAsync();
+            await _clientSession.CommitTransactionAsync(cancellationToken);
             _clientSession.Dispose();
             _clientSession = null;
         }
@@ -37,19 +37,19 @@ public class UnitOfWork(MongoDbContext context) : IUnitOfWork
         {
             if (_clientSession is not null)
             {
-                await _clientSession.AbortTransactionAsync();
+                await _clientSession.AbortTransactionAsync(cancellationToken);
             }
             throw;
         }
     }
 
-    public async Task AbortTransactionAsync()
+    public async Task AbortTransactionAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             if (_clientSession is not null)
             {
-                await _clientSession.AbortTransactionAsync();
+                await _clientSession.AbortTransactionAsync(cancellationToken);
             }
         }
         finally

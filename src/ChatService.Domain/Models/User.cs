@@ -33,7 +33,7 @@ public class User : DomainEntity<ObjectId>
     {
         var isChanged = false;
         
-        if (fullname != null && !fullname.Equals(Fullname))
+        if (!string.IsNullOrWhiteSpace(fullname) && !fullname.Equals(Fullname))
         {
             Changes["fullname"] = fullname;
             isChanged = true;
@@ -41,7 +41,7 @@ public class User : DomainEntity<ObjectId>
         
         if (avatar != null)
         {
-            Changes["avatar"] = avatar;
+            Changes["avatar"] =  new { public_url = avatar.PublicUrl };
             isChanged = true;
         }
 

@@ -1,7 +1,7 @@
 ﻿using ChatService.Contract.Services.Group;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
-using ChatService.Domain.ValueObject;
+using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
@@ -11,24 +11,27 @@ public class UpdateGroupCommandHandler (IGroupRepository groupRepository, IUnitO
 {
     public async Task<Result> Handle(UpdateGroupCommand request, CancellationToken cancellationToken)
     {
-        var group = await groupRepository.FindByIdAsync(ObjectId.Parse(request.GroupId), cancellationToken);
+        var group = await groupRepository.FindSingleAsync(x => x.Id == ObjectId.Parse(request.GroupId)
+            && x.Admins.Any(userId => userId.Id.Equals(request.AdminId)),
+            cancellationToken: cancellationToken);
+        
         if (group is null)
         {
-            throw new GroupExceptions.GroupNotFoundException();
+            throw new GroupExceptions.GroupAccessDeniedException();
         }
 
-        group.Modify(request.GroupUpdateDto.Name,
-            string.IsNullOrWhiteSpace(request.GroupUpdateDto.Avatar) ? null : Image.Of(request.GroupUpdateDto.Avatar));
+        group.Modify(request.Name,
+            string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of(request.Avatar));
         
-        await unitOfWork.StartTransactionAsync();
+        await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.ReplaceOneAsync(group.Id, group, cancellationToken);
-            await unitOfWork.CommitTransactionAsync();
+            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, group, cancellationToken);
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
         {
-            await unitOfWork.AbortTransactionAsync();
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
 

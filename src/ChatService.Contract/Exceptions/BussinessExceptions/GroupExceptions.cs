@@ -9,4 +9,7 @@ public static class GroupExceptions
 
     public sealed class GroupAccessDeniedException() : AuthorizeException(
         GroupMessage.GroupAccessDenied.GetMessage().Message, GroupMessage.GroupAccessDenied.GetMessage().Code);
+
+    public sealed class GroupMemberAlreadyExistsException() : BadRequestException(
+        GroupMessage.GroupMemberAlreadyExists.GetMessage().Message, GroupMessage.GroupMemberAlreadyExists.GetMessage().Code);
 }

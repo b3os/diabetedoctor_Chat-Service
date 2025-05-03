@@ -13,7 +13,6 @@
 
     <ItemGroup>
       <Folder Include="EventBus\Ably\" />
-      <Folder Include="EventBus\Kafka\EventHandlers\" />
     </ItemGroup>
     
 </Project>

@@ -22,8 +22,8 @@ public static class ChatEndpoints
     {
         var chat = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        chat.MapPost("groups/{groupId}/messages", CreateMessage);
-        chat.MapGet("messages", GetGroupMessages);
+        chat.MapPost("groups/{groupId}/messages", CreateMessage).WithSummary("Creates a new message");
+        chat.MapGet("messages", GetGroupMessages).WithSummary("Gets all messages");
 
 
         return builder;

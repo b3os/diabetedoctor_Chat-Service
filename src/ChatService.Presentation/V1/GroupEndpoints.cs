@@ -25,13 +25,13 @@ public static class GroupEndpoints
     {
         var group = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        group.MapPost("", CreateGroup);
-        group.MapPost("{groupId}/members", AddMemberToGroup);
+        group.MapPost("", CreateGroup).WithSummary("Create a new group");
+        group.MapPost("{groupId}/members", AddMemberToGroup).WithSummary("Add new members to the group");
 
-        group.MapPatch("{groupId}", UpdateGroup);
-        group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember);
+        group.MapPatch("{groupId}", UpdateGroup).WithSummary("Update a group");
+        group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember).WithSummary("Promote a group member to admin");
 
-        group.MapGet("", GetUserGroup);
+        group.MapGet("", GetUserGroup).WithSummary("Get groups of a user");
 
 
         return builder;
@@ -56,8 +56,7 @@ public static class GroupEndpoints
     private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, string groupId,
         string userId)
     {
-        var ownerId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
-        // var ownerId = claimsService.GetCurrentUserId;
+        var ownerId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new PromoteGroupMemberCommand
             { OwnerId = ownerId, GroupId = groupId, MemberId = userId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
@@ -74,8 +73,7 @@ public static class GroupEndpoints
     private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, string groupId,
         [FromBody] AddMemberToGroupCommand command)
     {
-        var adminId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
-        // var adminId = claimsService.GetCurrentUserId;
+        var adminId = claimsService.GetCurrentUserId;
         var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }

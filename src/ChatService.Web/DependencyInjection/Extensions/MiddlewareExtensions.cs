@@ -28,8 +28,6 @@ public static class MiddlewareExtensions
         
         app.NewVersionedApi(ChatEndpoints.ApiName)
             .MapChatApiV1();
-
-        app.NewVersionedApi(UserEndpoints.ApiName)
-            .MapUserApiV1();
+        
     }
 }

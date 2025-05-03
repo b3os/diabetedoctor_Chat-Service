@@ -10,9 +10,9 @@ public static class ServiceCollectionExtensions
 {
     public static void AddInfrastructureService(this IHostApplicationBuilder builder)
     {
-        // builder.AddKafkaProducer();
-        // builder.AddKafkaEventPublisher();
-        // builder.AddKafkaConsumer();
+        builder.AddKafkaProducer();
+        builder.AddKafkaEventPublisher();
+        builder.AddKafkaConsumer();
         
         builder.Services.AddSingleton(typeof(IntegrationEventFactory));
         builder.Services.AddScoped<IClaimsService, ClaimsService>();

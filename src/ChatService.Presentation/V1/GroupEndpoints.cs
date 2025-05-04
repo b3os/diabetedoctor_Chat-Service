@@ -25,13 +25,13 @@ public static class GroupEndpoints
     {
         var group = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        group.MapPost("", CreateGroup).WithSummary("Create a new group");
-        group.MapPost("{groupId}/members", AddMemberToGroup).WithSummary("Add new members to the group");
+        group.MapPost("", CreateGroup).RequireAuthorization().WithSummary("Create a new group");
+        group.MapPost("{groupId}/members", AddMemberToGroup).RequireAuthorization().WithSummary("Add new members to the group");
 
-        group.MapPatch("{groupId}", UpdateGroup).WithSummary("Update a group");
-        group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember).WithSummary("Promote a group member to admin");
+        group.MapPatch("{groupId}", UpdateGroup).RequireAuthorization().WithSummary("Update a group");
+        group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember).RequireAuthorization().WithSummary("Promote a group member to admin");
 
-        group.MapGet("", GetUserGroup).WithSummary("Get groups of a user");
+        group.MapGet("", GetUserGroup).RequireAuthorization().WithSummary("Get groups of a user");
 
 
         return builder;

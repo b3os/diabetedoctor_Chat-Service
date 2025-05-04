@@ -26,7 +26,7 @@ public class CreateMessageCommandHandler(
 
         var message = MapToMessage(groupId, request.UserId, request);
 
-        await unitOfWork.StartTransactionAsync();
+        await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             await messageRepository.CreateAsync(unitOfWork.ClientSession, message, cancellationToken);
@@ -35,11 +35,11 @@ public class CreateMessageCommandHandler(
 
             // await eventPublisher.PublishAsync(TopicConstraints.ChatTopic, integrationEvent);
 
-            await unitOfWork.CommitTransactionAsync();
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
         {
-            await unitOfWork.AbortTransactionAsync();
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
 

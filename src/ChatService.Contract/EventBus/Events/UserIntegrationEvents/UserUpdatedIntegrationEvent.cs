@@ -1,8 +1,8 @@
 ﻿namespace ChatService.Contract.EventBus.Events.UserIntegrationEvents;
 
-public class UserUpdatedIntegrationEvent : IntegrationEvent
+public record UserUpdatedIntegrationEvent : IntegrationEvent
 {
-    public string Id { get; set; } = default!;
+    public string UserId { get; set; } = default!;
     public string FullName { get; set; } = default!;
     public string Avatar { get; set; } = default!;
 }

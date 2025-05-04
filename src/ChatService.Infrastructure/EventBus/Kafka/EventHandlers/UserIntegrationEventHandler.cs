@@ -10,13 +10,27 @@ public class UserIntegrationEventHandler(ISender sender, ILogger<UserIntegration
 {
     public async Task Handle(UserCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling user created event: {userId}", notification.Id);
-        await sender.Send(new CreateUserCommand {Id = notification.Id, FullName = notification.FullName, Avatar = notification.Avatar}, cancellationToken);
+        logger.LogInformation("Handling user created event: {userId}", notification.UserId);
+        
+        if (string.IsNullOrWhiteSpace(notification.UserId))
+        {
+            logger.LogWarning("UserCreatedIntegrationEvent missing Id. Skipping user creation...");
+            return;
+        }
+        
+        await sender.Send(new CreateUserCommand {Id = notification.UserId, FullName = notification.FullName, Avatar = notification.Avatar}, cancellationToken);
     }
 
     public async Task Handle(UserUpdatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling user updated event: {userId}", notification.Id);
-        await sender.Send(new UpdateUserCommand {Id = notification.Id, FullName = notification.FullName, Avatar = notification.Avatar}, cancellationToken);
+        logger.LogInformation("Handling user updated event: {userId}", notification.UserId);
+        
+        if (string.IsNullOrWhiteSpace(notification.UserId))
+        {
+            logger.LogWarning("UserUpdatedIntegrationEvent missing Id. Skipping user updation...");
+            return;
+        }
+        
+        await sender.Send(new UpdateUserCommand {Id = notification.UserId, FullName = notification.FullName, Avatar = notification.Avatar}, cancellationToken);
     }
 }

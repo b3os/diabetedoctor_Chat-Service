@@ -2,6 +2,8 @@
 using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.DTOs.MessageDtos;
+using ChatService.Contract.EventBus.Abstractions;
+using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services;
 using ChatService.Contract.Services.Message.Commands;
@@ -22,10 +24,10 @@ public static class ChatEndpoints
     {
         var chat = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        chat.MapPost("groups/{groupId}/messages", CreateMessage).WithSummary("Creates a new message");
-        chat.MapGet("messages", GetGroupMessages).WithSummary("Gets all messages");
+        chat.MapPost("groups/{groupId}/messages", CreateMessage).RequireAuthorization().WithSummary("Creates a new message");
+        chat.MapGet("messages", GetGroupMessages).RequireAuthorization().WithSummary("Gets all messages");
 
-
+        chat.MapGet("", Test);
         return builder;
     }
 
@@ -38,11 +40,18 @@ public static class ChatEndpoints
     
     private static async Task<IResult> GetGroupMessages(ISender sender, IClaimsService claimsService, [FromQuery] string groupId, [AsParameters] QueryFilter filter)
     {
-        // var userId = claimsService.GetCurrentUserId;
-        var userId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
+        var userId = claimsService.GetCurrentUserId;
+        // var userId = "b93d6316-be4c-4885-a5e0-eae1ea3d1379";
         var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, UserId = userId, Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
-    } 
+    }
+
+    private static async Task<IResult> Test(IEventPublisher eventPublisher)
+    {
+        await eventPublisher.PublishAsync("user_topic", new UserCreatedIntegrationEvent(){Avatar = "avatar.jpg"});
+    
+        return Results.Ok();
+    }
     
     private static IResult HandlerFailure(Result result) =>
         result switch

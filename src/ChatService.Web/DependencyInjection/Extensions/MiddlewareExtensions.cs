@@ -7,9 +7,7 @@ public static class MiddlewareExtensions
 {
     public static void ConfigureMiddleware(this WebApplication app)
     {
-        app.UseAuthentication();
         
-        app.UseAuthorization();
         //if (app.Environment.IsDevelopment())
         //{
         //    app.ConfigureSwagger();
@@ -19,7 +17,11 @@ public static class MiddlewareExtensions
 
         app.UseHttpsRedirection();
 
-        app.MapCarter();
+        app.UseAuthentication();
+        
+        app.UseAuthorization();
+        
+        // app.MapCarter();
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 

@@ -11,26 +11,27 @@ public class ClaimsService : IClaimsService
 
     public ClaimsService(IHttpContextAccessor httpContextAccessor)
     {
-        var identity = httpContextAccessor.HttpContext?.User.Identity as ClaimsIdentity;
+        var identity = httpContextAccessor.HttpContext?.User;
         GetCurrentUserId = GetUserId(identity);
         GetCurrentRole = GetRole(identity);
     }
 
-    private static string GetUserId(ClaimsIdentity? identity)
+    private static string GetUserId(ClaimsPrincipal? identity)
     {
         if (identity == null)
         {
             return string.Empty;
         }
-        return identity.Claims.FirstOrDefault(x => x.Type == "UserId")?.Value ?? string.Empty;
+        return identity.FindFirstValue("UserId") ?? string.Empty;
     }
+    
 
-    private static string GetRole(ClaimsIdentity? identity)
+    private static string GetRole(ClaimsPrincipal? identity)
     {
         if (identity == null)
         {
             return string.Empty;
         }
-        return identity.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value ?? string.Empty;
+        return identity.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     }
 }

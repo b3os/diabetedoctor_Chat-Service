@@ -6,7 +6,7 @@ public record UserId
 {
     [BsonElement("_id")]
     [BsonRepresentation(BsonType.String)]
-    public string Id { get; init; } = default!;
+    public string Id { get; private init; } = default!;
 
     public static UserId Of(string id)
     {

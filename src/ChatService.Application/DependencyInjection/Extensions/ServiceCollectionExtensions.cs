@@ -7,7 +7,10 @@ namespace ChatService.Application.DependencyInjection.Extensions;
 public static class ServiceCollectionExtensions
 {
     private static IServiceCollection AddConfigureMediatR(this IServiceCollection services)
-    => services.AddMediatR(config => config.RegisterServicesFromAssembly(AssemblyReference.Assembly))
+    => services.AddMediatR(config => config.RegisterServicesFromAssemblies(
+            AssemblyReference.Assembly,
+            Assembly.Load("ChatService.Infrastructure")
+            ))
           .AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>))
           //.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>))
           //.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>))

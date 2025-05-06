@@ -26,4 +26,10 @@ public class MessageReadStatus : DomainEntity<ObjectId>
             IsDeleted = false
         };
     }
+
+    public void Update(ObjectId messageId)
+    {
+        Changes["last_read_message_id"] = messageId;
+        Changes["modified_date"] = CurrentTimeService.GetCurrentTime();
+    }
 }

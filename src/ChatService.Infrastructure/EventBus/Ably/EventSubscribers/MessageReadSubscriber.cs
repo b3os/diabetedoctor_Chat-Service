@@ -1,26 +1,25 @@
 ﻿using ChatService.Contract.Common.Constraint;
-using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
 
-namespace ChatService.Infrastructure.EventBus.Kafka.EventSubscribers;
+namespace ChatService.Infrastructure.EventBus.Ably.EventSubscribers;
 
-public class UserSubscriber : KafkaSubscriberBase
+public class MessageReadSubscriber : AblySubscriberBase
 {
     private readonly IntegrationEventFactory _integrationEventFactory;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public UserSubscriber(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSetting,
+    public MessageReadSubscriber(ILogger<AblySubscriberBase> logger, IOptions<AblySetting> ablySetting,
         IntegrationEventFactory integrationEventFactory, IServiceScopeFactory serviceScopeFactory) : base(logger,
-        kafkaSetting, KafkaTopicConstraints.UserTopic, KafkaTopicConstraints.ChatServiceUserConsumerGroup)
+        ablySetting, AblyTopicConstraints.MessageReadEvent, AblyTopicConstraints.MessageReadChannel)
     {
         _integrationEventFactory = integrationEventFactory;
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    protected override async Task ProcessMessageAsync(EventEnvelope messageValue, CancellationToken stoppingToken)
+    protected override async Task ProcessEventAsync(EventEnvelope<object> messageValue, CancellationToken stoppingToken)
     {
         try
         {
-            var @event = _integrationEventFactory.CreateEvent(messageValue.EventTypeName, messageValue.Message);
+            var @event = _integrationEventFactory.CreateEvent(messageValue.EventTypeName, messageValue.Message!.ToString()!);
             if (@event is not null)
             {
                 using var scope = _serviceScopeFactory.CreateScope();

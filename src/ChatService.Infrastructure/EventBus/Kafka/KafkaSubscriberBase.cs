@@ -8,13 +8,13 @@ using ChatService.Contract.Settings;
 
 namespace ChatService.Infrastructure.EventBus.Kafka;
 
-public abstract class KafkaSubscriberBase<T> : BackgroundService
+public abstract class KafkaSubscriberBase : BackgroundService
 {
     private readonly IConsumer<string, EventEnvelope> _consumer;
-    protected readonly ILogger<KafkaSubscriberBase<T>> Logger;
+    protected readonly ILogger<KafkaSubscriberBase> Logger;
     private readonly string _topicName;
     
-    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase<T>> logger, IOptions<KafkaSetting> kafkaSetting, string topicName, string groupId)
+    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSetting, string topicName, string groupId)
     {
         Logger = logger;
         _topicName = topicName;
@@ -65,6 +65,10 @@ public abstract class KafkaSubscriberBase<T> : BackgroundService
                     catch (ConsumeException ex)
                     {
                         Logger.LogError(ex, "Consumer error: {ErrorMessage}", ex.Error.Reason);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        Logger.LogInformation("Kafka Background Service Topic [{topic}] has stopped.", _topicName);
                     }
                     catch (Exception ex)
                     {

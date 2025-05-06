@@ -18,7 +18,8 @@ public static class ServiceCollectionExtensions
         builder.Services
             .Configure<KafkaSetting>(builder.Configuration.GetSection(KafkaSetting.SectionName))
             .Configure<MongoDbSetting>(builder.Configuration.GetSection(MongoDbSetting.SectionName))
-            .Configure<AuthSetting>(builder.Configuration.GetSection(AuthSetting.SectionName));
+            .Configure<AuthSetting>(builder.Configuration.GetSection(AuthSetting.SectionName))
+            .Configure<AblySetting>(builder.Configuration.GetSection(AblySetting.SectionName));
     }
 
     private static void AddAuthenticationAndAuthorization(this IHostApplicationBuilder builder)
@@ -65,6 +66,11 @@ public static class ServiceCollectionExtensions
     public static void AddWebService(this IHostApplicationBuilder builder)
     {
         builder.AddConfigurationAppSetting();
+        
+        // builder.Services.Configure<JsonOptions>(options =>
+        // {
+        //     options.SerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        // });
         
         builder.Services.AddCarter();
 

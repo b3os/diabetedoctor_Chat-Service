@@ -16,7 +16,8 @@ public static class ServiceCollectionExtensions
             .AddScoped<IUnitOfWork, UnitOfWork>()
             .AddScoped<IGroupRepository, GroupRepository>()
             .AddScoped<IUserRepository, UserRepository>()
-            .AddScoped<IMessageRepository, MessageRepository>();
+            .AddScoped<IMessageRepository, MessageRepository>()
+            .AddScoped<IMessageReadStatusRepository, MessageReadStatusRepository>();
     }
 
     private static void AddConfigurationService(this IHostApplicationBuilder builder, IConfiguration configuration)

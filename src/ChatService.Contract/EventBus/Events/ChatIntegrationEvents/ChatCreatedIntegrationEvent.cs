@@ -2,8 +2,8 @@
 
 public record ChatCreatedIntegrationEvent : IntegrationEvent
 {
-    public string? Id { get; set; }
-    public string? FullName { get; set; }
-    public string? GroupName { get; set; }
-    public string? Content { get; set; }
+    public string? Id { get; init; }
+    public string? FullName { get; init; }
+    public string? GroupName { get; init; }
+    public string? Content { get; init; }
 }

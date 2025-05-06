@@ -29,7 +29,6 @@ public abstract class AblySubscriberBase : BackgroundService
             {
                 try
                 {
-                    Logger.LogInformation("Received message [{message}].", message);
                     if (message.Data is string json)
                     {
                         var envelope = JsonSerializer.Deserialize<EventEnvelope<object>>(json);
@@ -46,6 +45,10 @@ public abstract class AblySubscriberBase : BackgroundService
                 {
                     Logger.LogError(ex, "Ably error: {AblyErrorMessage}", ex.ErrorInfo.Message);
                 }
+                catch (JsonException ex)
+                {
+                    Logger.LogError(ex, "Failed to deserialize message into EventEnvelope. JSON: {Json}", message.Data);
+                }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Error: {ErrorMessage}", ex.Message);
@@ -57,10 +60,6 @@ public abstract class AblySubscriberBase : BackgroundService
         catch (TaskCanceledException)
         {
             Logger.LogInformation("Ably Background Service Event [{event}] has stopped.", _eventName);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error: {ErrorMessage}", ex.Message);
         }
         finally
         {

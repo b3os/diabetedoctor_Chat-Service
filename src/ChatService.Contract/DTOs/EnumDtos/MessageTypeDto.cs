@@ -2,6 +2,6 @@
 
 public enum MessageTypeDto
 {
-    Picture = 0,
-    Text = 1
+     Text = 0,
+     Picture = 1
 }

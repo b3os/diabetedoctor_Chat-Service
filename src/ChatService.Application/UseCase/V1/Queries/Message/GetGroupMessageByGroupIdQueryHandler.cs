@@ -1,5 +1,6 @@
 ﻿using ChatService.Contract.DTOs.GroupDtos;
 using ChatService.Contract.DTOs.MessageDtos;
+using ChatService.Contract.DTOs.UserDTOs;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message.Queries;
 using ChatService.Contract.Services.Message.Response;
@@ -21,9 +22,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
         CancellationToken cancellationToken)
     {
         var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 10;
-        var total = 0;
 
-        // code tạm thay thế fluent validator
         if (!ObjectId.TryParse(request.GroupId, out var groupId))
         {
             throw new Exception();
@@ -38,70 +37,9 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
             throw new GroupExceptions.GroupAccessDeniedException();
         }
 
-        var pipeline = new List<BsonDocument>
-        {
-            new()
-            {
-                { "$match", new BsonDocument() { { "group_id", groupId } } }
-            }
-        };
-
-        if (!string.IsNullOrWhiteSpace(request.Filter.Cursor) &&
-            ObjectId.TryParse(request.Filter.Cursor, out var cursorId))
-        {
-            pipeline.Add(new BsonDocument
-            {
-                { "$match", new BsonDocument { { "_id", new BsonDocument { { "$lt", cursorId } } } } }
-            });
-        }
-        else
-        {
-            var projection =
-                Builders<Domain.Models.MessageReadStatus>.Projection.Include(status => status.LastReadMessageId);
-            var cursor = await _mongoDbContext.MessageReadStatuses
-                .Find(x => x.GroupId == groupId && x.UserId.Id == request.UserId).Project(projection)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (cursor != null)
-            {
-                pipeline.Add(new BsonDocument
-                {
-                    { "$match", new BsonDocument { { "_id", new BsonDocument { { "$gt", cursor } } } } }
-                });
-            }
-
-            var countPipeline = pipeline.Append(new BsonDocument("$count", "total")).ToList();
-
-            total = (await _mongoDbContext.Messages
-                .Aggregate<BsonDocument>(countPipeline, cancellationToken: cancellationToken)
-                .FirstOrDefaultAsync(cancellationToken: cancellationToken))?["total"].AsInt32 ?? 0;
-        }
-
-        pipeline.Add(new BsonDocument
-        {
-            { "$sort", new BsonDocument { { "_id", -1 } } }
-        });
-
-        if (total < pageSize)
-        {
-            pipeline.Add(new BsonDocument("$limit", pageSize + 1));
-        }
-
-        pipeline.Add(new BsonDocument("$lookup", new BsonDocument
-        {
-            { "from", "User" },
-            { "localField", "sender_id._id" },
-            { "foreignField", "user_id._id" },
-            { "as", "user" }
-        }));
-
-        pipeline.Add(new BsonDocument("$unwind", new BsonDocument
-        {
-            { "path", "$user" },
-            { "preserveNullAndEmptyArrays", true }
-        }));
-
-        pipeline.Add(new BsonDocument("$project", new BsonDocument
+        var builder = Builders<Domain.Models.Message>.Filter;
+        var sorter = Builders<Domain.Models.Message>.Sort;
+        var projection = new BsonDocument
         {
             { "_id", 1 },
             { "content", 1 },
@@ -114,7 +52,18 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
                     { "timezone", "+07:00" }
                 })
             },
-            { "is_read", new BsonDocument("$in", new BsonArray { request.UserId, "$read_by" }) },
+            {
+                "is_read", new BsonDocument("$in", new BsonArray
+                {
+                    request.UserId,
+                    new BsonDocument("$map", new BsonDocument
+                    {
+                        { "input", "$read_by" },
+                        { "as", "read" },
+                        { "in", "$$read._id" }
+                    })
+                })
+            },
             {
                 "user", new BsonDocument
                 {
@@ -123,37 +72,132 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
                     { "avatar", "$user.avatar.public_url" }
                 }
             }
-        }));
+        };
 
-        var result = await _mongoDbContext.Messages
-            .Aggregate<MessageDto>(pipeline, cancellationToken: cancellationToken)
-            .ToListAsync(cancellationToken);
+        var filters = new List<FilterDefinition<Domain.Models.Message>>
+            { builder.Eq(message => message.GroupId, groupId) };
 
-        if (result.Count == 0)
+        if (!string.IsNullOrWhiteSpace(request.Filter.Cursor) &&
+            ObjectId.TryParse(request.Filter.Cursor, out var cursorId))
+        {
+            filters.Add(builder.Lt(message => message.Id, cursorId));
+        }
+        else
+        {
+            var cursor = await _mongoDbContext.MessageReadStatuses
+                .Find(cursor => cursor.GroupId == groupId && cursor.UserId.Id == request.UserId)
+                .Project(cursor => cursor.LastReadMessageId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (cursor != ObjectId.Empty)
+            {
+                filters.Add(builder.Gt(message => message.Id, cursor));
+
+                var unreadMessages = await _mongoDbContext.Messages
+                    .Aggregate()
+                    .Match(builder.And(filters))
+                    .Sort(sorter.Ascending(message => message.Id))
+                    .Lookup<Domain.Models.Message, MessageDto>(
+                        foreignCollectionName: "User",
+                        localField: "sender_id._id",
+                        foreignField: "user_id._id",
+                        @as: "user")
+                    .Unwind("user", new AggregateUnwindOptions<MessageDto>
+                    {
+                        PreserveNullAndEmptyArrays = true
+                    })
+                    .Project(projection)
+                    .As<MessageDto>()
+                    .ToListAsync(cancellationToken);
+
+                if (unreadMessages.Count > pageSize)
+                {
+                    return Result.Success(new GetGroupMessageResponse()
+                    {
+                        Messages = PagedList<MessageDto>.Create(unreadMessages, unreadMessages.Count, pageSize,
+                            unreadMessages[0].Id, true)
+                    });
+                }
+
+                var readFilter = builder.And(
+                    builder.Eq(message => message.GroupId, groupId),
+                    builder.Lte(message => message.Id, cursor)
+                );
+
+                var readMessages = await _mongoDbContext.Messages
+                    .Aggregate()
+                    .Match(readFilter)
+                    .Sort(sorter.Descending(message => message.Id))
+                    .Limit(pageSize - unreadMessages.Count + 1)
+                    .Lookup<Domain.Models.Message, MessageDto>(
+                        foreignCollectionName: "User",
+                        localField: "sender_id._id",
+                        foreignField: "user_id._id",
+                        @as: "user")
+                    .Unwind("user", new AggregateUnwindOptions<MessageDto>
+                    {
+                        PreserveNullAndEmptyArrays = true
+                    })
+                    .Project(projection)
+                    .As<MessageDto>()
+                    .ToListAsync(cancellationToken: cancellationToken);
+
+                var unreadHasNext = readMessages.Count > pageSize - unreadMessages.Count;
+
+                if (unreadHasNext)
+                {
+                    readMessages.RemoveRange(pageSize, readMessages.Count - (pageSize - unreadMessages.Count));
+                }
+
+                readMessages.Reverse();
+
+                var unreadResult = readMessages.Concat(unreadMessages).ToList();
+                return Result.Success(new GetGroupMessageResponse()
+                {
+                    Messages = PagedList<MessageDto>.Create(unreadResult, unreadResult.Count, pageSize,
+                        unreadResult[0].Id, unreadHasNext)
+                });
+            }
+        }
+
+        var readResult = await _mongoDbContext.Messages
+            .Aggregate()
+            .Match(builder.And(filters))
+            .Sort(sorter.Descending(message => message.Id))
+            .Limit(pageSize + 1)
+            .Lookup<Domain.Models.Message, MessageDto>(
+                foreignCollectionName: "User",
+                localField: "sender_id._id",
+                foreignField: "user_id._id",
+                @as: "user")
+            .Unwind("user", new AggregateUnwindOptions<MessageDto>
+            {
+                PreserveNullAndEmptyArrays = true
+            })
+            .Project(projection)
+            .As<MessageDto>()
+            .ToListAsync(cancellationToken: cancellationToken);
+
+
+        if (readResult.Count == 0)
         {
             return Result.Success(new GetGroupMessageResponse()
                 { Messages = PagedList<MessageDto>.Create([], 0, pageSize, string.Empty, false) });
         }
 
-        if (string.IsNullOrWhiteSpace(request.UserId))
-        {
-            result.Reverse();
+        var readHasNext = readResult.Count > pageSize;
 
-            return Result.Success(new GetGroupMessageResponse()
-                { Messages = PagedList<MessageDto>.Create(result, result.Count, pageSize, result[0].Id, true) });
+        if (readHasNext)
+        {
+            readResult.RemoveRange(pageSize, readResult.Count - pageSize);
         }
 
-        var hasNext = result.Count > pageSize;
-
-        if (hasNext)
-        {
-            result.RemoveRange(pageSize, result.Count - pageSize);
-        }
-
-        result.Reverse();
+        readResult.Reverse();
 
         return Result.Success(new GetGroupMessageResponse()
-            { Messages = PagedList<MessageDto>.Create(result, result.Count, pageSize, result[0].Id, hasNext) });
+        {
+            Messages = PagedList<MessageDto>.Create(readResult, readResult.Count, pageSize, readResult[0].Id, readHasNext)
+        });
     }
 }
 

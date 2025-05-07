@@ -26,8 +26,6 @@ public static class ChatEndpoints
 
         chat.MapPost("groups/{groupId}/messages", CreateMessage).RequireAuthorization().WithSummary("Creates a new message");
         chat.MapGet("messages", GetGroupMessages).RequireAuthorization().WithSummary("Gets all messages");
-
-        chat.MapGet("", Test);
         return builder;
     }
 
@@ -45,14 +43,6 @@ public static class ChatEndpoints
         var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, UserId = userId, Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
-
-    private static async Task<IResult> Test(IEventPublisher eventPublisher)
-    {
-        await eventPublisher.PublishAsync("user_topic", new UserCreatedIntegrationEvent(){Avatar = "avatar.jpg"});
-    
-        return Results.Ok();
-    }
-    
     private static IResult HandlerFailure(Result result) =>
         result switch
         {

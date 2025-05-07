@@ -1,6 +1,7 @@
 ﻿using ChatService.Contract.Services.MessageReadStatus.Commands;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.ValueObjects;
+using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.MessageReadStatus;
 
@@ -8,7 +9,8 @@ public class UpsertMessageReadStatusCommandHandler(
     IUnitOfWork unitOfWork,
     IMessageReadStatusRepository messageReadStatusRepository,
     IUserRepository userRepository,
-    IGroupRepository groupRepository)
+    IGroupRepository groupRepository,
+    IMessageRepository messageRepository)
     : ICommandHandler<UpsertMessageReadStatusCommand>
 {
     public async Task<Result> Handle(UpsertMessageReadStatusCommand request, CancellationToken cancellationToken)
@@ -31,17 +33,26 @@ public class UpsertMessageReadStatusCommandHandler(
             status => status.UserId.Id == request.UserId 
                       && status.GroupId == request.GroupId, cancellationToken: cancellationToken);
 
+        var filter = Builders<Domain.Models.Message>.Filter.And(
+            Builders<Domain.Models.Message>.Filter.Eq(message => message.GroupId, request.GroupId),
+            Builders<Domain.Models.Message>.Filter.Gte(message => message.Id, request.MessageId));
+
+        var userId = UserId.Of(request.UserId);
+        var update = Builders<Domain.Models.Message>.Update.AddToSet(message => message.ReadBy, userId);
+        
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             if (messageStatus is null)
             {
                 var newMessageStatus = MapToDomain(request);
+                await messageRepository.UpdateManyAsync(unitOfWork.ClientSession, filter, update, cancellationToken: cancellationToken);
                 await messageReadStatusRepository.CreateAsync(unitOfWork.ClientSession, newMessageStatus, cancellationToken);
                 await unitOfWork.CommitTransactionAsync(cancellationToken);
             }
             else
             {
+                await messageRepository.UpdateManyAsync(unitOfWork.ClientSession, filter, update, cancellationToken: cancellationToken);
                 messageStatus.Update(request.MessageId);
                 await messageReadStatusRepository.UpdateOneAsync(unitOfWork.ClientSession, messageStatus, cancellationToken);
             }

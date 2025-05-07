@@ -20,9 +20,9 @@ public interface IRepositoryBase<TEntity> where TEntity : DomainEntity<ObjectId>
     Task CreateManyAsync(IClientSessionHandle session, IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
     
     Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default);
+    Task<UpdateResult> UpdateOneAsync<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default);
+    Task<UpdateResult> UpdateManyAsync(IClientSessionHandle session, FilterDefinition<TEntity> filter, UpdateDefinition<TEntity> update, CancellationToken cancellationToken = default);
     Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default);
-    Task<UpdateResult> AddToSetEach<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default);
-    
     
     Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default);
     Task<DeleteResult> DeleteManyAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default);

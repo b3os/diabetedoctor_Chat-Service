@@ -39,7 +39,7 @@ public class AddMemberToGroupCommandHandler(
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.AddToSetEach<UserId>(unitOfWork.ClientSession, group, cancellationToken);
+            await groupRepository.UpdateOneAsync<UserId>(unitOfWork.ClientSession, group, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)

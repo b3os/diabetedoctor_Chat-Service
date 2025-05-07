@@ -60,7 +60,7 @@ public class Group : DomainEntity<ObjectId>
 
     public void AddAdmin(UserId admin)
     {
-        Changes["admins"] = admin ;
+        Changes["admins"] = new List<UserId>{admin} ;
     }
     
     public void AddMembers(List<UserId> members)

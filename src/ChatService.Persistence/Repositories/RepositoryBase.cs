@@ -78,14 +78,8 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
             new UpdateOptions { IsUpsert = false }, cancellationToken
         ); 
     }
-
-    public async Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
-    {
-        var filter = Builders<TEntity>.Filter.Eq("_id", id);
-        return await DbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
-    }
-
-    public async Task<UpdateResult> AddToSetEach<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
+    
+    public async Task<UpdateResult> UpdateOneAsync<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq("_id", entity.Id);
         
@@ -107,6 +101,18 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
             combineUpdate,
             new UpdateOptions { IsUpsert = false }, cancellationToken);
     }
+
+    public async Task<UpdateResult> UpdateManyAsync(IClientSessionHandle session, FilterDefinition<TEntity> filterDefinition, UpdateDefinition<TEntity> updateDefinition, CancellationToken cancellationToken = default)
+    {
+        return await DbSet.UpdateManyAsync(session: session, filterDefinition, updateDefinition, cancellationToken: cancellationToken);
+    }
+
+    public async Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<TEntity>.Filter.Eq("_id", id);
+        return await DbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
+    }
+    
 
     public async Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default)
     {

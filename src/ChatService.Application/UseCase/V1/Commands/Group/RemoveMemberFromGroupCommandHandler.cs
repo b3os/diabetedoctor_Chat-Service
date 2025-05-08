@@ -1,39 +1,37 @@
 ﻿using ChatService.Domain.Abstractions;
 using ChatService.Domain.ValueObjects;
-using ChatService.Persistence;
 using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
 
-public class AddMemberToGroupCommandHandler(
+public class RemoveMemberFromGroupCommandHandler(
     IUnitOfWork unitOfWork,
     IGroupRepository groupRepository,
-    IUserRepository userRepository) 
-    : ICommandHandler<AddMemberToGroupCommand>
+    IUserRepository userRepository) : ICommandHandler<RemoveMemberFromGroupCommand>
 {
-    public async Task<Result> Handle(AddMemberToGroupCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(RemoveMemberFromGroupCommand request, CancellationToken cancellationToken)
     {
         var groupId = ObjectId.Parse(request.GroupId);
         var groupExist = await groupRepository.ExistsAsync(
             group => group.Id == groupId
                      && group.Admins.Any(userId => userId.Id.Equals(request.AdminId)),
             cancellationToken);
-
+        
         if (!groupExist)
         {
             throw new GroupExceptions.GroupAccessDeniedException();
         }
+        
+        var members = (await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken)).ToList();
 
-        var member = await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
-
-        if (member.Count() != request.UserIds.Count())
+        if (members.Count != request.UserIds.Count())
         {
             throw new UserExceptions.UserNotFoundException();
         }
-
-        var memberUserIds = UserId.All(request.UserIds);
-        var update = Builders<Domain.Models.Group>.Update.AddToSetEach(group => group.Members, memberUserIds);
         
+        var memberUserIds = UserId.All(request.UserIds);
+        var update = Builders<Domain.Models.Group>.Update.PullFilter(group => group.Members, member => memberUserIds.Contains(member));
+
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
@@ -46,7 +44,7 @@ public class AddMemberToGroupCommandHandler(
             throw;
         }
 
-        return Result.Success(new Response(GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
-            GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Message));
+        return Result.Success(new Response(GroupMessage.RemoveMemberFromGroupSuccessfully.GetMessage().Code,
+            GroupMessage.RemoveMemberFromGroupSuccessfully.GetMessage().Message));
     }
 }

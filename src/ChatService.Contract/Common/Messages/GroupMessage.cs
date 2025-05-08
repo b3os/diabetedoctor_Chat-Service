@@ -2,7 +2,7 @@
 
 public enum GroupMessage
 {
-    [Message("Tạo nhóm thành công", "GROUP_200")]
+    [Message("Tạo nhóm thành công", "group01")]
     CreatedGroupSuccessfully,
     [Message("Cập nhật thành công", "group02")]
     UpdatedGroupSuccessfully,
@@ -12,6 +12,8 @@ public enum GroupMessage
     PromoteAdminGroupSuccessfully,
     [Message("Thêm thành viên thành công", "group05")]
     AddMemberToGroupSuccessfully,
+    [Message("Xóa thành viên thành công", "group06")]
+    RemoveMemberFromGroupSuccessfully,
     
     //Exception
     [Message("Nhóm không tồn tại", "group_error_01")]

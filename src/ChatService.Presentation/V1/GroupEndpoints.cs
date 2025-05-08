@@ -33,6 +33,7 @@ public static class GroupEndpoints
 
         group.MapGet("", GetUserGroup).RequireAuthorization().WithSummary("Get groups of a user");
 
+        group.MapDelete("{groupId}/members", RemoveMemberFromGroup).RequireAuthorization().WithSummary("Remove a group member");
 
         return builder;
     }
@@ -72,6 +73,14 @@ public static class GroupEndpoints
 
     private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, string groupId,
         [FromBody] AddMemberToGroupCommand command)
+    {
+        var adminId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    }
+    
+    private static async Task<IResult> RemoveMemberFromGroup(ISender sender, IClaimsService claimsService, string groupId,
+        [FromBody] RemoveMemberFromGroupCommand command)
     {
         var adminId = claimsService.GetCurrentUserId;
         var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });

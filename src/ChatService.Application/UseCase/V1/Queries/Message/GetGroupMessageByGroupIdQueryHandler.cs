@@ -4,6 +4,7 @@ using ChatService.Contract.DTOs.UserDTOs;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message.Queries;
 using ChatService.Contract.Services.Message.Response;
+using ChatService.Domain.Models;
 using ChatService.Persistence;
 using MongoDB.Driver;
 
@@ -166,7 +167,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
             .Sort(sorter.Descending(message => message.Id))
             .Limit(pageSize + 1)
             .Lookup<Domain.Models.Message, MessageDto>(
-                foreignCollectionName: "User",
+                foreignCollectionName: nameof(User),
                 localField: "sender_id._id",
                 foreignField: "user_id._id",
                 @as: "user")

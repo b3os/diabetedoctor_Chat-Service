@@ -1,4 +1,4 @@
-﻿using ChatService.Contract.Services.Group;
+﻿using ChatService.Contract.DTOs.GroupDtos;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.ValueObjects;
 using MongoDB.Driver;
@@ -10,11 +10,13 @@ public class PromoteGroupMemberCommandHandler(IGroupRepository groupRepository, 
 {
     public async Task<Result> Handle(PromoteGroupMemberCommand request, CancellationToken cancellationToken)
     {
+        var groupId = ObjectId.Parse(request.GroupId);
+        var projection = Builders<Domain.Models.Group>.Projection.Include(group => group.Admins);
         var group = await groupRepository.FindSingleAsync(
-                group => group.Id == ObjectId.Parse(request.GroupId) 
+                group => group.Id == groupId
                          && group.Owner.Id == request.OwnerId
-                         && !group.Admins.Any(admin => admin.Id.Equals(request.MemberId))
-                         && group.Members.Any(member => member.Id.Equals(request.MemberId)), 
+                         && group.Members.Any(member => member.Id.Equals(request.MemberId)),
+                projection,
                 cancellationToken: cancellationToken);
         
         if (group is null)
@@ -22,13 +24,18 @@ public class PromoteGroupMemberCommandHandler(IGroupRepository groupRepository, 
             throw new GroupExceptions.GroupAccessDeniedException();
         }
         
+        var isPromoted = !group.Admins.Any(admin => admin.Id.Equals(request.MemberId));
         var memberUserId = UserId.Of(request.MemberId);
-        group.AddAdmin(memberUserId);
+
+        var builder = Builders<Domain.Models.Group>.Update;
+        var update = isPromoted
+            ? builder.AddToSet(x => x.Admins, memberUserId) 
+            : builder.Pull(x => x.Admins, memberUserId);
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.UpdateOneAsync<UserId>(unitOfWork.ClientSession, group, cancellationToken);
+            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, groupId ,update, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
@@ -36,6 +43,7 @@ public class PromoteGroupMemberCommandHandler(IGroupRepository groupRepository, 
             await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
+        
         return Result.Success(new Response(GroupMessage.PromoteAdminGroupSuccessfully.GetMessage().Code,
             GroupMessage.PromoteAdminGroupSuccessfully.GetMessage().Message));
     }

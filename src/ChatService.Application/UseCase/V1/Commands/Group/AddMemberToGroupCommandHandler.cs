@@ -12,21 +12,18 @@ public class AddMemberToGroupCommandHandler(
 {
     public async Task<Result> Handle(AddMemberToGroupCommand request, CancellationToken cancellationToken)
     {
-        var projection = Builders<Domain.Models.Group>.Projection.Include(group => group.Id);
-        var group = await groupRepository.FindSingleAsync(
-            group => group.Id == ObjectId.Parse(request.GroupId)
-                     && group.Admins.Any(userId => userId.Id.Equals(request.AdminId))
-                     && !group.Members.Any(member => request.UserIds.Contains(member.Id)),
-            projection,
+        var groupId = ObjectId.Parse(request.GroupId);
+        var groupExist = await groupRepository.ExistsAsync(
+            group => group.Id == groupId
+                     && group.Admins.Any(userId => userId.Id.Equals(request.AdminId)),
             cancellationToken);
 
-        if (group is null)
+        if (!groupExist)
         {
-            throw new GroupExceptions.GroupMemberAlreadyExistsException();
+            throw new GroupExceptions.GroupAccessDeniedException();
         }
 
-        var member =
-            await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
+        var member = await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
 
         if (member.Count() != request.UserIds.Count())
         {
@@ -34,12 +31,14 @@ public class AddMemberToGroupCommandHandler(
         }
 
         var memberUserIds = UserId.All(request.UserIds);
-        group.AddMembers(memberUserIds);
-
+        var update = Builders<Domain.Models.Group>.Update.Combine(
+            Builders<Domain.Models.Group>.Update.AddToSetEach(group => group.Members, memberUserIds),
+            Builders<Domain.Models.Group>.Update.Set(group => group.ModifiedDate, CurrentTimeService.GetCurrentTime()));
+        
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.UpdateOneAsync<UserId>(unitOfWork.ClientSession, group, cancellationToken);
+            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, groupId, update, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)

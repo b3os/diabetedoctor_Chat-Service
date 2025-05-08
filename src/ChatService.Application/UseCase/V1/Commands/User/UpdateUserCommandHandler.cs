@@ -11,27 +11,19 @@ public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
 {
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        var projection = Builders<Domain.Models.User>.Projection
-            .Include(x => x.Fullname)
-            .Include(x => x.Avatar);
-        var user = await userRepository.FindSingleAsync(x => x.UserId.Id.Equals(request.Id), projection, cancellationToken);
+        var user = await userRepository.FindSingleAsync(x => x.UserId.Id.Equals(request.Id), cancellationToken: cancellationToken);
 
         if (user is null)
         {
-            return Result.Failure(new Error("ABC",$"User with id {request.Id} does not exist."));
+            throw new UserExceptions.UserNotFoundException();
         }
 
         user.Modify(request.FullName, string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of(request.Avatar));
-
-        if (user.Changes.Count == 0)
-        {
-            return Result.Success();
-        }
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await userRepository.UpdateOneAsync(unitOfWork.ClientSession, user, cancellationToken);
+            await userRepository.ReplaceOneAsync(unitOfWork.ClientSession, user, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)

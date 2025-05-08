@@ -35,23 +35,19 @@ public class User : DomainEntity<ObjectId>
         
         if (!string.IsNullOrWhiteSpace(fullname) && !fullname.Equals(Fullname))
         {
-            Changes["fullname"] = fullname;
+            Fullname = fullname;
             isChanged = true;
         }
         
         if (avatar != null)
         {
-            Changes["avatar"] =  new { public_url = avatar.PublicUrl };
+            Avatar = avatar;
             isChanged = true;
         }
 
         if (isChanged)
         {
-            Changes["modified_date"] = CurrentTimeService.GetCurrentTime();
+            ModifiedDate = CurrentTimeService.GetCurrentTime();
         }
-        
-        // Fullname = fullname ?? Fullname;
-        // Avatar =  avatar ?? Avatar;
-        // ModifiedDate = CurrentTimeService.GetCurrentTime();
     }
 }

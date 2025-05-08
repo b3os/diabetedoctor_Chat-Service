@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatService.Contract.Helpers;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
 using ChatService.Domain.ValueObjects;
@@ -26,17 +27,20 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         GC.SuppressFinalize(this);
     }
 
-    public async Task<long> CountAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    public async Task<long> CountAsync(Expression<Func<TEntity, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         return await DbSet.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
     }
 
-    public async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         return await DbSet.Find(filter).AnyAsync(cancellationToken);
     }
 
-    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter, ProjectionDefinition<TEntity> projection = default!,CancellationToken cancellationToken = default)
+    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter,
+        ProjectionDefinition<TEntity> projection = default!, CancellationToken cancellationToken = default)
     {
         return projection switch
         {
@@ -47,14 +51,14 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
 
     public async Task<TEntity?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
-        return await DbSet.Find(Builders<TEntity>.Filter.Eq("_id", id)).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        return await DbSet.Find(Builders<TEntity>.Filter.Eq("_id", id)).FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<TEntity>> FindListAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await DbSet.Find(filter).ToListAsync(cancellationToken: cancellationToken);
+        return await DbSet.Find(filter).ToListAsync(cancellationToken);
     }
-    
+
     public async Task CreateAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
         await DbSet.InsertOneAsync(session: session, entity, cancellationToken: cancellationToken);
@@ -65,55 +69,24 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         await DbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
     }
 
-    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, UpdateDefinition<TEntity> update, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<TEntity>.Filter.Eq("_id", entity.Id);
-        var updates = entity.Changes.Select(change => Builders<TEntity>.Update.Set(change.Key, change.Value)).ToList();
-
-        var combineUpdate = Builders<TEntity>.Update.Combine(updates);
-        
-        return await DbSet.UpdateOneAsync(session,
-            filter,
-            combineUpdate,
-            new UpdateOptions { IsUpsert = false }, cancellationToken
-        ); 
-    }
-    
-    public async Task<UpdateResult> UpdateOneAsync<TValue>(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
-    {
-        var filter = Builders<TEntity>.Filter.Eq("_id", entity.Id);
-        
-        var updates = entity.Changes.Select(change =>
-        {
-            if (change.Value is not IEnumerable values) 
-            {
-                return Builders<TEntity>.Update.AddToSet(change.Key, change.Value);
-            }
-
-            var itemsList = values.Cast<TValue>().ToList();
-            return Builders<TEntity>.Update.AddToSetEach(change.Key, itemsList );
-        }).ToList();
-        
-        var combineUpdate = Builders<TEntity>.Update.Combine(updates);
-
-        return await DbSet.UpdateOneAsync(session,
-            filter,
-            combineUpdate,
-            new UpdateOptions { IsUpsert = false }, cancellationToken);
+        var filter = Builders<TEntity>.Filter.Eq(x => x.Id, id);
+        var finalUpdate = Builders<TEntity>.Update.Combine(update, Builders<TEntity>.Update.Set(x => x.ModifiedDate, DateTime.UtcNow));
+        return await DbSet.UpdateOneAsync(session, filter, finalUpdate, new UpdateOptions { IsUpsert = false }, cancellationToken);
     }
 
     public async Task<UpdateResult> UpdateManyAsync(IClientSessionHandle session, FilterDefinition<TEntity> filterDefinition, UpdateDefinition<TEntity> updateDefinition, CancellationToken cancellationToken = default)
     {
-        return await DbSet.UpdateManyAsync(session: session, filterDefinition, updateDefinition, cancellationToken: cancellationToken);
+        return await DbSet.UpdateManyAsync(session: session, filterDefinition, updateDefinition, new UpdateOptions { IsUpsert = false }, cancellationToken);
     }
 
-    public async Task<ReplaceOneResult> ReplaceOneAsync(ObjectId id, TEntity entity, CancellationToken cancellationToken = default)
+    public async Task<ReplaceOneResult> ReplaceOneAsync(IClientSessionHandle session, TEntity entity, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<TEntity>.Filter.Eq("_id", id);
+        var filter = Builders<TEntity>.Filter.Eq(x => x.Id, entity.Id);
         return await DbSet.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
     }
     
-
     public async Task<DeleteResult> DeleteOneAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq("_id", id);
@@ -130,10 +103,10 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
                 deleteIds.Add(objectId);
             }
         }
-        
+
         if (deleteIds.Count == 0)
             return DeleteResult.Unacknowledged.Instance;
-        
+
         var filter = Builders<TEntity>.Filter.In("_id", deleteIds);
         return await DbSet.DeleteManyAsync(filter, cancellationToken: cancellationToken);
     }

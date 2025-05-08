@@ -19,10 +19,6 @@ public abstract class DomainEntity<TKey>
 
     [BsonElement("is_deleted"), BsonRepresentation(BsonType.Boolean)]
     public bool? IsDeleted { get; protected set; }
-
-    [BsonIgnore] public Dictionary<string, object> Changes { get; protected set; } = new();
-    
-    public void ClearChanges() => Changes.Clear(); 
     
     // /// <summary>
     // /// True if domain entity has an identity

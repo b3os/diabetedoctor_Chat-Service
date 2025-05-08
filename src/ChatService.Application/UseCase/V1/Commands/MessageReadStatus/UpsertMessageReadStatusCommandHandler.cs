@@ -38,28 +38,27 @@ public class UpsertMessageReadStatusCommandHandler(
             Builders<Domain.Models.Message>.Filter.Gte(message => message.Id, request.MessageId));
 
         var userId = UserId.Of(request.UserId);
-        var update = Builders<Domain.Models.Message>.Update.AddToSet(message => message.ReadBy, userId);
+        var addToSet = Builders<Domain.Models.Message>.Update.AddToSet(message => message.ReadBy, userId);
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
+            await messageRepository.UpdateManyAsync(unitOfWork.ClientSession, filter, addToSet, cancellationToken: cancellationToken);
             if (messageStatus is null)
             {
                 var newMessageStatus = MapToDomain(request);
-                await messageRepository.UpdateManyAsync(unitOfWork.ClientSession, filter, update, cancellationToken: cancellationToken);
                 await messageReadStatusRepository.CreateAsync(unitOfWork.ClientSession, newMessageStatus, cancellationToken);
-                await unitOfWork.CommitTransactionAsync(cancellationToken);
             }
             else
             {
-                await messageRepository.UpdateManyAsync(unitOfWork.ClientSession, filter, update, cancellationToken: cancellationToken);
-                messageStatus.Update(request.MessageId);
-                await messageReadStatusRepository.UpdateOneAsync(unitOfWork.ClientSession, messageStatus, cancellationToken);
+                var update = Builders<Domain.Models.MessageReadStatus>.Update.Set(messRead => messRead.LastReadMessageId, request.MessageId);
+                await messageReadStatusRepository.UpdateOneAsync(unitOfWork.ClientSession, messageStatus.Id, update, cancellationToken);
             }
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
         {
-            await unitOfWork.CommitTransactionAsync(cancellationToken);
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
         

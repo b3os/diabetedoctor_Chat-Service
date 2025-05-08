@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using ChatService.Contract.DTOs.GroupDtos;
+using MongoDB.Bson;
 
 namespace ChatService.Contract.Services.Group.Commands;
 

@@ -32,39 +32,4 @@ public class Group : DomainEntity<ObjectId>
             IsDeleted = false
         };
     }
-
-    public void Modify(string? name, Image? avatar)
-    {
-        var isChanged = false;
-        
-        if (!string.IsNullOrWhiteSpace(name) && !name.Equals(Name))
-        {
-            Changes["name"] = name;
-            isChanged = true;
-        }
-
-        if (avatar != null)
-        {
-            Changes["avatar"] = new { public_url = avatar.PublicUrl };
-            isChanged = true;
-        }
-        
-        if (isChanged)
-        {
-            Changes["modified_date"] = CurrentTimeService.GetCurrentTime();
-        }
-        
-        // Name = name ?? Name;
-        // Avatar = avatar ?? Avatar;
-    }
-
-    public void AddAdmin(UserId admin)
-    {
-        Changes["admins"] = new List<UserId>{admin} ;
-    }
-    
-    public void AddMembers(List<UserId> members)
-    {
-        Changes["members"] = members;
-    }
 }

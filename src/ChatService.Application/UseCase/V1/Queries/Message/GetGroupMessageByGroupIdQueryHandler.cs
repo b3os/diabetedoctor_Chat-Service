@@ -3,22 +3,17 @@ using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.DTOs.UserDTOs;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message.Queries;
-using ChatService.Contract.Services.Message.Response;
+using ChatService.Contract.Services.Message.Responses;
+using ChatService.Domain.Abstractions;
 using ChatService.Domain.Models;
 using ChatService.Persistence;
 using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Queries.Message;
 
-public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessageByIdQuery, GetGroupMessageResponse>
+public class GetGroupMessageByGroupIdQueryHandler(IMongoDbContext mongoDbContext)
+    : IQueryHandler<GetGroupMessageByIdQuery, GetGroupMessageResponse>
 {
-    private readonly MongoDbContext _mongoDbContext;
-
-    public GetGroupMessageByGroupIdQueryHandler(MongoDbContext mongoDbContext)
-    {
-        _mongoDbContext = mongoDbContext;
-    }
-
     public async Task<Result<GetGroupMessageResponse>> Handle(GetGroupMessageByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -29,7 +24,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
             throw new Exception();
         }
 
-        var groupExist = await _mongoDbContext.Groups
+        var groupExist = await mongoDbContext.Groups
             .Find(x => x.Id == groupId && x.Members.Any(id => id.Id.Equals(request.UserId)))
             .AnyAsync(cancellationToken);
 
@@ -85,7 +80,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
         }
         else
         {
-            var cursor = await _mongoDbContext.MessageReadStatuses
+            var cursor = await mongoDbContext.MessageReadStatuses
                 .Find(cursor => cursor.GroupId == groupId && cursor.UserId.Id == request.UserId)
                 .Project(cursor => cursor.LastReadMessageId)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -94,7 +89,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
             {
                 filters.Add(builder.Gt(message => message.Id, cursor));
 
-                var unreadMessages = await _mongoDbContext.Messages
+                var unreadMessages = await mongoDbContext.Messages
                     .Aggregate()
                     .Match(builder.And(filters))
                     .Sort(sorter.Ascending(message => message.Id))
@@ -125,7 +120,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
                     builder.Lte(message => message.Id, cursor)
                 );
 
-                var readMessages = await _mongoDbContext.Messages
+                var readMessages = await mongoDbContext.Messages
                     .Aggregate()
                     .Match(readFilter)
                     .Sort(sorter.Descending(message => message.Id))
@@ -161,7 +156,7 @@ public class GetGroupMessageByGroupIdQueryHandler : IQueryHandler<GetGroupMessag
             }
         }
 
-        var readResult = await _mongoDbContext.Messages
+        var readResult = await mongoDbContext.Messages
             .Aggregate()
             .Match(builder.And(filters))
             .Sort(sorter.Descending(message => message.Id))

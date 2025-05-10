@@ -1,8 +1,3 @@
 ﻿namespace ChatService.Persistence.Repositories;
 
-public class MessageRepository : RepositoryBase<Message>, IMessageRepository
-{
-    public MessageRepository(MongoDbContext context) : base(context)
-    {
-    }
-}
+public class MessageRepository(IMongoDbContext context) : RepositoryBase<Message>(context), IMessageRepository;

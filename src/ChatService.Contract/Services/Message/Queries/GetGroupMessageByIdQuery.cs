@@ -1,5 +1,5 @@
 ﻿using ChatService.Contract.Services.Group.Responses;
-using ChatService.Contract.Services.Message.Response;
+using ChatService.Contract.Services.Message.Responses;
 
 namespace ChatService.Contract.Services.Message.Queries;
 

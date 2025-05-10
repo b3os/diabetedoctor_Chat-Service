@@ -4,6 +4,7 @@ using ChatService.Contract.DTOs.UserDTOs;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Group.Queries;
 using ChatService.Contract.Services.Group.Responses;
+using ChatService.Domain.Abstractions;
 using ChatService.Domain.Models;
 using ChatService.Domain.ValueObjects;
 using ChatService.Persistence;
@@ -12,7 +13,7 @@ using MongoDB.Driver;
 namespace ChatService.Application.UseCase.V1.Queries.Group;
 
 public class
-    GetUserGroupByUserIdQueryHandler(MongoDbContext mongoDbContext)
+    GetUserGroupByUserIdQueryHandler(IMongoDbContext mongoDbContext)
     : IQueryHandler<GetUserGroupByUserIdQuery, GetUserGroupResponse>
 {
     public async Task<Result<GetUserGroupResponse>> Handle(GetUserGroupByUserIdQuery request,
@@ -103,7 +104,7 @@ public class
             {
                 "user", new BsonDocument
                 {
-                    { "_id", "$user.user_id._id" },
+                    { "_id", "$user._id" },
                     { "fullname", "$user.fullname" },
                     { "avatar", "$user.avatar.public_url" }
                 }
@@ -135,13 +136,13 @@ public class
                     })
                 )
             )
-            .Lookup<Domain.Models.Message, Domain.Models.Message, User, UserDto>(
+            .Lookup<Domain.Models.Message, Domain.Models.Message, User, MessageDto>(
                 foreignCollection: mongoDbContext.Users,
                 localField: message => message.SenderId.Id,
                 foreignField: user => user.UserId.Id,
-                @as: user => user
+                @as: messageDto => messageDto.User
             )
-            .Unwind(userDto => userDto, new AggregateUnwindOptions<BsonDocument>
+            .Unwind(messageDto => messageDto.User, new AggregateUnwindOptions<BsonDocument>
             {
                 PreserveNullAndEmptyArrays = true
             })

@@ -9,7 +9,7 @@ public static class ServiceCollectionExtensions
     public static void AddPersistenceServices(this IHostApplicationBuilder builder)
     {
         
-        builder.AddDatabaseConfiguration(builder.Configuration);
+        builder.AddDatabaseConfiguration();
         builder.AddConfigurationService(builder.Configuration);
         
         builder.Services
@@ -26,8 +26,8 @@ public static class ServiceCollectionExtensions
             .Configure<MongoDbSetting>(configuration.GetSection(MongoDbSetting.SectionName));
     }
 
-    private static void AddDatabaseConfiguration(this IHostApplicationBuilder builder, IConfiguration configuration)
+    private static void AddDatabaseConfiguration(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddScoped<MongoDbContext>();
+        builder.Services.AddScoped<IMongoDbContext, MongoDbContext>();
     }
 }

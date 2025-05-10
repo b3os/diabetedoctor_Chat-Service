@@ -1,6 +1,9 @@
+using System.Data.Entity;
+using ChatService.Domain.Abstractions;
+
 namespace ChatService.Persistence;
 
-public class MongoDbContext
+public class MongoDbContext : IMongoDbContext
 {
     public MongoDbContext(IOptions<MongoDbSetting> mongoDbSetting)
     {

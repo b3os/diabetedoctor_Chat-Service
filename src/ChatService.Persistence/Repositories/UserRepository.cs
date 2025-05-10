@@ -4,6 +4,6 @@ using MongoDB.Bson;
 
 namespace ChatService.Persistence.Repositories;
 
-public class UserRepository(MongoDbContext context) : RepositoryBase<User>(context), IUserRepository
+public class UserRepository(IMongoDbContext context) : RepositoryBase<User>(context), IUserRepository
 {
 }

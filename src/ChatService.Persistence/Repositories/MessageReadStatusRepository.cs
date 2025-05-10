@@ -1,6 +1,9 @@
-﻿namespace ChatService.Persistence.Repositories;
+﻿
+using ChatService.Domain.Abstractions;
 
-public class MessageReadStatusRepository(MongoDbContext context)
+namespace ChatService.Persistence.Repositories;
+
+public class MessageReadStatusRepository(IMongoDbContext context)
     : RepositoryBase<MessageReadStatus>(context), IMessageReadStatusRepository
 {
     

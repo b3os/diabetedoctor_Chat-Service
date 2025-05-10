@@ -16,7 +16,7 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
 {
     protected readonly IMongoCollection<TEntity> DbSet;
 
-    public RepositoryBase(MongoDbContext context)
+    public RepositoryBase(IMongoDbContext context)
     {
         var database = context.Database;
         DbSet = database.GetCollection<TEntity>(typeof(TEntity).Name);

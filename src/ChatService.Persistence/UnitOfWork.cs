@@ -2,7 +2,7 @@
 
 namespace ChatService.Persistence;
 
-public class UnitOfWork(MongoDbContext context) : IUnitOfWork
+public class UnitOfWork(IMongoDbContext context) : IUnitOfWork
 {
     private IClientSessionHandle? _clientSession;
     private readonly MongoClient _client = context.Client;

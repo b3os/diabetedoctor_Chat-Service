@@ -16,8 +16,4 @@
         <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
     </ItemGroup>
     
-    <ItemGroup>
-      <Folder Include="UseCase\V1\DomainEvents\" />
-    </ItemGroup>
-    
 </Project>

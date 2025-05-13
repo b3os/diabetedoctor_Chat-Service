@@ -1,10 +1,13 @@
-﻿namespace ChatService.Application.UseCase.V1.Commands.Group;
+﻿using ChatService.Contract.Services.Group.DomainEvents;
+
+namespace ChatService.Application.UseCase.V1.Commands.Group;
 
 public class DeleteGroupCommandHandler(
     IUnitOfWork unitOfWork, 
     IGroupRepository groupRepository, 
     IMessageRepository messageRepository, 
-    IMessageReadStatusRepository messageReadStatusRepository) 
+    IMessageReadStatusRepository messageReadStatusRepository,
+    IPublisher publisher) 
     : ICommandHandler<DeleteGroupCommand>
 {
     public async Task<Result> Handle(DeleteGroupCommand request, CancellationToken cancellationToken)
@@ -20,6 +23,7 @@ public class DeleteGroupCommandHandler(
             await groupRepository.DeleteOneAsync(unitOfWork.ClientSession, request.GroupId, cancellationToken);
             await messageRepository.DeleteManyAsync(unitOfWork.ClientSession, messageFilter, cancellationToken);
             await messageReadStatusRepository.DeleteManyAsync(unitOfWork.ClientSession, messageStatusFilter, cancellationToken);
+            await publisher.Publish(MapToEvent(request.GroupId), cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception e)
@@ -40,5 +44,13 @@ public class DeleteGroupCommandHandler(
 
         if (!groupExist)
             throw new GroupExceptions.GroupAccessDeniedException();
+    }
+
+    private GroupDeletedEvent MapToEvent(ObjectId groupId)
+    {
+        return new GroupDeletedEvent()
+        {
+            GroupId = groupId.ToString(),
+        };
     }
 }

@@ -4,6 +4,6 @@ namespace ChatService.Contract.DTOs.MessageDtos;
 
 public record MessageCreateDto
 {
-    public required string Content {get; init;}
-    public required MessageTypeDto Type {get; init;}
+    public string? Content {get; init;} = default!;
+    public MessageTypeDto Type {get; init;}
 }

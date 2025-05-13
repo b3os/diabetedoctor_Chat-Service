@@ -12,6 +12,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace ChatService.Presentation.V1;
 
@@ -29,10 +30,10 @@ public static class ChatEndpoints
         return builder;
     }
 
-    private static async Task<IResult> CreateMessage(ISender sender, IClaimsService claimsService, string groupId, [FromBody] MessageCreateDto dto)
+    private static async Task<IResult> CreateMessage(ISender sender, IClaimsService claimsService, ObjectId groupId, [FromBody] MessageCreateDto dto)
     {
         var userId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, UserId = userId, Message = dto});
+        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, UserId = userId, Content = dto.Content, Type = dto.Type});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     

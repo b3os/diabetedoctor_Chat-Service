@@ -15,7 +15,8 @@ public class CreateGroupValidator : AbstractValidator<CreateGroupCommand>
             .Must(members => members.All(id => !string.IsNullOrWhiteSpace(id)))
             .WithMessage("Danh sách thành viên không được chứa giá trị rỗng hoặc chỉ có khoảng trắng.")
             .Must(members => members.All(id => Guid.TryParse(id, out _)))
-            .WithMessage("Phát hiện thành viên không hợp lệ.");
+            .WithMessage("Phát hiện thành viên không hợp lệ.")
+            .When(x => x.Members is { Count: > 0 });
         
         RuleFor(x => x.OwnerId)
             .NotEmpty().WithMessage("Chủ phòng không được để trống.")

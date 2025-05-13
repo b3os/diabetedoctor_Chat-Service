@@ -1,4 +1,5 @@
 ﻿using ChatService.Contract.Services.Group;
+using ChatService.Contract.Services.Group.DomainEvents;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
 using ChatService.Domain.Enums;
@@ -8,7 +9,10 @@ using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
 
-public class UpdateGroupCommandHandler(IGroupRepository groupRepository, IUnitOfWork unitOfWork)
+public class UpdateGroupCommandHandler(
+    IGroupRepository groupRepository,
+    IUnitOfWork unitOfWork,
+    IPublisher publisher)
     : ICommandHandler<UpdateGroupCommand>
 {
     public async Task<Result> Handle(UpdateGroupCommand request, CancellationToken cancellationToken)
@@ -47,6 +51,7 @@ public class UpdateGroupCommandHandler(IGroupRepository groupRepository, IUnitOf
         {
             await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, request.GroupId,
                 Builders<Domain.Models.Group>.Update.Combine(updates), updateOptions, cancellationToken);
+            await publisher.Publish(MapToEvent(request), cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
@@ -57,5 +62,15 @@ public class UpdateGroupCommandHandler(IGroupRepository groupRepository, IUnitOf
 
         return Result.Success(new Response(GroupMessage.UpdatedGroupSuccessfully.GetMessage().Code,
             GroupMessage.UpdatedGroupSuccessfully.GetMessage().Message));
+    }
+
+    private GroupUpdatedEvent MapToEvent(UpdateGroupCommand command)
+    {
+        return new GroupUpdatedEvent()
+        {
+            GroupId = command.GroupId.ToString(),
+            Avatar = command.Avatar,
+            Name = command.Name,
+        };
     }
 }

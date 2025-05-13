@@ -4,6 +4,7 @@ using ChatService.Contract.EventBus.Abstractions;
 using ChatService.Contract.EventBus.Events.ChatIntegrationEvents;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message;
+using ChatService.Contract.Services.Message.DomainEvents;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.ValueObjects;
 using MediatR;
@@ -15,25 +16,25 @@ public class CreateMessageCommandHandler(
     IMessageRepository messageRepository,
     IGroupRepository groupRepository,
     IUserRepository userRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IPublisher publisher)
     : ICommandHandler<CreateMessageCommand>
 {
-    // IEventPublisher eventPublisher, 
     public async Task<Result> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        var groupId = ObjectId.Parse(request.GroupId);
-        var userAndGroup = await FindUserAndGround(request.UserId, groupId, cancellationToken);
-
-        var message = MapToMessage(groupId, request.UserId, request);
+        
+        await EnsureUserExists(request.UserId, cancellationToken);
+        
+        await EnsureAccessGroupPermissionAsync(request.GroupId, request.UserId, cancellationToken);
+        
+        var message = MapToMessage(request.GroupId, request.UserId, request);
 
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             await messageRepository.CreateAsync(unitOfWork.ClientSession, message, cancellationToken);
-
-            // var integrationEvent = MapToIntegrationEvent(message, userAndGroup.Group, userAndGroup.User);
-
-            // await eventPublisher.PublishAsync(TopicConstraints.ChatTopic, integrationEvent);
+            
+            await publisher.Publish(MapToEvent(request.GroupId, request.UserId, message), cancellationToken);
 
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
@@ -47,50 +48,41 @@ public class CreateMessageCommandHandler(
             MessageMessage.CreateMessageSuccessfully.GetMessage().Message));
     }
 
-    private async Task<(Domain.Models.User User, Domain.Models.Group Group)> FindUserAndGround(string userId,
-        ObjectId groupId, CancellationToken cancellationToken)
+    private async Task EnsureUserExists(string userId, CancellationToken cancellationToken)
     {
-        var user = await userRepository.FindSingleAsync(x => x.UserId.Id.Equals(userId),
-            Builders<Domain.Models.User>.Projection
-                .Include(user => user.Fullname),
+        var exists = await userRepository.ExistsAsync(user => user.UserId.Id == userId,
             cancellationToken: cancellationToken);
         
-        if (user is null)
-        {
+        if (!exists)
             throw new UserExceptions.UserNotFoundException();
-        }
-
-        var group = await groupRepository.FindSingleAsync(
-            group => group.Id == groupId 
-                     && group.Members.Any(member => member.UserId.Id == userId),
-            cancellationToken: cancellationToken);
-
-        if (group is null)
-        {
-            throw new GroupExceptions.GroupNotFoundException();
-        }
-
-        return (user, group);
     }
-
+    
+    private async Task EnsureAccessGroupPermissionAsync(ObjectId groupId, string userId, CancellationToken cancellationToken)
+    {
+        var exists = await groupRepository.ExistsAsync(
+            group => group.Id == groupId && group.Members.Any(member => member.UserId.Id == userId),
+            cancellationToken: cancellationToken);
+        
+        if (!exists)
+            throw new UserExceptions.UserNotFoundException();
+    }
 
     private Domain.Models.Message MapToMessage(ObjectId groupId, string userId, CreateMessageCommand command)
     {
         var id = ObjectId.GenerateNewId();
         var senderUserId = UserId.Of(userId);
-        var type = Mapper.MapMessageType(command.Message.Type);
-        return Domain.Models.Message.Create(id, groupId, senderUserId, command.Message.Content, type);
+        var type = Mapper.MapMessageType(command.Type);
+        return Domain.Models.Message.Create(id, groupId, senderUserId, command.Content!, type);
     }
 
-    private ChatCreatedIntegrationEvent MapToIntegrationEvent(Domain.Models.Message message, Domain.Models.Group group,
-        Domain.Models.User user)
+    private ChatCreatedEvent MapToEvent(ObjectId groupId, string senderId, Domain.Models.Message message)
     {
-        return new ChatCreatedIntegrationEvent
+        return new ChatCreatedEvent
         {
-            Id = message.Id.ToString(),
-            Content = message.Content,
-            FullName = user.Fullname,
-            GroupName = group.Name,
+            MessageId = message.Id.ToString(),
+            MessageContent = message.Content,
+            SenderId = senderId,
+            GroupId = groupId.ToString(),
         };
     }
 }

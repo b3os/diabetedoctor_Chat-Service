@@ -1,4 +1,5 @@
 ﻿using ChatService.Contract.DTOs.UserDTOs;
+using ChatService.Contract.Services.Group.DomainEvents;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Models;
 using ChatService.Domain.ValueObjects;
@@ -11,7 +12,8 @@ namespace ChatService.Application.UseCase.V1.Commands.Group;
 public class AddMemberToGroupCommandHandler(
     IUnitOfWork unitOfWork,
     IGroupRepository groupRepository,
-    IUserRepository userRepository)
+    IUserRepository userRepository,
+    IPublisher publisher)
     : ICommandHandler<AddMemberToGroupCommand, Response<DuplicatedUserDto>>
 {
     public async Task<Result<Response<DuplicatedUserDto>>> Handle(AddMemberToGroupCommand request, CancellationToken cancellationToken)
@@ -54,6 +56,7 @@ public class AddMemberToGroupCommandHandler(
         try
         {
             await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, request.GroupId, update, options, cancellationToken);
+            await publisher.Publish(MapToEvent(request), cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
@@ -64,5 +67,14 @@ public class AddMemberToGroupCommandHandler(
 
         return Result.Success(new Response<DuplicatedUserDto>(GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
             GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Message, new DuplicatedUserDto()));
+    }
+
+    private GroupMembersAddedEvent MapToEvent(AddMemberToGroupCommand command)
+    {
+        return new GroupMembersAddedEvent()
+        {
+            GroupId = command.GroupId.ToString(),
+            Members = command.UserIds
+        };
     }
 }

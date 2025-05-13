@@ -11,12 +11,15 @@ namespace ChatService.Application.UseCase.V1.Commands.Group;
 
 public sealed class CreateGroupCommandHandler(
     IGroupRepository groupRepository, 
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork, 
     IPublisher publisher)
     : ICommandHandler<CreateGroupCommand>
 {
     public async Task<Result> Handle(CreateGroupCommand request, CancellationToken cancellationToken)
     {
+        await EnsureUserExistsAsync(request.OwnerId!, cancellationToken);
+        
         var group = MapToGroup(request.OwnerId!, request);
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
@@ -36,13 +39,20 @@ public sealed class CreateGroupCommandHandler(
             GroupMessage.CreatedGroupSuccessfully.GetMessage().Message));
     }
 
+    private async Task EnsureUserExistsAsync(string userId, CancellationToken cancellationToken)
+    {
+        var exists = await userRepository.ExistsAsync(user => user.UserId.Id == userId, cancellationToken);
+        if (!exists)
+            throw new UserExceptions.UserNotFoundException();
+    }
+
     private Domain.Models.Group MapToGroup(string ownerId, CreateGroupCommand command)
     {
         var id = ObjectId.GenerateNewId();
         var avatar = Image.Of(command.Avatar);
         var ownerUserId = UserId.Of(ownerId);
         var memberIds = UserId.All(command.Members!.Where(userId => userId != ownerId));
-        return Domain.Models.Group.Create(id, command.Name, avatar, ownerUserId, memberIds);
+        return Domain.Models.Group.Create(id, command.Name!, avatar, ownerUserId, memberIds);
     }
 
     private GroupCreatedEvent MapToEvent(Domain.Models.Group group)

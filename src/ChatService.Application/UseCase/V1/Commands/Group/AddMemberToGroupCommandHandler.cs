@@ -30,10 +30,9 @@ public class AddMemberToGroupCommandHandler(
             throw new GroupExceptions.GroupAccessDeniedException();
         }
 
-        var member =
-            await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
+        var member = await userRepository.CountAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
 
-        if (member.Count() != request.UserIds.Count)
+        if (member != request.UserIds.Count)
         {
             throw new UserExceptions.UserNotFoundException();
         }

@@ -22,7 +22,7 @@ public class CreateMessageCommandHandler(
     public async Task<Result> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
         var groupId = ObjectId.Parse(request.GroupId);
-        // var userAndGroup = await FindUserAndGround(userId, groupId, cancellationToken);
+        var userAndGroup = await FindUserAndGround(request.UserId, groupId, cancellationToken);
 
         var message = MapToMessage(groupId, request.UserId, request);
 
@@ -60,8 +60,9 @@ public class CreateMessageCommandHandler(
             throw new UserExceptions.UserNotFoundException();
         }
 
-        var group = await groupRepository.FindSingleAsync(x => x.Id == groupId && x.Members.Any(a => a.Equals(userId)),
-            
+        var group = await groupRepository.FindSingleAsync(
+            group => group.Id == groupId 
+                     && group.Members.Any(member => member.UserId.Id == userId),
             cancellationToken: cancellationToken);
 
         if (group is null)
@@ -77,7 +78,7 @@ public class CreateMessageCommandHandler(
     {
         var id = ObjectId.GenerateNewId();
         var senderUserId = UserId.Of(userId);
-        var type = ValueObjectMapper.MapMessageType(command.Message.Type);
+        var type = Mapper.MapMessageType(command.Message.Type);
         return Domain.Models.Message.Create(id, groupId, senderUserId, command.Message.Content, type);
     }
 

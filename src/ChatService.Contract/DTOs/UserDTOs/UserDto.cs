@@ -8,7 +8,6 @@ namespace ChatService.Contract.DTOs.UserDTOs;
 public record UserDto
 {
     [BsonElement("_id")]
-    [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; init; } = default!;
     
     [BsonElement("avatar")]
@@ -16,5 +15,8 @@ public record UserDto
     
     [BsonElement("fullname")]
     public string FullName { get; init; } = default!;
+    
+    [BsonElement("role")]
+    public int Role { get; init; }
 }
 

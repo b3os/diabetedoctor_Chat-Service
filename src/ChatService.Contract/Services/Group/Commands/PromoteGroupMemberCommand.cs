@@ -1,8 +1,9 @@
-﻿namespace ChatService.Contract.Services.Group.Commands;
+﻿
+namespace ChatService.Contract.Services.Group.Commands;
 
 public record PromoteGroupMemberCommand : ICommand
 {
     public string? OwnerId { get; init; }
-    public string GroupId { get; init; } = default!;
+    public ObjectId GroupId { get; init; }
     public string MemberId { get; init; } = default!;
 }

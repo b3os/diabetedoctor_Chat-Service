@@ -23,6 +23,10 @@ public class
 
         var builder = Builders<Domain.Models.Group>.Filter;
         var sorter = Builders<Domain.Models.Group>.Sort;
+        var filters = new List<FilterDefinition<Domain.Models.Group>>()
+        {
+            builder.ElemMatch(group => group.Members, id => id.UserId.Id == request.UserId)
+        };
         var groupProjection = new BsonDocument
         {
             { "_id", 1 },
@@ -30,17 +34,13 @@ public class
             { "avatar", "$avatar.public_url" },
             { "message", 1 },
         };
-        var filters = new List<FilterDefinition<Domain.Models.Group>>()
-        {
-            builder.ElemMatch(group => group.Members, id => id.Id.Equals(request.UserId))
-        };
 
         // tạm thời đang dùng chung query với search sau này sẽ đổi thành elastic với plugin của duydo
-        if (!string.IsNullOrWhiteSpace(request.Filter.Search))
-        {
-            filters.Add(builder.Regex(group => group.Name,
-                new BsonRegularExpression(NormalizeToRegex.NormalizeInput(request.Filter.Search), "ix")));
-        }
+        // if (!string.IsNullOrWhiteSpace(request.Filter.Search))
+        // {
+        //     filters.Add(builder.Regex(group => group.Name,
+        //         new BsonRegularExpression(NormalizeToRegex.NormalizeInput(request.Filter.Search), "ix")));
+        // }
 
         var total = await mongoDbContext.Groups.CountDocumentsAsync(builder.And(filters),
             cancellationToken: cancellationToken);
@@ -104,7 +104,7 @@ public class
             {
                 "user", new BsonDocument
                 {
-                    { "_id", "$user._id" },
+                    { "_id", "$user.user_id._id" },
                     { "fullname", "$user.fullname" },
                     { "avatar", "$user.avatar.public_url" }
                 }

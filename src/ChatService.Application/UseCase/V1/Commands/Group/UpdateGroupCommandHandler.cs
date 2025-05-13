@@ -1,25 +1,28 @@
 ﻿using ChatService.Contract.Services.Group;
 using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
+using ChatService.Domain.Enums;
 using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
 
-public class UpdateGroupCommandHandler (IGroupRepository groupRepository, IUnitOfWork unitOfWork)
+public class UpdateGroupCommandHandler(IGroupRepository groupRepository, IUnitOfWork unitOfWork)
     : ICommandHandler<UpdateGroupCommand>
 {
     public async Task<Result> Handle(UpdateGroupCommand request, CancellationToken cancellationToken)
     {
-        var groupId = ObjectId.Parse(request.GroupId);
-        var projection = Builders<Domain.Models.Group>.Projection.Include(group => group.Name).Include(group => group.Avatar);
+        var projection = Builders<Domain.Models.Group>.Projection.Include(group => group.Name)
+            .Include(group => group.Avatar);
         var group = await groupRepository.FindSingleAsync(
-            group => group.Id == groupId 
-                 && group.Admins.Any(userId => userId.Id.Equals(request.AdminId)),
+            group => group.Id == request.GroupId
+                     && group.Members.Any(member => member.UserId.Id.Equals(request.AdminId)
+                                                    && (member.Role == GroupRoleEnum.Admin ||
+                                                        member.Role == GroupRoleEnum.Owner)),
             projection,
             cancellationToken);
-        
+
         if (group is null)
         {
             throw new GroupExceptions.GroupAccessDeniedException();
@@ -37,11 +40,13 @@ public class UpdateGroupCommandHandler (IGroupRepository groupRepository, IUnitO
         {
             updates.Add(Builders<Domain.Models.Group>.Update.Set(x => x.Avatar, Image.Of(request.Avatar)));
         }
-        
+
+        var updateOptions = new UpdateOptions<Domain.Models.Group> { IsUpsert = false };
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, groupId, Builders<Domain.Models.Group>.Update.Combine(updates), cancellationToken);
+            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, request.GroupId,
+                Builders<Domain.Models.Group>.Update.Combine(updates), updateOptions, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)

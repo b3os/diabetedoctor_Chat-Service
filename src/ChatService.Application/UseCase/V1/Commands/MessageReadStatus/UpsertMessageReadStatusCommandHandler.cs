@@ -39,6 +39,7 @@ public class UpsertMessageReadStatusCommandHandler(
 
         var userId = UserId.Of(request.UserId);
         var addToSet = Builders<Domain.Models.Message>.Update.AddToSet(message => message.ReadBy, userId);
+        var updateOptions = new UpdateOptions<Domain.Models.MessageReadStatus> { IsUpsert = false };
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
@@ -52,7 +53,7 @@ public class UpsertMessageReadStatusCommandHandler(
             else
             {
                 var update = Builders<Domain.Models.MessageReadStatus>.Update.Set(messRead => messRead.LastReadMessageId, request.MessageId);
-                await messageReadStatusRepository.UpdateOneAsync(unitOfWork.ClientSession, messageStatus.Id, update, cancellationToken);
+                await messageReadStatusRepository.UpdateOneAsync(unitOfWork.ClientSession, messageStatus.Id, update, updateOptions, cancellationToken);
             }
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }

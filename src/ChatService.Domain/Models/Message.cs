@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ChatService.Domain.Abstractions;
+using ChatService.Domain.Enums;
 using ChatService.Domain.ValueObjects;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -15,11 +16,11 @@ public class Message : DomainEntity<ObjectId>
     [BsonElement("content")]
     public string Content { get; private set; } = default!;
     [BsonElement("message_type")]
-    public MessageType Type { get; private set; } = default!;
+    public MessageTypeEnum Type { get; private set; } = default!;
     [BsonElement("read_by")]
     public List<UserId> ReadBy { get; private set; } = default!;
 
-    public static Message Create (ObjectId id, ObjectId groupId, UserId senderId, string content, MessageType type)
+    public static Message Create (ObjectId id, ObjectId groupId, UserId senderId, string content, MessageTypeEnum type)
     {
         return new Message()
         {

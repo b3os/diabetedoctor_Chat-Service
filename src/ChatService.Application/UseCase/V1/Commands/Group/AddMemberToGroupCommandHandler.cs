@@ -1,6 +1,9 @@
-﻿using ChatService.Domain.Abstractions;
+﻿using ChatService.Contract.DTOs.UserDTOs;
+using ChatService.Domain.Abstractions;
+using ChatService.Domain.Models;
 using ChatService.Domain.ValueObjects;
 using ChatService.Persistence;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Group;
@@ -8,15 +11,16 @@ namespace ChatService.Application.UseCase.V1.Commands.Group;
 public class AddMemberToGroupCommandHandler(
     IUnitOfWork unitOfWork,
     IGroupRepository groupRepository,
-    IUserRepository userRepository) 
-    : ICommandHandler<AddMemberToGroupCommand>
+    IUserRepository userRepository)
+    : ICommandHandler<AddMemberToGroupCommand, Response<DuplicatedUserDto>>
 {
-    public async Task<Result> Handle(AddMemberToGroupCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Response<DuplicatedUserDto>>> Handle(AddMemberToGroupCommand request, CancellationToken cancellationToken)
     {
-        var groupId = ObjectId.Parse(request.GroupId);
         var groupExist = await groupRepository.ExistsAsync(
-            group => group.Id == groupId
-                     && group.Admins.Any(userId => userId.Id.Equals(request.AdminId)),
+            group => group.Id == request.GroupId
+                     && group.Members.Any(member => member.UserId.Id == request.AdminId
+                                                    && (member.Role == GroupRoleEnum.Admin ||
+                                                        member.Role == GroupRoleEnum.Owner)),
             cancellationToken);
 
         if (!groupExist)
@@ -24,20 +28,32 @@ public class AddMemberToGroupCommandHandler(
             throw new GroupExceptions.GroupAccessDeniedException();
         }
 
-        var member = await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
+        var member =
+            await userRepository.FindListAsync(user => request.UserIds.Contains(user.UserId.Id), cancellationToken);
 
-        if (member.Count() != request.UserIds.Count())
+        if (member.Count() != request.UserIds.Count)
         {
             throw new UserExceptions.UserNotFoundException();
         }
+        
+        var duplicationResult = await groupRepository.CheckDuplicatedUsersAsync(request.GroupId, request.UserIds, cancellationToken);
 
+        if (duplicationResult is not null && duplicationResult["matchCount"].AsInt32 > 0)
+        {
+            var userDuplicationResult = BsonSerializer.Deserialize<DuplicatedUserDto>(duplicationResult);
+            return Result.Success(new Response<DuplicatedUserDto>(GroupMessage.GroupMemberAlreadyExists.GetMessage().Code,
+                GroupMessage.GroupMemberAlreadyExists.GetMessage().Message, userDuplicationResult));
+        }
+        
         var memberUserIds = UserId.All(request.UserIds);
-        var update = Builders<Domain.Models.Group>.Update.AddToSetEach(group => group.Members, memberUserIds);
+        var membersToAdd = Member.CreateMany(memberUserIds);
+        var update = Builders<Domain.Models.Group>.Update.AddToSetEach(group => group.Members, membersToAdd);
+        var options = new UpdateOptions<Domain.Models.Group> { IsUpsert = false };
         
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, groupId, update, cancellationToken);
+            await groupRepository.UpdateOneAsync(unitOfWork.ClientSession, request.GroupId, update, options, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch (Exception)
@@ -46,7 +62,7 @@ public class AddMemberToGroupCommandHandler(
             throw;
         }
 
-        return Result.Success(new Response(GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
-            GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Message));
+        return Result.Success(new Response<DuplicatedUserDto>(GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
+            GroupMessage.AddMemberToGroupSuccessfully.GetMessage().Message, new DuplicatedUserDto()));
     }
 }

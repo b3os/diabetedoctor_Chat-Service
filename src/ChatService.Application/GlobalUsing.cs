@@ -13,4 +13,6 @@ global using ChatService.Domain.Abstractions.Repositories;
 global using ChatService.Contract.Services.Group.Commands;
 global using ChatService.Contract.Services.Message.Commands;
 global using MediatR;
-
+global using ChatService.Domain.Enums;
+global using MongoDB.Driver;
+global using ChatService.Domain.Abstractions;

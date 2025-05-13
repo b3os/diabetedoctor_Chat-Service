@@ -36,8 +36,7 @@ public sealed class CreateGroupCommandHandler(IGroupRepository groupRepository, 
         var id = ObjectId.GenerateNewId();
         var avatar = Image.Of(command.Avatar);
         var ownerUserId = UserId.Of(ownerId);
-        var memberIds = UserId.All(command.Members);
-        memberIds.Add(ownerUserId);
+        var memberIds = UserId.All(command.Members.Where(userId => userId != ownerId));
         return Domain.Models.Group.Create(id, command.Name, avatar, ownerUserId, memberIds);
     }
 }

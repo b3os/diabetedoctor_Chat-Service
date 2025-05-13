@@ -33,7 +33,7 @@ public static class GroupEndpoints
 
         group.MapGet("", GetUserGroup).RequireAuthorization().WithSummary("Get groups of a user");
 
-        group.MapDelete("{groupId}/members", RemoveMemberFromGroup).RequireAuthorization().WithSummary("Remove a group member");
+        group.MapDelete("{groupId}/members/{memberId}", RemoveMemberFromGroup).RequireAuthorization().WithSummary("Remove a group member");
 
         return builder;
     }
@@ -46,15 +46,15 @@ public static class GroupEndpoints
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
 
-    private static async Task<IResult> UpdateGroup(ISender sender, IClaimsService claimsService, string groupId,
-        [FromBody] UpdateGroupCommand command)
+    private static async Task<IResult> UpdateGroup(ISender sender, IClaimsService claimsService, ObjectId groupId,
+        [FromBody] GroupUpdateDto dto)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
+        var result = await sender.Send(new UpdateGroupCommand() { AdminId = adminId, GroupId = groupId, Avatar = dto.Avatar , Name = dto.Name });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
 
-    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, string groupId,
+    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, ObjectId groupId,
         string userId)
     {
         var ownerId = claimsService.GetCurrentUserId;
@@ -71,19 +71,19 @@ public static class GroupEndpoints
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
 
-    private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, string groupId,
-        [FromBody] AddMemberToGroupCommand command)
+    private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, ObjectId groupId,
+        [FromBody] GroupAddMemberDto dto)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
+        var result = await sender.Send(new AddMemberToGroupCommand() { AdminId = adminId, GroupId = groupId, UserIds = dto.UserIds });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     
-    private static async Task<IResult> RemoveMemberFromGroup(ISender sender, IClaimsService claimsService, string groupId,
-        [FromBody] RemoveMemberFromGroupCommand command)
+    private static async Task<IResult> RemoveMemberFromGroup(ISender sender, IClaimsService claimsService, ObjectId groupId,
+        string memberId)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(command with { AdminId = adminId, GroupId = groupId });
+        var result = await sender.Send(new RemoveMemberFromGroupCommand() { AdminId = adminId, GroupId = groupId, MemberId = memberId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
 

@@ -1,0 +1,28 @@
+# This is a basic workflow that is manually triggered
+
+name: remove old artifact
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 12 * * *'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "greet"
+  remove-artifacts:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Logging
+      run: echo "Processing remove artifact"
+      
+    - name: Remove
+      uses: c-hive/gha-remove-artifacts@v1.2.0
+      with: 
+        age: '1 day'
+      

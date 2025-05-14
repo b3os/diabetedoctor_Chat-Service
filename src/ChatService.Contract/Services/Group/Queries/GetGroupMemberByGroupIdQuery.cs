@@ -2,8 +2,9 @@
 
 namespace ChatService.Contract.Services.Group.Queries;
 
-public record GetUserGroupByUserIdQuery : IQuery<GetUserGroupResponse>
+public record GetGroupMemberByGroupIdQuery : IQuery<GetGroupMemberResponse>
 {
-    public string UserId { get; init; } = string.Empty;
+    public string UserId { get; set; } = default!;
+    public ObjectId GroupId { get; set; }
     public QueryFilter Filter { get; init; } = default!;
 }

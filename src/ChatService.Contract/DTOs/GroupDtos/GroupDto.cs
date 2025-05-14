@@ -1,5 +1,6 @@
 ﻿using ChatService.Contract.DTOs.MediaDTOs;
 using ChatService.Contract.DTOs.MessageDtos;
+using ChatService.Contract.DTOs.UserDTOs;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -17,4 +18,6 @@ public record GroupDto
     public string Avatar { get; init; } = default!;
     [BsonElement("message")]
     public MessageDto Message { get; init; } = default!;
+    [BsonElement("members")]
+    public IEnumerable<UserDto> Members { get; init; } = [];
 }

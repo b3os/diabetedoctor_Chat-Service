@@ -91,7 +91,7 @@ public class
         {
             { "_id", 1 },
             { "content", 1 },
-            { "type", "$message_type.value" },
+            { "type", "$message_type" },
             { "is_read", 1 },
             {
                 "created_date", new BsonDocument("$dateToString", new BsonDocument
@@ -149,86 +149,4 @@ public class
             .Project(messageProjection)
             .As<Domain.Models.Message, BsonDocument, MessageDto>();
     }
-
-    // private BsonDocument GetNewestMessageOfEachGroup(string userId)
-    // {
-    //     return new BsonDocument
-    //     {
-    //         {
-    //             "$lookup", new BsonDocument
-    //             {
-    //                 { "from", "Message" },
-    //                 { "let", new BsonDocument { { "groupId", "$_id" } } },
-    //                 {
-    //                     "pipeline", new BsonArray
-    //                     {
-    //                         new BsonDocument("$match", new BsonDocument
-    //                             {
-    //                                 { "$expr", new BsonDocument("$eq", new BsonArray { "$group_id", "$$groupId" }) }
-    //                             }
-    //                         ),
-    //                         new BsonDocument("$sort", new BsonDocument
-    //                             {
-    //                                 { "created_date", -1 }
-    //                             }
-    //                         ),
-    //                         new BsonDocument("$limit", 1),
-    //                         new BsonDocument("$addFields", new BsonDocument
-    //                         {
-    //                             {
-    //                                 "is_read", new BsonDocument
-    //                                 {
-    //                                     {
-    //                                         "$cond", new BsonArray
-    //                                         {
-    //                                             new BsonDocument("$in", new BsonArray { userId, "$read_by" }),
-    //                                             true,
-    //                                             false
-    //                                         }
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }),
-    //                         new BsonDocument("$lookup", new BsonDocument
-    //                         {
-    //                             { "from", "User" },
-    //                             { "localField", "sender_id._id" },
-    //                             { "foreignField", "user_id._id" },
-    //                             { "as", "user" }
-    //                         }),
-    //                         new BsonDocument("$unwind", new BsonDocument
-    //                         {
-    //                             { "path", "$user" },
-    //                             { "preserveNullAndEmptyArrays", true }
-    //                         }),
-    //                         new BsonDocument("$project", new BsonDocument
-    //                         {
-    //                             { "_id", 1 },
-    //                             { "content", 1 },
-    //                             { "type", "$message_type.value" },
-    //                             { "is_read", 1 },
-    //                             {
-    //                                 "created_date", new BsonDocument("$dateToString", new BsonDocument
-    //                                 {
-    //                                     { "format", "%Y-%m-%dT%H:%M:%S.%L%z" },
-    //                                     { "date", "$created_date" },
-    //                                     { "timezone", "+07:00" }
-    //                                 })
-    //                             },
-    //                             {
-    //                                 "user", new BsonDocument
-    //                                 {
-    //                                     { "_id", "$user.user_id._id" },
-    //                                     { "fullname", "$user.fullname" },
-    //                                     { "avatar", "$user.avatar.public_url" }
-    //                                 }
-    //                             }
-    //                         })
-    //                     }
-    //                 },
-    //                 { "as", "message" }
-    //             }
-    //         }
-    //     };
-    // }
 }

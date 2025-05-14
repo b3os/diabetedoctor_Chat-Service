@@ -41,7 +41,7 @@ public class GetGroupMessageByGroupIdQueryHandler(IMongoDbContext mongoDbContext
                 return await GetUnreadAndReadMessages(request.UserId, groupId, lastReadMessageId, pageSize, cancellationToken);
             }
 
-            var allMessages = await ExecuteMessageAggregate(request.UserId, filters, true, pageSize, cancellationToken);
+            var allMessages = await ExecuteMessageAggregate(request.UserId, filters, true, null, cancellationToken);
             return Result.Success(new GetGroupMessageResponse
             {
                 Messages = PagedList<MessageDto>.Create(allMessages, allMessages.Count, pageSize, string.Empty, false)
@@ -117,7 +117,7 @@ public class GetGroupMessageByGroupIdQueryHandler(IMongoDbContext mongoDbContext
         {
             { "_id", 1 },
             { "content", 1 },
-            { "type", "$message_type.value" },
+            { "type", "$message_type" },
             {
                 "created_date", new BsonDocument("$dateToString", new BsonDocument
                 {

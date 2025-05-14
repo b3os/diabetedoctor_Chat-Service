@@ -32,7 +32,8 @@ public static class GroupEndpoints
         group.MapPatch("{groupId}/members/{userId}", PromoteGroupMember).RequireAuthorization().WithSummary("Promote a group member to admin");
 
         group.MapGet("", GetUserGroup).RequireAuthorization().WithSummary("Get groups of a user");
-
+        // group.MapGet("{groupId}/members", GetMembersOfGroup);
+        
         group.MapDelete("{groupId}/members/{memberId}", RemoveMemberFromGroup).RequireAuthorization().WithSummary("Remove a group member");
 
         return builder;
@@ -84,6 +85,13 @@ public static class GroupEndpoints
     {
         var adminId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new RemoveMemberFromGroupCommand() { AdminId = adminId, GroupId = groupId, MemberId = memberId });
+        return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
+    }
+    
+    private static async Task<IResult> GetMembersOfGroup(ISender sender, IClaimsService claimsService, ObjectId groupId)
+    {
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new GetGroupMemberByGroupIdQuery() { GroupId = groupId });
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
 

@@ -24,7 +24,7 @@ public static class KafkaEventBusExtensions
                 Acks = Acks.All,
                 MessageSendMaxRetries = 3,
                 CompressionType = CompressionType.Gzip,
-                LingerMs = 1000,
+                // LingerMs = 0,
                 MessageTimeoutMs = 10000, // Maximum time may use to deliver a message (including retries)
                 RequestTimeoutMs = 10000, // This value is only enforced by the broker and relies on
                 RetryBackoffMs = 1000 // The backoff time in milliseconds before retrying a protocol request
@@ -45,7 +45,7 @@ public static class KafkaEventBusExtensions
     {
         builder.Services.AddTransient<IEventPublisher>(services => new KafkaEventPublisher(
             services.GetRequiredService<IProducer<string, EventEnvelope>>(),
-            services.GetRequiredService<ILoggerFactory>().CreateLogger("EventPublisher")
+            services.GetRequiredService<ILoggerFactory>().CreateLogger("KafkaEventPublisher")
         ));
     }
     

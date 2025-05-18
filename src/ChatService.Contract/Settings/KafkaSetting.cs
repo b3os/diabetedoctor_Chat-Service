@@ -3,5 +3,5 @@
 public class KafkaSetting
 {
     public const string SectionName = "KafkaSetting";
-    public string BootstrapServer { get; init; } = default!;
+    public string BootstrapServer { get; init; } = null!;
 }

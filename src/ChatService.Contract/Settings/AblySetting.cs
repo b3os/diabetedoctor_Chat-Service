@@ -3,5 +3,5 @@
 public class AblySetting
 {
     public const string SectionName = "AblySetting";
-    public string ApiKey { get; set; } = default!;
+    public string ApiKey { get; set; } = null!;
 }

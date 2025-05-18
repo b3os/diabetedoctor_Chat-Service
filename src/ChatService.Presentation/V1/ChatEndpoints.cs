@@ -3,6 +3,7 @@ using Asp.Versioning.Builder;
 using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.EventBus.Abstractions;
+using ChatService.Contract.EventBus.Events.ChatIntegrationEvents;
 using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services;
@@ -24,7 +25,6 @@ public static class ChatEndpoints
     public static IVersionedEndpointRouteBuilder MapChatApiV1(this IVersionedEndpointRouteBuilder builder)
     {
         var chat = builder.MapGroup(BaseUrl).HasApiVersion(1);
-
         chat.MapPost("groups/{groupId}/messages", CreateMessage).RequireAuthorization().WithSummary("Creates a new message");
         chat.MapGet("messages", GetGroupMessages).RequireAuthorization().WithSummary("Gets all messages");
         return builder;
@@ -33,7 +33,7 @@ public static class ChatEndpoints
     private static async Task<IResult> CreateMessage(ISender sender, IClaimsService claimsService, ObjectId groupId, [FromBody] MessageCreateDto dto)
     {
         var userId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, UserId = userId, Content = dto.Content, Type = dto.Type});
+        var result = await sender.Send(new CreateMessageCommand{GroupId = groupId, UserId = userId, Content = dto.Content, Type = dto.Type, ReadBy = dto.ReadBy});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
     
@@ -43,6 +43,7 @@ public static class ChatEndpoints
         var result = await sender.Send(new GetGroupMessageByIdQuery() {GroupId = groupId, UserId = userId, Filter = filter});
         return result.IsFailure ? HandlerFailure(result) : Results.Ok(result);
     }
+    
     private static IResult HandlerFailure(Result result) =>
         result switch
         {

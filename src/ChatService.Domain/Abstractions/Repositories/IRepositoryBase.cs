@@ -13,7 +13,7 @@ public interface IRepositoryBase<TEntity> where TEntity : DomainEntity<ObjectId>
     Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default);
 
     Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter,
-        ProjectionDefinition<TEntity> definition = default!, CancellationToken cancellationToken = default);
+        ProjectionDefinition<TEntity> definition = null!, CancellationToken cancellationToken = default);
 
     Task<TEntity?> FindByIdAsync(ObjectId id, CancellationToken cancellationToken = default);
 
@@ -26,7 +26,7 @@ public interface IRepositoryBase<TEntity> where TEntity : DomainEntity<ObjectId>
         CancellationToken cancellationToken = default);
 
     Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, UpdateDefinition<TEntity> update,
-        UpdateOptions<TEntity> options = default!, CancellationToken cancellationToken = default);
+        UpdateOptions<TEntity> options = null!, CancellationToken cancellationToken = default);
 
     Task<UpdateResult> UpdateManyAsync(IClientSessionHandle session, FilterDefinition<TEntity> filter,
         UpdateDefinition<TEntity> update, CancellationToken cancellationToken = default);

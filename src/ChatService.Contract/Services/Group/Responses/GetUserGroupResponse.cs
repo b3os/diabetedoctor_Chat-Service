@@ -4,5 +4,5 @@ namespace ChatService.Contract.Services.Group.Responses;
 
 public record GetUserGroupResponse
 {
-    public PagedList<GroupDto> Groups { get; init; } = default!;
+    public PagedList<GroupDto> Groups { get; init; } = null!;
 }

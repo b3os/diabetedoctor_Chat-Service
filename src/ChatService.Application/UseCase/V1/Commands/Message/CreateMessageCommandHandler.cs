@@ -1,14 +1,6 @@
 ﻿using ChatService.Application.Mapping;
-using ChatService.Contract.Common.Constraint;
-using ChatService.Contract.EventBus.Abstractions;
-using ChatService.Contract.EventBus.Events.ChatIntegrationEvents;
-using ChatService.Contract.Infrastructure.Services;
-using ChatService.Contract.Services.Message;
 using ChatService.Contract.Services.Message.DomainEvents;
-using ChatService.Domain.Abstractions;
 using ChatService.Domain.ValueObjects;
-using MediatR;
-using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Commands.Message;
 
@@ -22,19 +14,18 @@ public class CreateMessageCommandHandler(
 {
     public async Task<Result> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        
-        await EnsureUserExists(request.UserId, cancellationToken);
-        
+        var user = await EnsureUserExists(request.UserId, cancellationToken);
+
         await EnsureAccessGroupPermissionAsync(request.GroupId, request.UserId, cancellationToken);
-        
+
         var message = MapToMessage(request.GroupId, request.UserId, request);
 
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
             await messageRepository.CreateAsync(unitOfWork.ClientSession, message, cancellationToken);
-            
-            await publisher.Publish(MapToEvent(request.GroupId, request.UserId, message), cancellationToken);
+
+            await publisher.Publish(MapToEvent(request.GroupId, user, message), cancellationToken);
 
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
@@ -48,21 +39,24 @@ public class CreateMessageCommandHandler(
             MessageMessage.CreateMessageSuccessfully.GetMessage().Message));
     }
 
-    private async Task EnsureUserExists(string userId, CancellationToken cancellationToken)
+    private async Task<Domain.Models.User> EnsureUserExists(string userId, CancellationToken cancellationToken)
     {
-        var exists = await userRepository.ExistsAsync(user => user.UserId.Id == userId,
+        var user = await userRepository.FindSingleAsync(user => user.UserId.Id == userId,
             cancellationToken: cancellationToken);
-        
-        if (!exists)
+
+        if (user is null)
             throw new UserExceptions.UserNotFoundException();
+
+        return user;
     }
-    
-    private async Task EnsureAccessGroupPermissionAsync(ObjectId groupId, string userId, CancellationToken cancellationToken)
+
+    private async Task EnsureAccessGroupPermissionAsync(ObjectId groupId, string userId,
+        CancellationToken cancellationToken)
     {
         var exists = await groupRepository.ExistsAsync(
             group => group.Id == groupId && group.Members.Any(member => member.UserId.Id == userId),
-            cancellationToken: cancellationToken);
-        
+            cancellationToken);
+
         if (!exists)
             throw new UserExceptions.UserNotFoundException();
     }
@@ -75,14 +69,16 @@ public class CreateMessageCommandHandler(
         return Domain.Models.Message.Create(id, groupId, senderUserId, command.Content!, type);
     }
 
-    private ChatCreatedEvent MapToEvent(ObjectId groupId, string senderId, Domain.Models.Message message)
+    private ChatCreatedEvent MapToEvent(ObjectId groupId, Domain.Models.User sender, Domain.Models.Message message)
     {
         return new ChatCreatedEvent
         {
+            SenderId = sender.UserId.Id,
+            SenderFullName = sender.Fullname,
+            SenderAvatar = sender.Avatar.PublicUrl,
             MessageId = message.Id.ToString(),
             MessageContent = message.Content,
-            SenderId = senderId,
-            GroupId = groupId.ToString(),
+            GroupId = groupId.ToString()
         };
     }
 }

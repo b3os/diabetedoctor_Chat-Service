@@ -6,5 +6,5 @@ public record MessageReadStatusUpsertEvent : IDomainEvent
 {
     public ObjectId MessageId { get; init; }
     public ObjectId GroupId { get; init; }
-    public string UserId { get; init; } = default!;
+    public string UserId { get; init; } = null!;
 }

@@ -10,15 +10,15 @@ namespace ChatService.Domain.Models;
 public class Message : DomainEntity<ObjectId>
 {
     [BsonElement("group_id")]
-    public ObjectId GroupId { get; private set; } = default!;
+    public ObjectId GroupId { get; private set; }
     [BsonElement("sender_id")]
-    public UserId SenderId { get; private set; } = default!;
+    public UserId SenderId { get; private set; } = null!;
     [BsonElement("content")]
-    public string Content { get; private set; } = default!;
+    public string Content { get; private set; } = null!;
     [BsonElement("message_type")]
-    public MessageTypeEnum Type { get; private set; } = default!;
+    public MessageTypeEnum Type { get; private set; }
     [BsonElement("read_by")]
-    public List<UserId> ReadBy { get; private set; } = default!;
+    public List<UserId> ReadBy { get; private set; } = null!;
 
     public static Message Create (ObjectId id, ObjectId groupId, UserId senderId, string content, MessageTypeEnum type)
     {

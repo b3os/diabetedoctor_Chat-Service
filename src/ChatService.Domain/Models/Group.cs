@@ -8,11 +8,11 @@ namespace ChatService.Domain.Models;
 public class Group : DomainEntity<ObjectId>
 {
     [BsonElement("name")]
-    public string Name { get; private set; } = default!;
+    public string Name { get; private set; } = null!;
     [BsonElement("avatar")]
-    public Image Avatar { get; private set; } = default!;
+    public Image Avatar { get; private set; } = null!;
     [BsonElement("members")]
-    public List<Member> Members {get; private set;} = default!;
+    public List<Member> Members {get; private set;} = null!;
 
     public static Group Create(ObjectId id, string name, Image avatar, UserId ownerId, List<UserId> memberIds)
     {
@@ -36,7 +36,7 @@ public class Group : DomainEntity<ObjectId>
 public record Member
 {
     [BsonElement("user_id")]
-    public UserId UserId { get; private set; } = default!;
+    public UserId UserId { get; private set; } = null!;
     [BsonElement("role")]
     public GroupRoleEnum Role { get; private set; }
     

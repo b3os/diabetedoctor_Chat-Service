@@ -2,5 +2,5 @@
 
 public record GroupDeletedEvent : IDomainEvent
 {
-    public string GroupId { get; init; } = default!;
+    public string GroupId { get; init; } = null!;
 };

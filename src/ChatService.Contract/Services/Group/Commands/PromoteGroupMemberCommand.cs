@@ -5,5 +5,5 @@ public record PromoteGroupMemberCommand : ICommand
 {
     public string? OwnerId { get; init; }
     public ObjectId GroupId { get; init; }
-    public string MemberId { get; init; } = default!;
+    public string MemberId { get; init; } = null!;
 }

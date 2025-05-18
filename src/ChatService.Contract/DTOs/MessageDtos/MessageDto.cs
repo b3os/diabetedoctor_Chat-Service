@@ -10,13 +10,13 @@ public class MessageDto
 {
     [BsonElement("_id")]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = default!;
+    public string Id { get; set; } = null!;
     
     [BsonElement("content")]
-    public string Content { get; set; } = default!;
+    public string Content { get; set; } = null!;
     
     [BsonElement("type")]
-    public int Type { get; set; } = default!;
+    public int Type { get; set; } = 0!;
     
     [BsonElement("created_date")]
     public DateTimeOffset CreatedDate { get; set; } = default!;
@@ -25,5 +25,5 @@ public class MessageDto
     public bool IsRead { get; set; }
     
     [BsonElement("user")]
-    public UserDto User { get; set; } = default!;
+    public UserDto User { get; set; } = null!;
 }

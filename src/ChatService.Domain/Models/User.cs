@@ -9,11 +9,11 @@ namespace ChatService.Domain.Models;
 public class User : DomainEntity<ObjectId>
 {
     [BsonElement("user_id")]
-    public UserId UserId { get; private set; } = default!;
+    public UserId UserId { get; private set; } = null!;
     [BsonElement("fullname")]
-    public string Fullname { get; private set; } = default!;
+    public string Fullname { get; private set; } = null!;
     [BsonElement("avatar")]
-    public Image Avatar { get; private set; } = default!;
+    public Image Avatar { get; private set; } = null!;
 
     public static User Create(ObjectId id, UserId userId, string fullname, Image avatar)
     {

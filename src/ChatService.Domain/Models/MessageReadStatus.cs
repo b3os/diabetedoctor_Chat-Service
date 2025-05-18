@@ -7,7 +7,7 @@ namespace ChatService.Domain.Models;
 public class MessageReadStatus : DomainEntity<ObjectId>
 {
     [BsonElement("user_id")]
-    public UserId UserId { get; private set; } = default!;
+    public UserId UserId { get; private set; } = null!;
     [BsonElement("group_id")]
     public ObjectId GroupId { get; private set; }
     [BsonElement("last_read_message_id")]

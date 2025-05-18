@@ -2,6 +2,6 @@
 
 public record GroupMembersAddedEvent : IDomainEvent
 {
-    public string GroupId { get; init; } = default!;
-    public IEnumerable<string> Members { get; init; } = default!;
+    public string GroupId { get; init; } = null!;
+    public IEnumerable<string> Members { get; init; } = null!;
 }

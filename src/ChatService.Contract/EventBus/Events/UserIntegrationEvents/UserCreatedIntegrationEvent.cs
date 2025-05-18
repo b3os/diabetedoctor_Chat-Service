@@ -2,7 +2,7 @@
 
 public record UserCreatedIntegrationEvent : IntegrationEvent
 {
-    public string UserId { get; init; } = default!;
-    public string FullName { get; init; } = default!;
-    public string Avatar { get; init; } = default!;
+    public string UserId { get; init; } = null!;
+    public string FullName { get; init; } = null!;
+    public string Avatar { get; init; } = null!;
 }

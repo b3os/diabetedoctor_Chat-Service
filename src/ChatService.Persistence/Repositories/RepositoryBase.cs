@@ -40,11 +40,11 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
     }
 
     public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> filter,
-        ProjectionDefinition<TEntity> projection = default!, CancellationToken cancellationToken = default)
+        ProjectionDefinition<TEntity> projection = null!, CancellationToken cancellationToken = default)
     {
         return projection switch
         {
-            default(ProjectionDefinition<TEntity>) => await DbSet.Find(filter).FirstOrDefaultAsync(cancellationToken),
+            null => await DbSet.Find(filter).FirstOrDefaultAsync(cancellationToken),
             _ => await DbSet.Find(filter).Project<TEntity>(projection).FirstOrDefaultAsync(cancellationToken)
         };
     }
@@ -69,7 +69,7 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
         await DbSet.InsertManyAsync(session: session, entities, cancellationToken: cancellationToken);
     }
 
-    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, UpdateDefinition<TEntity> update, UpdateOptions<TEntity> options = default!, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> UpdateOneAsync(IClientSessionHandle session, ObjectId id, UpdateDefinition<TEntity> update, UpdateOptions<TEntity> options = null!, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TEntity>.Filter.Eq(x => x.Id, id);
         var finalUpdate = Builders<TEntity>.Update.Combine(update, Builders<TEntity>.Update.Set(x => x.ModifiedDate, CurrentTimeService.GetCurrentTime()));

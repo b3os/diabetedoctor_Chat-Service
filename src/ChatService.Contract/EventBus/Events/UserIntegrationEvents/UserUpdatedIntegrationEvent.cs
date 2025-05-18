@@ -2,7 +2,7 @@
 
 public record UserUpdatedIntegrationEvent : IntegrationEvent
 {
-    public string UserId { get; set; } = default!;
-    public string FullName { get; set; } = default!;
-    public string Avatar { get; set; } = default!;
+    public string UserId { get; set; } = null!;
+    public string FullName { get; set; } = null!;
+    public string Avatar { get; set; } = null!;
 }

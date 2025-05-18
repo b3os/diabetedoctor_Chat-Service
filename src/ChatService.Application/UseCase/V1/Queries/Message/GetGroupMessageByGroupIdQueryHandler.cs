@@ -13,7 +13,7 @@ public class GetGroupMessageByGroupIdQueryHandler(IMongoDbContext mongoDbContext
     public async Task<Result<GetGroupMessageResponse>> Handle(GetGroupMessageByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 10;
+        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 25;
 
         if (!ObjectId.TryParse(request.GroupId, out var groupId))
         {

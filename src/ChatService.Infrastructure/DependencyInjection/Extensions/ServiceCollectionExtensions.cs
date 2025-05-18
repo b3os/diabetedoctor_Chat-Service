@@ -27,6 +27,8 @@ public static class ServiceCollectionExtensions
 
     private static void AddAbly(this IHostApplicationBuilder builder)
     {
+        builder.AddAblyRealtime();
+        builder.AddAblyEventPublisher();
         builder.AddAblySubscriber();
     }
     

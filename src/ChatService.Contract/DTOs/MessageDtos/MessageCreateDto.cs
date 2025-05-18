@@ -4,6 +4,7 @@ namespace ChatService.Contract.DTOs.MessageDtos;
 
 public record MessageCreateDto
 {
-    public string? Content {get; init;} = default!;
+    public string? Content {get; init;} = null!;
     public MessageTypeDto Type {get; init;}
+    public HashSet<string> ReadBy { get; init; } = [];
 }

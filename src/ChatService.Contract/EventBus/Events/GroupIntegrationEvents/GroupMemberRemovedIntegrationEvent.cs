@@ -2,6 +2,6 @@
 
 public record GroupMemberRemovedIntegrationEvent : IntegrationEvent
 {
-    public string GroupId { get; init; } = default!;
-    public string MemberId { get; init; } = default!;
+    public string GroupId { get; init; } = null!;
+    public string MemberId { get; init; } = null!;
 };

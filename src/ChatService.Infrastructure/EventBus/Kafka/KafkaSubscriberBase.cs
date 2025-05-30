@@ -14,21 +14,21 @@ public abstract class KafkaSubscriberBase : BackgroundService
     protected readonly ILogger<KafkaSubscriberBase> Logger;
     private readonly string _topicName;
     
-    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSetting, string topicName, string groupId)
+    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSettings, string topicName, string groupId)
     {
         Logger = logger;
         _topicName = topicName;
 
         var consumerConfig = new ConsumerConfig
         {
-            BootstrapServers = kafkaSetting.Value.BootstrapServer,
+            BootstrapServers = kafkaSettings.Value.BootstrapServer,
             GroupId = groupId,
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = true,
-            //SaslUsername = configuration["Kafka:SaslUsername"],
-            //SaslPassword = configuration["Kafka:SaslPassword"],
-            // SecurityProtocol = SecurityProtocol.SaslSsl,
-            //SaslMechanism = SaslMechanism.Plain,
+            SaslUsername = kafkaSettings.Value.SaslUsername,
+            SaslPassword = kafkaSettings.Value.SaslPassword,
+            SecurityProtocol = SecurityProtocol.SaslPlaintext,
+            SaslMechanism = SaslMechanism.Plain,
         };
         _consumer = new ConsumerBuilder<string, EventEnvelope>(consumerConfig)
             .SetValueDeserializer(new EventEnvelopeDeserializer()).Build();

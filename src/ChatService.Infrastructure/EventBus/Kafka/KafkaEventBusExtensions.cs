@@ -11,28 +11,28 @@ public static class KafkaEventBusExtensions
     {
         builder.Services.AddSingleton<IProducer<string, EventEnvelope>>(sp =>
         {
-            var kafkaSetting = sp.GetRequiredService<IOptions<KafkaSetting>>();
+            var kafkaSettings = sp.GetRequiredService<IOptions<KafkaSetting>>();
             
-            if (kafkaSetting?.Value is null)
+            if (kafkaSettings?.Value is null)
             {
                 throw new InvalidOperationException("Kafka configuration is missing.");
             }
 
             var producerConfig = new ProducerConfig
             {
-                BootstrapServers = kafkaSetting.Value.BootstrapServer,
+                BootstrapServers = kafkaSettings.Value.BootstrapServer,
                 Acks = Acks.All,
                 MessageSendMaxRetries = 3,
                 CompressionType = CompressionType.Gzip,
                 // LingerMs = 0,
                 MessageTimeoutMs = 10000, // Maximum time may use to deliver a message (including retries)
                 RequestTimeoutMs = 10000, // This value is only enforced by the broker and relies on
-                RetryBackoffMs = 1000 // The backoff time in milliseconds before retrying a protocol request
+                RetryBackoffMs = 1000, // The backoff time in milliseconds before retrying a protocol request
                 // Nếu cần SASL:
-                // SaslUsername = kafkaSetting.Value.SaslUsername,
-                // SaslPassword = kafkaSetting.Value.SaslPassword,
-                // SecurityProtocol = SecurityProtocol.SaslPlaintext,
-                // SaslMechanism = SaslMechanism.Plain
+                SaslUsername = kafkaSettings.Value.SaslUsername,
+                SaslPassword = kafkaSettings.Value.SaslPassword,
+                SecurityProtocol = SecurityProtocol.SaslPlaintext,
+                SaslMechanism = SaslMechanism.Plain
             };
 
             return new ProducerBuilder<string, EventEnvelope>(producerConfig)

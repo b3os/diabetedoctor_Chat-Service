@@ -1,5 +1,6 @@
-﻿using ChatService.Contract.Common.Constraint;
-using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
+﻿using ChatService.Application.Helpers;
+using ChatService.Contract.Common.Constraint;
+using ChatService.Domain.Abstractions.Repositories;
 
 namespace ChatService.Infrastructure.EventBus.Kafka.EventSubscribers;
 
@@ -8,9 +9,10 @@ public class UserSubscriber : KafkaSubscriberBase
     private readonly IntegrationEventFactory _integrationEventFactory;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public UserSubscriber(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSetting,
-        IntegrationEventFactory integrationEventFactory, IServiceScopeFactory serviceScopeFactory) : base(logger,
-        kafkaSetting, KafkaTopicConstraints.UserTopic, KafkaTopicConstraints.ChatServiceUserConsumerGroup)
+    public UserSubscriber(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSettings> kafkaSettings,
+        IntegrationEventFactory integrationEventFactory, IServiceScopeFactory serviceScopeFactory)
+        : base(logger, kafkaSettings, KafkaTopicConstraints.UserTopic,
+            KafkaTopicConstraints.ChatServiceUserConsumerGroup)
     {
         _integrationEventFactory = integrationEventFactory;
         _serviceScopeFactory = serviceScopeFactory;
@@ -18,23 +20,48 @@ public class UserSubscriber : KafkaSubscriberBase
 
     protected override async Task ProcessMessageAsync(EventEnvelope messageValue, CancellationToken stoppingToken)
     {
-        try
+        const int maxRetries = 1;
+        var retries = 0;
+
+        var @event = _integrationEventFactory.CreateEvent(messageValue.EventTypeName, messageValue.Message);
+        if (@event is null)
         {
-            var @event = _integrationEventFactory.CreateEvent(messageValue.EventTypeName, messageValue.Message);
-            if (@event is not null)
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                await mediator.Publish(@event, stoppingToken);
-            }
-            else
-            {
-                Logger.LogWarning("Event type not found: {t}", messageValue.EventTypeName);
-            }
+            Logger.LogWarning("Event type not found: {t}", messageValue.EventTypeName);
+            return;
         }
-        catch (Exception e)
+        
+        using var scope = _serviceScopeFactory.CreateScope();
+        
+        while (retries < maxRetries)
         {
-            Logger.LogError(e, "An error occurred while processing the message.");
+            try
+            {
+                var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(@event.GetType());
+                var handler = scope.ServiceProvider.GetRequiredService(handlerType);
+                await ((dynamic)handler).Handle((dynamic)@event, stoppingToken);
+                // var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                // await mediator.Publish(@event, stoppingToken);
+                return;
+            }
+            catch (Exception ex)
+            {
+                retries++;
+                Logger.LogError(ex, "An error occurred while processing the message.");
+
+                if (retries < maxRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retries)), stoppingToken);
+                }
+                else
+                {
+                    Logger.LogError(ex, "Max retries exceeded. Sending to retry topic: {eventType}",
+                        messageValue.EventTypeName);
+                    var outboxRepo = scope.ServiceProvider.GetRequiredService<IOutboxEventRepository>();
+                    var outboxEvent = OutboxEventExtension.ToOutboxEvent(KafkaTopicConstraints.RetryTopic, @event);
+                    outboxEvent.IncreaseRetryCount();
+                    await outboxRepo.SaveAsync(outboxEvent, stoppingToken);
+                }
+            }
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using ChatService.Contract.DTOs.MediaDTOs;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.UserDTOs;
 

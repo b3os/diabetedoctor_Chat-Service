@@ -1,13 +1,12 @@
 ﻿using ChatService.Contract.DTOs.EnumDtos;
-using ChatService.Contract.DTOs.MessageDtos;
 
 namespace ChatService.Contract.Services.Message.Commands;
 
-public record CreateMessageCommand : ICommand
+public record CreateMessageCommand : ICommand<Response>
 {
-    public ObjectId GroupId { get; init; }
+    public ObjectId ConversationId { get; init; }
+    public ConversationTypeDto ConversationType { get; init; }
     public string UserId { get; init; } = null!;
     public string? Content {get; init;}
-    public MessageTypeDto Type {get; init;}
-    public HashSet<string> ReadBy { get; init; } = [];
+    public MessageTypeDto MessageType {get; init;}
 }

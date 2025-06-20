@@ -1,9 +1,4 @@
-﻿using ChatService.Contract.Services.User;
-using ChatService.Contract.Services.User.Commands;
-using ChatService.Domain.Abstractions;
-using ChatService.Domain.Abstractions.Repositories;
-using ChatService.Domain.ValueObjects;
-using MongoDB.Bson;
+﻿using ChatService.Contract.Services.User.Commands;
 
 namespace ChatService.Application.UseCase.V1.Commands.User;
 
@@ -13,19 +8,7 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
     public async Task<Result> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         var user = MapToUser(request);
-        
-        await unitOfWork.StartTransactionAsync(cancellationToken);
-        try
-        {
-            await userRepository.CreateAsync(unitOfWork.ClientSession, user, cancellationToken);
-            await unitOfWork.CommitTransactionAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            await unitOfWork.AbortTransactionAsync(cancellationToken);
-            throw;
-        }
-        
+        await userRepository.CreateAsync(unitOfWork.ClientSession, user, cancellationToken);
         return Result.Success();
     }
 

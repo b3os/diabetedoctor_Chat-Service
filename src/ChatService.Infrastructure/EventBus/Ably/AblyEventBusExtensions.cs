@@ -1,7 +1,5 @@
-﻿using ChatService.Contract.Common.Constraint;
-using ChatService.Infrastructure.EventBus.Ably.EventSubscribers;
+﻿using ChatService.Infrastructure.EventBus.Ably.EventSubscribers;
 using IO.Ably;
-using IO.Ably.Realtime;
 
 namespace ChatService.Infrastructure.EventBus.Ably;
 

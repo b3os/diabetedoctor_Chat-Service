@@ -1,8 +1,4 @@
-﻿using System.Linq;
-using ChatService.Web.DependencyInjection.Options;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
+﻿using ChatService.Web.DependencyInjection.Options;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;

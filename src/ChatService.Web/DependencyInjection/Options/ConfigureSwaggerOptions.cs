@@ -1,6 +1,4 @@
-﻿using System;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Swashbuckle.AspNetCore.SwaggerGen;

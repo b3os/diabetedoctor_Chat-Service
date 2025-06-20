@@ -1,6 +1,4 @@
-﻿using ChatService.Application;
-using ChatService.Application.Behaviors;
-using ChatService.Application.DependencyInjection.Extensions;
+﻿using ChatService.Application.Behaviors;
 
 namespace ChatService.Application.DependencyInjection.Extensions;
 

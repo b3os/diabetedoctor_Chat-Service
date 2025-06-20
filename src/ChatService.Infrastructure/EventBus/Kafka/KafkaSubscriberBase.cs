@@ -1,12 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ChatService.Contract.Settings;
-
-namespace ChatService.Infrastructure.EventBus.Kafka;
+﻿namespace ChatService.Infrastructure.EventBus.Kafka;
 
 public abstract class KafkaSubscriberBase : BackgroundService
 {
@@ -14,7 +6,7 @@ public abstract class KafkaSubscriberBase : BackgroundService
     protected readonly ILogger<KafkaSubscriberBase> Logger;
     private readonly string _topicName;
     
-    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSetting> kafkaSettings, string topicName, string groupId)
+    protected KafkaSubscriberBase(ILogger<KafkaSubscriberBase> logger, IOptions<KafkaSettings> kafkaSettings, string topicName, string groupId)
     {
         Logger = logger;
         _topicName = topicName;
@@ -24,7 +16,7 @@ public abstract class KafkaSubscriberBase : BackgroundService
             BootstrapServers = kafkaSettings.Value.BootstrapServer,
             GroupId = groupId,
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = true,
+            EnableAutoCommit = false,
             SaslUsername = kafkaSettings.Value.SaslUsername,
             SaslPassword = kafkaSettings.Value.SaslPassword,
             SecurityProtocol = SecurityProtocol.SaslPlaintext,
@@ -52,9 +44,8 @@ public abstract class KafkaSubscriberBase : BackgroundService
 
                         if (consumeResult != null)
                         {
-                            _ = Task.Run(
-                                () => ProcessMessageAsync(consumeResult.Message.Value, stoppingToken),
-                                stoppingToken);
+                            await ProcessMessageAsync(consumeResult.Message.Value, stoppingToken);
+                            _consumer.Commit(consumeResult);
                         }
                         else
                         {

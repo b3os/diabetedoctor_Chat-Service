@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace ChatService.Infrastructure;
+﻿namespace ChatService.Infrastructure;
 
 public class AssemblyReference
 {

@@ -2,7 +2,7 @@
 
 public record CreateUserCommand : ICommand
 {
-    public required string Id { get; init; }
-    public required string FullName { get; init; }
+    public string Id { get; init; } = null!;
+    public string FullName { get; init; } = null!;
     public string? Avatar { get; init; }
 }

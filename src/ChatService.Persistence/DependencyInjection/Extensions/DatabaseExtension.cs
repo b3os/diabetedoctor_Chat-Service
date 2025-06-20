@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using ChatService.Persistence.DependencyInjection.Options;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 
 namespace ChatService.Persistence.DependencyInjection.Extensions;
 

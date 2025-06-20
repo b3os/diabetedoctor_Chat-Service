@@ -2,10 +2,10 @@
 
 public sealed class ValidationResult : Result, IValidationResult
 {
-    private ValidationResult(Error[] errros)
-        : base(false, IValidationResult.ValidationError) => Errors = errros;
+    private ValidationResult(Error[] errors)
+        : base(false, IValidationResult.ValidationError) => Errors = errors;
 
     public Error[] Errors { get; }
 
-    public static ValidationResult WithErrors(Error[] errros) => new(errros);
+    public static ValidationResult WithErrors(Error[] errors) => new(errors);
 }

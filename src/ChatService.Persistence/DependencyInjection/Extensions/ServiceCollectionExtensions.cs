@@ -1,4 +1,3 @@
-using ChatService.Domain.Abstractions;
 using ChatService.Persistence.Repositories;
 using Microsoft.Extensions.Hosting;
 
@@ -14,10 +13,12 @@ public static class ServiceCollectionExtensions
         
         builder.Services
             .AddScoped<IUnitOfWork, UnitOfWork>()
-            .AddScoped<IGroupRepository, GroupRepository>()
+            .AddScoped<IConversationRepository, ConversationRepository>()
             .AddScoped<IUserRepository, UserRepository>()
             .AddScoped<IMessageRepository, MessageRepository>()
-            .AddScoped<IMessageReadStatusRepository, MessageReadStatusRepository>();
+            .AddScoped<IParticipantRepository, ParticipantRepository>()
+            .AddScoped<IOutboxEventRepository, OutboxEventRepository>()
+            .AddScoped<IOutBoxEventConsumerRepository, OutBoxEventConsumerRepository>();
     }
 
     private static void AddConfigurationService(this IHostApplicationBuilder builder, IConfiguration configuration)

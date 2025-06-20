@@ -10,5 +10,9 @@
         <ProjectReference Include="..\ChatService.Application\ChatService.Application.csproj" />
         <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="EventBus\Ably\EventHandlers\" />
+    </ItemGroup>
     
 </Project>

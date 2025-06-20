@@ -16,4 +16,8 @@
         <ProjectReference Include="..\ChatService.Contract\ChatService.Contract.csproj" />
     </ItemGroup>
     
+    <ItemGroup>
+      <Folder Include="UseCase\V1\Commands\Participant\" />
+    </ItemGroup>
+    
 </Project>

@@ -15,8 +15,15 @@
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.8.0" />
         <PackageReference Include="Mapster" Version="7.4.0" />
         <PackageReference Include="MediatR" Version="12.4.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="LinqKit" Version="1.3.8" />
         <PackageReference Include="MongoDB.Driver" Version="3.2.0" />
+        <PackageReference Include="Scrutor" Version="6.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Services\Participant\Commands\" />
+      <Folder Include="Services\Message\DomainEvents\" />
     </ItemGroup>
 </Project>

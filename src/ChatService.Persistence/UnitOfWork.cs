@@ -1,6 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-
-namespace ChatService.Persistence;
+﻿namespace ChatService.Persistence;
 
 public class UnitOfWork(IMongoDbContext context) : IUnitOfWork
 {

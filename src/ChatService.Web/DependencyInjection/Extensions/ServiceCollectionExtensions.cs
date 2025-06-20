@@ -1,12 +1,8 @@
 ﻿using System.Text;
-using System.Text.Json;
 using ChatService.Contract.Settings;
 using ChatService.Presentation.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ChatService.Web.DependencyInjection.Extensions;
@@ -16,10 +12,11 @@ public static class ServiceCollectionExtensions
     private static void AddConfigurationAppSetting(this IHostApplicationBuilder builder)
     {
         builder.Services
-            .Configure<KafkaSetting>(builder.Configuration.GetSection(KafkaSetting.SectionName))
+            .Configure<KafkaSettings>(builder.Configuration.GetSection(KafkaSettings.SectionName))
             .Configure<MongoDbSetting>(builder.Configuration.GetSection(MongoDbSetting.SectionName))
             .Configure<AuthSetting>(builder.Configuration.GetSection(AuthSetting.SectionName))
-            .Configure<AblySetting>(builder.Configuration.GetSection(AblySetting.SectionName));
+            .Configure<AblySetting>(builder.Configuration.GetSection(AblySetting.SectionName))
+            .Configure<AppDefaultSettings>(builder.Configuration.GetSection(AppDefaultSettings.SectionName));
     }
 
     private static void AddAuthenticationAndAuthorization(this IHostApplicationBuilder builder)

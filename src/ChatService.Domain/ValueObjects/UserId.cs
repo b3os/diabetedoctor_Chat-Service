@@ -13,8 +13,8 @@ public record UserId
         return new UserId {Id = id};
     }
 
-    public static List<UserId> All(IEnumerable<string> ids)
-    {
-        return ids.Select(Of).ToList();
-    }
+    // public static List<UserId> All(IEnumerable<string> ids)
+    // {
+    //     return ids.Select(Of).ToList();
+    // }
 }

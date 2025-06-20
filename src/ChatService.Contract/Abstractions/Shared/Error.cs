@@ -1,22 +1,42 @@
-﻿using System;
-
-namespace ChatService.Contract.Abstractions.Shared;
+﻿namespace ChatService.Contract.Abstractions.Shared;
 
 public class Error : IEquatable<Error>
 {
-    public static readonly Error None = new(string.Empty, string.Empty);
-    public static readonly Error NullValue = new("Error.NullValue", "The specified result value is null.");
-
-    public Error(string code, string message)
+    public Error(string code, object description, ErrorType errorType)
     {
         Code = code;
-        Message = message;
+        Description = description;
+        ErrorType = errorType;
     }
 
     public string Code { get; }
 
-    public string Message { get; }
+    public object Description { get; }
+    
+    public ErrorType ErrorType { get; }
+    
+    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.Failure);
 
+    public static readonly Error NullValue = new("Error.NullValue", "The specified result value is null.", ErrorType.Failure);
+    
+    public static Error Failure(string code, string description) =>
+        new(code, description, ErrorType.Failure);
+    
+    public static Error Validation(string code, string description) =>
+        new(code, description, ErrorType.Validation);
+    
+    public static Error NotFound(string code, string description) =>
+        new(code, description, ErrorType.NotFound);
+    
+    public static Error Conflict(string code, string description) =>
+        new(code, description, ErrorType.Conflict);
+    
+    public static Error Conflict(string code, object description) =>
+        new(code, description, ErrorType.Conflict);
+    
+    public static Error Forbidden(string code, string description) =>
+        new(code, description, ErrorType.Forbidden);
+    
     public static implicit operator string(Error error) => error.Code;
 
     public static bool operator ==(Error? a, Error? b)
@@ -43,12 +63,21 @@ public class Error : IEquatable<Error>
             return false;
         }
 
-        return Code == other.Code && Message == other.Message;
+        return Code == other.Code && Description == other.Description;
     }
 
     public override bool Equals(object? obj) => obj is Error error && Equals(error);
 
-    public override int GetHashCode() => HashCode.Combine(Code, Message);
+    public override int GetHashCode() => HashCode.Combine(Code, Description);
 
     public override string ToString() => Code;
+}
+
+public enum ErrorType
+{
+    Failure = 0,
+    Validation = 1,
+    NotFound = 2,
+    Conflict = 3,
+    Forbidden = 4
 }

@@ -3,4 +3,6 @@ global using ChatService.Domain.Models;
 global using System.Linq.Expressions;
 global using MongoDB.Driver;
 global using ChatService.Contract.Helpers;
+global using ChatService.Contract.Abstractions.Message;
+global using ChatService.Domain.ValueObjects;
 

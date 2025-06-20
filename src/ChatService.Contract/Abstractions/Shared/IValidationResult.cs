@@ -4,6 +4,6 @@ public interface IValidationResult
 {
     public static readonly Error ValidationError = new
         ("ValidationError",
-        "A Validation problem occured.");
+        "A Validation problem occured.", ErrorType.Validation);
     Error[] Errors { get; }
 }

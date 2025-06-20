@@ -1,6 +1,4 @@
-﻿using ChatService.Contract.Abstractions.Shared;
-
-namespace ChatService.Contract.Abstractions.Message;
+﻿namespace ChatService.Contract.Abstractions.Message;
 
 public interface ICommand : IRequest<Result>
 {

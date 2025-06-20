@@ -1,0 +1,11 @@
+﻿global using ChatService.Presentation.Extensions;
+global using Asp.Versioning.Builder;
+global using ChatService.Contract.DTOs.ConversationDtos;
+global using ChatService.Contract.Infrastructure.Services;
+global using ChatService.Contract.Services.Conversation.Commands;
+global using ChatService.Presentation.Extensions;
+global using MediatR;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
+global using MongoDB.Bson;

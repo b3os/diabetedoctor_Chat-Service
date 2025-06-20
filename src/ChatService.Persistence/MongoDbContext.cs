@@ -1,6 +1,3 @@
-using System.Data.Entity;
-using ChatService.Domain.Abstractions;
-
 namespace ChatService.Persistence;
 
 public class MongoDbContext : IMongoDbContext
@@ -15,6 +12,8 @@ public class MongoDbContext : IMongoDbContext
     public MongoClient Client { get; }    
     public IMongoCollection<User> Users => Database.GetCollection<User>(nameof(User));    
     public IMongoCollection<Message> Messages => Database.GetCollection<Message>(nameof(Message));
-    public IMongoCollection<Group> Groups => Database.GetCollection<Group>(nameof(Group));
-    public IMongoCollection<MessageReadStatus> MessageReadStatuses => Database.GetCollection<MessageReadStatus>(nameof(MessageReadStatus));
+    public IMongoCollection<Conversation> Conversations => Database.GetCollection<Conversation>(nameof(Conversation));
+    public IMongoCollection<Participant> Participants => Database.GetCollection<Participant>(nameof(Participant));
+    public IMongoCollection<OutboxEvent> OutboxEvents => Database.GetCollection<OutboxEvent>(nameof(OutboxEvent));
+    public IMongoCollection<OutboxEventConsumer> OutboxEventsConsumers => Database.GetCollection<OutboxEventConsumer>(nameof(OutboxEventConsumer));
 }

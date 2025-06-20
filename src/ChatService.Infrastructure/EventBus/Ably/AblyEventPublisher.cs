@@ -1,5 +1,4 @@
 ﻿using IO.Ably;
-using IO.Ably.Realtime;
 
 namespace ChatService.Infrastructure.EventBus.Ably;
 
@@ -14,7 +13,7 @@ public class AblyEventPublisher(AblyRealtime realtime, ILogger logger) : IAblyEv
         {
             var channel = realtime.Channels.Get(channelName);
             await channel.PublishAsync(eventName, new Message<string, EventEnvelope> { Key = @event.EventId.ToString(), 
-                Value = new EventEnvelope(typeof(TEvent), json)}
+                Value = new EventEnvelope(typeof(TEvent), json, 0)}
             );
             
             logger.LogInformation("Published event {@event}", @event.EventId);

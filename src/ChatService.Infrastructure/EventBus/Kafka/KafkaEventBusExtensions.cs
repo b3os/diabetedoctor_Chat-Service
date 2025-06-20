@@ -1,6 +1,4 @@
-﻿using System;
-using ChatService.Infrastructure.EventBus.Kafka.EventSubscribers;
-using ChatService.Contract.Settings;
+﻿using ChatService.Infrastructure.EventBus.Kafka.EventSubscribers;
 
 namespace ChatService.Infrastructure.EventBus.Kafka;
 
@@ -11,7 +9,7 @@ public static class KafkaEventBusExtensions
     {
         builder.Services.AddSingleton<IProducer<string, EventEnvelope>>(sp =>
         {
-            var kafkaSettings = sp.GetRequiredService<IOptions<KafkaSetting>>();
+            var kafkaSettings = sp.GetRequiredService<IOptions<KafkaSettings>>();
             
             if (kafkaSettings?.Value is null)
             {
@@ -43,15 +41,13 @@ public static class KafkaEventBusExtensions
     
     public static void AddKafkaEventPublisher(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddTransient<IEventPublisher>(services => new KafkaEventPublisher(
-            services.GetRequiredService<IProducer<string, EventEnvelope>>(),
-            services.GetRequiredService<ILoggerFactory>().CreateLogger("KafkaEventPublisher")
-        ));
+        builder.Services.AddSingleton<IEventPublisher, KafkaEventPublisher>();
     }
     
     public static void AddKafkaConsumer(this IHostApplicationBuilder builder)
     {
         builder.Services.AddHostedService<UserSubscriber>();
+        builder.Services.AddHostedService<ChatSubscriber>();
     }
     
     private class EventEnvelopeSerializer : ISerializer<EventEnvelope>

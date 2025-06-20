@@ -7,6 +7,9 @@ public interface IMongoDbContext
     
     IMongoCollection<User> Users { get; }
     IMongoCollection<Message> Messages { get; }
-    IMongoCollection<Group> Groups { get; }
-    IMongoCollection<MessageReadStatus> MessageReadStatuses { get; }
+    IMongoCollection<Conversation> Conversations { get; }
+    IMongoCollection<Participant> Participants { get; }
+    IMongoCollection<OutboxEvent> OutboxEvents { get; }
+    IMongoCollection<OutboxEventConsumer> OutboxEventsConsumers { get; }
+    
 }

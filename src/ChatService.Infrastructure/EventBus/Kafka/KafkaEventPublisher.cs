@@ -1,20 +1,20 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿namespace ChatService.Infrastructure.EventBus.Kafka;
 
-namespace ChatService.Infrastructure.EventBus.Kafka;
-
-public class KafkaEventPublisher(IProducer<string, EventEnvelope> producer, ILogger logger) : IEventPublisher
+public class KafkaEventPublisher(IProducer<string, EventEnvelope> producer, ILogger<KafkaEventPublisher> logger)
+    : IEventPublisher
 {
-    public async Task PublishAsync<TEvent>(string? topic, TEvent @event) where TEvent : IntegrationEvent
+    public async Task PublishAsync<TEvent>(string? topic, TEvent @event, int retry, CancellationToken cancellationToken = default) where TEvent : IntegrationEvent
     {
-        var json = JsonSerializer.Serialize(@event);
-        logger.LogInformation("Publishing event {type} to topic {topic}: {event}", @event.GetType().Name, topic, json);
+        var type = @event.GetType();
+        var json = JsonSerializer.Serialize(@event, type);
+        logger.LogInformation("Publishing event {type} to topic {topic}: {event}", type.Name, topic, json);
         
         try
         {
-            await producer.ProduceAsync(topic, new Message<string, EventEnvelope> { Key = @event.EventId.ToString(), 
-                Value = new EventEnvelope(typeof(TEvent), json) }
-            );
+            await producer.ProduceAsync(topic, 
+                new Message<string, EventEnvelope> { Key = @event.EventId.ToString(), 
+                Value = new EventEnvelope(type, json, retry) }, 
+                cancellationToken);
 
             logger.LogInformation("Published event {@event}", @event.EventId);
         }

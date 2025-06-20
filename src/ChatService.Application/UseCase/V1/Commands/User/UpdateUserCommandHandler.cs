@@ -1,9 +1,4 @@
-﻿using ChatService.Contract.Services.User;
-using ChatService.Contract.Services.User.Commands;
-using ChatService.Domain.Abstractions;
-using ChatService.Domain.Abstractions.Repositories;
-using ChatService.Domain.ValueObjects;
-using MongoDB.Driver;
+﻿using ChatService.Contract.Services.User.Commands;
 
 namespace ChatService.Application.UseCase.V1.Commands.User;
 
@@ -20,18 +15,9 @@ public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
 
         user.Modify(request.FullName, string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of(request.Avatar));
         
-        await unitOfWork.StartTransactionAsync(cancellationToken);
-        try
-        {
-            await userRepository.ReplaceOneAsync(unitOfWork.ClientSession, user, cancellationToken);
-            await unitOfWork.CommitTransactionAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            await unitOfWork.AbortTransactionAsync(cancellationToken);
-            throw;
-        }
-        
+        await userRepository.ReplaceOneAsync(unitOfWork.ClientSession, user, cancellationToken);
+        await unitOfWork.CommitTransactionAsync(cancellationToken);
+            
         return Result.Success();
     }
 }

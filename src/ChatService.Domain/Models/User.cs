@@ -1,19 +1,20 @@
-﻿using System;
-using ChatService.Contract.Helpers;
-using ChatService.Domain.Abstractions;
-using ChatService.Domain.ValueObjects;
+﻿using ChatService.Domain.Abstractions;
+using ChatService.Domain.Enums;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Domain.Models;
 
+[BsonIgnoreExtraElements]
 public class User : DomainEntity<ObjectId>
 {
     [BsonElement("user_id")]
     public UserId UserId { get; private set; } = null!;
-    [BsonElement("fullname")]
-    public string Fullname { get; private set; } = null!;
+    [BsonElement("full_name")]
+    public string FullName { get; private set; } = null!;
     [BsonElement("avatar")]
     public Image Avatar { get; private set; } = null!;
+    [BsonElement("role")]
+    public RoleEnum Role { get; private set; } = default!;
 
     public static User Create(ObjectId id, UserId userId, string fullname, Image avatar)
     {
@@ -22,7 +23,7 @@ public class User : DomainEntity<ObjectId>
             Id = id,
             UserId = userId,
             Avatar = avatar,
-            Fullname = fullname,
+            FullName = fullname,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
@@ -33,9 +34,9 @@ public class User : DomainEntity<ObjectId>
     {
         var isChanged = false;
         
-        if (!string.IsNullOrWhiteSpace(fullname) && !fullname.Equals(Fullname))
+        if (!string.IsNullOrWhiteSpace(fullname) && !fullname.Equals(FullName))
         {
-            Fullname = fullname;
+            FullName = fullname;
             isChanged = true;
         }
         

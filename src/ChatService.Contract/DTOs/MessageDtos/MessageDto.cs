@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.UserDTOs;
-using MongoDB.Bson;
+﻿using ChatService.Contract.DTOs.ParticipantDtos;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.MessageDtos;
@@ -8,7 +7,6 @@ namespace ChatService.Contract.DTOs.MessageDtos;
 [BsonIgnoreExtraElements]
 public class MessageDto
 {
-    [BsonElement("_id")]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
     
@@ -21,9 +19,6 @@ public class MessageDto
     [BsonElement("created_date")]
     public DateTimeOffset CreatedDate { get; set; } = default!;
     
-    [BsonElement("is_read")]
-    public bool IsRead { get; set; }
-    
-    [BsonElement("user")]
-    public UserDto User { get; set; } = null!;
+    [BsonElement("participant_info")]
+    public ParticipantDto Participant { get; set; } = null!;
 }

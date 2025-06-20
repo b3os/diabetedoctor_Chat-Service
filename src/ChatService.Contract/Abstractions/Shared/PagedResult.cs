@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ChatService.Contract.Abstractions.Shared;
 
 public class PagedResult<T>

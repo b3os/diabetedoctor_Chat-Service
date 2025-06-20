@@ -1,14 +1,9 @@
 ﻿namespace ChatService.Contract.Abstractions.Shared;
 public class Result
 {
-    protected internal Result(bool isSuccess, Error error)
+    protected Result(bool isSuccess, Error error)
     {
-        if (isSuccess && error != Error.None)
-        {
-            throw new InvalidOperationException();
-        }
-
-        if (!isSuccess && error == Error.None)
+        if (isSuccess && error != Error.None || !isSuccess && error == Error.None)
         {
             throw new InvalidOperationException();
         }
@@ -33,7 +28,4 @@ public class Result
 
     public static Result<TValue> Failure<TValue>(Error error) =>
         new(default, false, error);
-
-    public static Result<TValue> Create<TValue>(TValue? value) =>
-        value is not null ? Success(value) : Failure<TValue>(Error.NullValue);
 }

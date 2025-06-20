@@ -1,16 +1,15 @@
 ﻿using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
-using ChatService.Contract.Services.User;
 using ChatService.Contract.Services.User.Commands;
 
 namespace ChatService.Infrastructure.EventBus.Kafka.EventHandlers;
 
-public class UserIntegrationEventHandler(ISender sender, ILogger<UserIntegrationEventHandler> logger) :
+public sealed class UserIntegrationEventHandler(ISender sender, ILogger<UserIntegrationEventHandler> logger) :
     IIntegrationEventHandler<UserCreatedIntegrationEvent>,
     IIntegrationEventHandler<UserUpdatedIntegrationEvent>
 {
     public async Task Handle(UserCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling user created event: {userId}", notification.UserId);
+        logger.LogInformation("Handling user created event: {eventId}", notification.EventId);
         
         if (string.IsNullOrWhiteSpace(notification.UserId))
         {
@@ -23,7 +22,7 @@ public class UserIntegrationEventHandler(ISender sender, ILogger<UserIntegration
 
     public async Task Handle(UserUpdatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling user updated event: {userId}", notification.UserId);
+        logger.LogInformation("Handling user updated event: {eventId}", notification.EventId);
         
         if (string.IsNullOrWhiteSpace(notification.UserId))
         {

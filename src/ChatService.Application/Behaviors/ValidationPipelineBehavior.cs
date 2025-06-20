@@ -1,6 +1,4 @@
-﻿using MediatR;
-
-namespace ChatService.Application.Behaviors;
+﻿namespace ChatService.Application.Behaviors;
 
 public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
@@ -21,17 +19,18 @@ public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior
             return await next();
         }
 
-        Error[] errors = _validators
+        var errors = _validators
             .Select(validator => validator.Validate(request))
             .SelectMany(validationResult => validationResult.Errors)
             .Where(validationFailure => validationFailure is not null)
             .Select(failure => new Error(
                 failure.PropertyName,
-                failure.ErrorMessage))
+                failure.ErrorMessage,
+                ErrorType.Validation))
             .Distinct()
             .ToArray();
 
-        if (errors.Any())
+        if (errors.Length != 0)
         {
             return CreateValidationResult<TResponse>(errors);
         }
@@ -47,11 +46,11 @@ public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior
             return (ValidationResult.WithErrors(errors) as TResult)!;
         }
 
-        object validationResult = typeof(ValidationResult<>)
+        var validationResult = typeof(ValidationResult<>)
             .GetGenericTypeDefinition()
             .MakeGenericType(typeof(TResult).GenericTypeArguments[0])
             .GetMethod(nameof(ValidationResult.WithErrors))!
-            .Invoke(null, new object?[] { errors })!;
+            .Invoke(null, [errors])!;
 
         return (TResult)validationResult;
     }

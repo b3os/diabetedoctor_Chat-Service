@@ -32,6 +32,7 @@ public static class ResultExtensions
         static int GetStatusCode(ErrorType errorType) =>
             errorType switch
             {
+                ErrorType.BadRequest => StatusCodes.Status400BadRequest,
                 ErrorType.Validation => StatusCodes.Status400BadRequest, 
                 ErrorType.NotFound => StatusCodes.Status404NotFound,
                 ErrorType.Forbidden => StatusCodes.Status403Forbidden,
@@ -42,6 +43,7 @@ public static class ResultExtensions
         static string GetTitle(ErrorType errorType) =>
             errorType switch
             {
+                ErrorType.BadRequest => "Bad Request",
                 ErrorType.Validation => "Bad Request",
                 ErrorType.NotFound => "Not Found",
                 ErrorType.Forbidden => "Forbidden",
@@ -52,6 +54,7 @@ public static class ResultExtensions
         static string GetType(ErrorType errorType) =>
             errorType switch
             {
+                ErrorType.BadRequest => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
                 ErrorType.Validation => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
                 ErrorType.Forbidden => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3",
                 ErrorType.NotFound => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",

@@ -15,7 +15,10 @@ public class Conversation : DomainEntity<ObjectId>
     public Image Avatar { get; private set; } = null!;
     
     [BsonElement("type")]
-    public ConversationTypeEnum ConversationType { get; private set; }
+    public ConversationType ConversationType { get; private set; }
+    
+    [BsonElement("status")]
+    public ConversationStatus Status { get; private set; }
     
     [BsonElement("members")]
     public List<UserId> Members { get; private set; } = [];
@@ -30,8 +33,9 @@ public class Conversation : DomainEntity<ObjectId>
             Id = id,
             Name = name,
             Avatar = avatar,
-            ConversationType = ConversationTypeEnum.Group,
+            ConversationType = ConversationType.Group,
             Members = members,
+            Status = ConversationStatus.Open,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
@@ -45,15 +49,16 @@ public class Conversation : DomainEntity<ObjectId>
             Id = id,
             Name = name,
             Avatar = avatar,
-            ConversationType = ConversationTypeEnum.Personal,
+            ConversationType = ConversationType.Personal,
             Members = members,
+            Status = ConversationStatus.Open,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
         };
     }
 
-    public Result Modify(string? name, Image? avatar)
+    public Result Modify(string? name)
     {
         var errors = new List<Error>();
         
@@ -65,11 +70,6 @@ public class Conversation : DomainEntity<ObjectId>
             }
     
             Name = name;
-        }
-
-        if (avatar != null)
-        {
-            Avatar = avatar;
         }
         
         return errors.Count > 0 ? ValidationResult.WithErrors(errors.AsEnumerable().ToArray()) : Result.Success();

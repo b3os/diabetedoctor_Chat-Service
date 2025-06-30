@@ -20,5 +20,5 @@ public class MessageDto
     public DateTimeOffset CreatedDate { get; set; } = default!;
     
     [BsonElement("participant_info")]
-    public ParticipantDto Participant { get; set; } = null!;
+    public ParticipantResponseDto ParticipantResponse { get; set; } = null!;
 }

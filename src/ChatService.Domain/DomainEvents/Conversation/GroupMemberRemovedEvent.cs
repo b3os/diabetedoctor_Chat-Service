@@ -1,3 +1,3 @@
 ﻿namespace ChatService.Domain.DomainEvents.Conversation;
 
-public record GroupMemberRemovedEvent(ObjectId ParticipantId) : IDomainEvent;
+public record GroupMemberRemovedEvent(string ConversationId, string MemberId) : IDomainEvent;

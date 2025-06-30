@@ -65,7 +65,7 @@ public class GetMessageByConversationIdQueryHandler(
 
         result.Reverse();
         
-        return Result.Success(new GetMessagesResponse()
+        return Result.Success(new GetMessagesResponse
         {
             Messages =
                 PagedList<MessageDto>.Create(result, 0, pageSize, hasNext ? result[^1].Id : string.Empty, hasNext)
@@ -142,14 +142,7 @@ public class GetMessageByConversationIdQueryHandler(
             { "_id", 1 },
             { "content", 1 },
             { "type", 1 },
-            {
-                "created_date", new BsonDocument("$dateToString", new BsonDocument
-                {
-                    { "format", "%Y-%m-%dT%H:%M:%S.%L%z" },
-                    { "date", "$created_date" },
-                    { "timezone", "+07:00" }
-                })
-            },
+            { "created_date", 1 },
             {
                 "participant_info", new BsonDocument
                 {

@@ -9,11 +9,11 @@ public class OutBoxEventConsumerRepository(IMongoDbContext context) : IOutBoxEve
             builder.Eq(x => x.EventId, eventId),
             builder.Eq(x => x.Name, name)
             );
-        return await context.OutboxEventsConsumers.Find(filter).AnyAsync(cancellationToken); 
+        return await context.OutboxEventConsumers.Find(filter).AnyAsync(cancellationToken); 
     }
 
     public async Task CreateEventAsync(OutboxEventConsumer eventConsumer, CancellationToken cancellationToken = default)
     {
-        await context.OutboxEventsConsumers.InsertOneAsync(eventConsumer, cancellationToken: cancellationToken);
+        await context.OutboxEventConsumers.InsertOneAsync(eventConsumer, cancellationToken: cancellationToken);
     }
 }

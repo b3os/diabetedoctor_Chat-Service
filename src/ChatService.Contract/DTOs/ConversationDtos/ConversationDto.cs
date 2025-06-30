@@ -1,12 +1,11 @@
-﻿using ChatService.Contract.DTOs.MessageDtos;
+﻿using ChatService.Contract.DTOs.EnumDtos;
+using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.DTOs.ParticipantDtos;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.ConversationDtos;
 
-
-[BsonIgnoreExtraElements]
-public record ConversationDto
+public class ConversationDto
 {
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
@@ -15,17 +14,17 @@ public record ConversationDto
     public string Name { get; init; } = null!;
     
     [BsonElement("avatar")]
-    public string Avatar { get; init; } = null!;
+    public ImageDto Avatar { get; init; } = null!;
     
     [BsonElement("type")]
-    public int ConversationType { get; init; }
+    public ConversationTypeEnum ConversationType { get; init; }
     
     [BsonElement("last_message")]
     public MessageDto? Message { get; init; }
     
-    [BsonElement("members")]
-    public IEnumerable<ParticipantDto> Members { get; init; } = [];
-    
     [BsonElement("modified_date")]
     public DateTime ModifiedDate { get; init; }
+    
+    [BsonElement("members")]
+    public IEnumerable<ParticipantDto> Members { get; init; } = [];
 }

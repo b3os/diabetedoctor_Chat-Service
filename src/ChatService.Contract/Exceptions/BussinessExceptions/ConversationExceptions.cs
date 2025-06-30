@@ -18,7 +18,7 @@ public static class ConversationExceptions
 
     // Group Member
     public sealed class GroupMemberAlreadyExistsException() : BadRequestException(
-        ConversationMessage.GroupMemberAlreadyExist.GetMessage().Message, ConversationMessage.GroupMemberAlreadyExist.GetMessage().Code);
+        ConversationMessage.GroupMemberAlreadyExistedOrBanned.GetMessage().Message, ConversationMessage.GroupMemberAlreadyExistedOrBanned.GetMessage().Code);
     
     public sealed class GroupMemberNotExistsException() : NotFoundException(
         ConversationMessage.GroupMemberNotExists.GetMessage().Message, ConversationMessage.GroupMemberNotExists.GetMessage().Code);

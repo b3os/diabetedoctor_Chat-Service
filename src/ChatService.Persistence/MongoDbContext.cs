@@ -15,5 +15,5 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<Conversation> Conversations => Database.GetCollection<Conversation>(nameof(Conversation));
     public IMongoCollection<Participant> Participants => Database.GetCollection<Participant>(nameof(Participant));
     public IMongoCollection<OutboxEvent> OutboxEvents => Database.GetCollection<OutboxEvent>(nameof(OutboxEvent));
-    public IMongoCollection<OutboxEventConsumer> OutboxEventsConsumers => Database.GetCollection<OutboxEventConsumer>(nameof(OutboxEventConsumer));
+    public IMongoCollection<OutboxEventConsumer> OutboxEventConsumers => Database.GetCollection<OutboxEventConsumer>(nameof(OutboxEventConsumer));
 }

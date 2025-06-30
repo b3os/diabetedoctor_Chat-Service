@@ -21,21 +21,26 @@ public static class MiddlewareExtensions
         
         app.UseAuthorization();
         
+        app.UseCors();
+        
         // app.MapCarter();
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-        app.NewVersionedApi(GroupEndpoints.ApiName)
-            .MapGroupApiV1();
+        // app.NewVersionedApi(GroupEndpoints.ApiName)
+        //     .MapGroupApiV1();
+        
+        // app.NewVersionedApi(UserEndpoints.ApiName)
+        //     .MapUserApiV1();
         
         app.NewVersionedApi(ChatEndpoints.ApiName)
             .MapChatApiV1();
         
-        app.NewVersionedApi(UserEndpoints.ApiName)
-            .MapUserApiV1();
-        
         app.NewVersionedApi(ConversationEndpoints.ApiName)
             .MapConversationApiV1();
+        
+        app.NewVersionedApi(MediaEndpoints.ApiName)
+            .MapMediaApiV1();
         
     }
 }

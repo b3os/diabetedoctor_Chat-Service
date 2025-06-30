@@ -10,6 +10,6 @@ public interface IMongoDbContext
     IMongoCollection<Conversation> Conversations { get; }
     IMongoCollection<Participant> Participants { get; }
     IMongoCollection<OutboxEvent> OutboxEvents { get; }
-    IMongoCollection<OutboxEventConsumer> OutboxEventsConsumers { get; }
+    IMongoCollection<OutboxEventConsumer> OutboxEventConsumers { get; }
     
 }

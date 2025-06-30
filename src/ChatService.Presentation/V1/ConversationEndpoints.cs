@@ -1,4 +1,5 @@
 ﻿using ChatService.Contract.Services;
+using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 using ChatService.Contract.Services.Conversation.Queries;
 
 namespace ChatService.Presentation.V1;
@@ -12,70 +13,84 @@ public static class ConversationEndpoints
     {
         var conversation = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
+        // create
         conversation.MapPost("", CreateConversation).RequireAuthorization().WithSummary("Create a new group");
-        conversation.MapPost("{groupId}/members", AddMemberToGroup).RequireAuthorization().WithSummary("Add new members to the group");
         
-        conversation.MapPatch("{groupId}", UpdateConversation).RequireAuthorization().WithSummary("Update a group");
-        conversation.MapPatch("{groupId}/members/{userId}", PromoteGroupMember).RequireAuthorization().WithSummary("Promote a group member to admin");
+        // add members
+        conversation.MapPost("{conversationId}/members", AddMembersToGroup).RequireAuthorization().WithSummary("Add new members to the group");
+        conversation.MapPost("{conversationId}/doctors", AddDoctorToGroup).RequireAuthorization().WithSummary("Add new doctor to the group");
 
-        conversation.MapDelete("{groupId}", DeleteConversation).RequireAuthorization().WithSummary("Delete a group (executor is owner)");
+        // update
+        conversation.MapPatch("{conversationId}", UpdateConversation).RequireAuthorization().WithSummary("Update a group");
+        conversation.MapPatch("{conversationId}/members/{userId}", PromoteGroupMember).RequireAuthorization().WithSummary("Promote a group member to admin");
+
+        // delete
+        conversation.MapDelete("{conversationId}", DeleteConversation).RequireAuthorization().WithSummary("Delete a group (executor is owner)");
        
+        // query (get)
         conversation.MapGet("", GetUserConversation).RequireAuthorization().WithSummary("Get groups of a user");
 
         return builder;
     }
     
     private static async Task<IResult> CreateConversation(ISender sender, IClaimsService claimsService,
-        [FromBody] CreateConversationCommand command)
+        [FromBody] CreateGroupConversationCommand command)
     {
         var ownerId = claimsService.GetCurrentUserId;
         var result = await sender.Send(command with { OwnerId = ownerId, Members = command.Members.Append(ownerId).ToHashSet() });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
-    private static async Task<IResult> UpdateConversation(ISender sender, IClaimsService claimsService, ObjectId groupId,
+    private static async Task<IResult> UpdateConversation(ISender sender, IClaimsService claimsService, ObjectId conversationId,
         [FromBody] ConversationUpdateDto dto)
     {
         var ownerId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new UpdateConversationCommand
+        var result = await sender.Send(new UpdateGroupConversationCommand
         {
             AdminId = ownerId,
-            GroupId = groupId, 
+            ConversationId = conversationId, 
             Name = dto.Name, 
-            Avatar = dto.Avatar, 
-            Version = dto.Version
+            AvatarId = dto.AvatarId
         });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
-    private static async Task<IResult> DeleteConversation(ISender sender, IClaimsService claimsService, ObjectId groupId)
+    private static async Task<IResult> DeleteConversation(ISender sender, IClaimsService claimsService, ObjectId conversationId)
     {
         var ownerId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new DeleteConversationCommand(OwnerId: ownerId, ConversationId: groupId));
+        var result = await sender.Send(new DeleteGroupConversationCommand(OwnerId: ownerId, ConversationId: conversationId));
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
-    private static async Task<IResult> AddMemberToGroup(ISender sender, IClaimsService claimsService, ObjectId groupId,
-        [FromBody] GroupAddMemberDto dto)
+    private static async Task<IResult> AddMembersToGroup(ISender sender, IClaimsService claimsService, ObjectId conversationId,
+        [FromBody] GroupAddMembersDto dto)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new AddMemberToGroupCommand
+        var result = await sender.Send(new AddMembersToGroupCommand
         {
             AdminId = adminId,
-            ConversationId = groupId,
+            ConversationId = conversationId,
             UserIds = dto.UserIds
         });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
-    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, ObjectId groupId,
+    private static async Task<IResult> AddDoctorToGroup(ISender sender, IClaimsService claimsService, ObjectId conversationId,
+        [FromBody] GroupAddDoctorDto dto)
+    {
+        var adminId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new AddDoctorToGroupCommand(adminId, dto.DoctorId, conversationId));
+        return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
+    }
+    
+    private static async Task<IResult> PromoteGroupMember(ISender sender, IClaimsService claimsService, ObjectId conversationId,
         string userId)
     {
         var ownerId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new PromoteGroupMemberCommand
         {
             OwnerId = ownerId,
-            GroupId = groupId, 
+            GroupId = conversationId, 
             MemberId = userId
         });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();

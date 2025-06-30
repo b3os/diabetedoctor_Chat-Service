@@ -5,4 +5,5 @@ global using MongoDB.Driver;
 global using ChatService.Contract.Helpers;
 global using ChatService.Contract.Abstractions.Message;
 global using ChatService.Domain.ValueObjects;
-
+global using ChatService.Domain.Abstractions;
+global using MongoDB.Bson.Serialization.Attributes;

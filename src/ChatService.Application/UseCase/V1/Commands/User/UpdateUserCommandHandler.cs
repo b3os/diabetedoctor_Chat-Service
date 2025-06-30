@@ -13,7 +13,7 @@ public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
             throw new UserExceptions.UserNotFoundException();
         }
 
-        user.Modify(request.FullName, string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of(request.Avatar));
+        user.Modify(request.FullName, string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of("",request.Avatar));
         
         await userRepository.ReplaceOneAsync(unitOfWork.ClientSession, user, cancellationToken);
         await unitOfWork.CommitTransactionAsync(cancellationToken);

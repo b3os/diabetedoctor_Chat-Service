@@ -1,9 +1,10 @@
 ﻿using ChatService.Contract.Services.Conversation.Commands;
+using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 using FluentValidation;
 
 namespace ChatService.Contract.Services.Conversation.Validators;
 
-public class AddMemberToGroupValidator : AbstractValidator<AddMemberToGroupCommand>
+public class AddMemberToGroupValidator : AbstractValidator<AddMembersToGroupCommand>
 {
     public AddMemberToGroupValidator()
     {

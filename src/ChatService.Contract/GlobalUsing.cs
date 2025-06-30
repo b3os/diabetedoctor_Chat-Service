@@ -6,3 +6,4 @@ global using ChatService.Contract.Abstractions.Message;
 global using Microsoft.AspNetCore.Http;
 global using System.Text.Json.Serialization;
 global using MongoDB.Bson;
+global using FluentValidation;

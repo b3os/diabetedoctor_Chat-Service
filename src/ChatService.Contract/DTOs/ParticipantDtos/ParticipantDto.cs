@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Contract.DTOs.UserDTOs;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.ParticipantDtos;
 
@@ -7,20 +8,17 @@ public record ParticipantDto
 {
     [BsonElement("_id")]
     [BsonRepresentation(BsonType.String)]
-    public string? Id { get; private set; }
+    public string? Id { get; init; }
     
     [BsonElement("conversation_id")]
-    public ObjectId? ConversationId { get; private set; }
-    
-    [BsonElement("full_name")]
-    public string FullName { get; private set; } = null!;
-    
-    [BsonElement("avatar")]
-    public string Avatar { get; private set; } = null!;
+    public ObjectId? ConversationId { get; init; }
     
     [BsonElement("role")]
-    public int Role { get; private set; }
+    public int Role { get; init; }
     
     [BsonElement("invited_by")]
-    public string InvitedBy { get; private set; } = null!;
-}
+    public string InvitedBy { get; init; } = null!;
+    
+    [BsonElement("user")]
+    public UserDto User { get; init; } = null!;
+};

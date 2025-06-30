@@ -2,19 +2,33 @@
 
 namespace ChatService.Domain.ValueObjects;
 
-public record UserId
+public sealed class UserId : ValueObject
 {
     [BsonElement("_id")]
     [BsonRepresentation(BsonType.String)]
-    public string Id { get; private init; } = null!;
+    public string Id { get; } = null!;
 
+    private UserId(){}
+
+    [BsonConstructor]
+    private UserId(string id)
+    {
+        Id = id;
+    }
+    
     public static UserId Of(string id)
     {
-        return new UserId {Id = id};
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Id bắt buộc phải có");
+        }
+        return new UserId(id);
+    }
+    
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Id;
     }
 
-    // public static List<UserId> All(IEnumerable<string> ids)
-    // {
-    //     return ids.Select(Of).ToList();
-    // }
+    public override string ToString() => Id;
 }

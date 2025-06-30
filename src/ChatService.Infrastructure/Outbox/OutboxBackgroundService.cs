@@ -16,9 +16,7 @@ internal class OutboxBackgroundService(
             {
                 using var scope = serviceScopeFactory.CreateScope();
                 var outboxProcessor = scope.ServiceProvider.GetRequiredService<OutboxProcessor>();
-                
                 await outboxProcessor.Execute(stoppingToken);
-
                 await Task.Delay(TimeSpan.FromSeconds(OutboxProcessorFrequency), stoppingToken);
             }
         }

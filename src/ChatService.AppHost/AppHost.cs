@@ -1,5 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.ChatService_Web>("chatservice-web");
+var kafka = builder.AddConnectionString("kafka");
+builder.AddProject<Projects.ChatService_Web>("chatservice-web")
+    .WithReference(kafka);
 
 builder.Build().Run();

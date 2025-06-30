@@ -1,14 +1,20 @@
 ﻿using ChatService.Application.Mapping;
+using ChatService.Contract.DTOs.ConversationDtos;
+using ChatService.Contract.DTOs.EnumDtos;
+using ChatService.Contract.Enums;
 using ChatService.Contract.EventBus.Abstractions;
 using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
+using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message.Commands;
+using CloudinaryDotNet.Actions;
+using MongoDB.Bson.Serialization;
 
 namespace ChatService.Application.UseCase.V1.Commands.Message;
 
 public class CreateMessageCommandHandler(
     IMessageRepository messageRepository,
     IConversationRepository conversationRepository,
-    IParticipantRepository participantRepository,
+    IMediaRepository mediaRepository,
     IOutboxEventRepository outboxEventRepository,
     IUnitOfWork unitOfWork,
     IAblyEventPublisher ablyEventPublisher)
@@ -16,25 +22,49 @@ public class CreateMessageCommandHandler(
 {
     public async Task<Result<Response>> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        var conversationFoundResult = await GetConversationAsync(request, cancellationToken);
-        if (conversationFoundResult.IsFailure)
+        var conversation = await GetConversationWithParticipantAsync(request, cancellationToken);
+        if (conversation.IsFailure)
         {
-            return Result.Failure<Response>(conversationFoundResult.Error);
+            return Result.Failure<Response>(conversation.Error);
         }
-        
-        var participantResult = await GetSenderInfoHasPermissionAsync(request.ConversationId, request.UserId, cancellationToken);
-        if (participantResult.IsFailure)
+
+        var id = ObjectId.GenerateNewId();
+        var userId = Mapper.MapUserId(conversation.Value.Member!.User.UserId);
+
+        Domain.Models.Media? media = null;
+        Domain.Models.Message message;
+        switch (request.MessageType)
         {
-            return Result.Failure<Response>(participantResult.Error);
+            case MessageTypeEnum.Text:
+                message = Domain.Models.Message.CreateText(id, request.ConversationId, userId, request.Content!);
+                break;
+            case MessageTypeEnum.File:
+                var mediaId = ObjectId.Parse(request.MediaId);
+                media = await mediaRepository.FindByIdAsync(mediaId, cancellationToken);
+                if (media is null)
+                {
+                    return Result.Failure<Response>(MediaErrors.MediaNotFound);
+                }
+
+                var file = FileAttachment.Of(media.PublicId, media.PublicUrl, media.MediaType);
+                message = Domain.Models.Message.CreateFile(id, request.ConversationId, userId, media.OriginalFileName,
+                    file);
+                media.Use();
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported message type: {request.MessageType.ToString()}");
         }
-            
-        var message = MapToMessage(request.ConversationId, participantResult.Value.UserId, request);
-        var integrationEvent = MapToIntegrationEvent(conversationFoundResult.Value, participantResult.Value, message);
-        
-        await unitOfWork.StartTransactionAsync(cancellationToken);
+
+        var integrationEvent = MapToIntegrationEvent(conversation.Value, message);
+
         try
         {
+            await unitOfWork.StartTransactionAsync(cancellationToken);
             await messageRepository.CreateAsync(unitOfWork.ClientSession, message, cancellationToken);
+            if (media is not null)
+            {
+                await mediaRepository.ReplaceOneAsync(unitOfWork.ClientSession, media, cancellationToken);
+            }
             var @event = OutboxEventExtension.ToOutboxEvent(KafkaTopicConstraints.ChatTopic, integrationEvent);
             await outboxEventRepository.CreateAsync(unitOfWork.ClientSession, @event, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
@@ -44,87 +74,68 @@ public class CreateMessageCommandHandler(
             await unitOfWork.AbortTransactionAsync(cancellationToken);
             throw;
         }
-        
-        await ablyEventPublisher.PublishAsync(AblyTopicConstraints.GlobalChatChannel, AblyTopicConstraints.GlobalChatEvent, integrationEvent);
+
+        await ablyEventPublisher.PublishAsync(AblyTopicConstraints.GlobalChatChannel,
+            AblyTopicConstraints.GlobalChatEvent, integrationEvent);
         return Result.Success(new Response(
             MessageMessage.CreateMessageSuccessfully.GetMessage().Code,
             MessageMessage.CreateMessageSuccessfully.GetMessage().Message));
     }
-    
-    private async Task<Result<Domain.Models.Conversation>> GetConversationAsync(CreateMessageCommand command, CancellationToken cancellationToken)
-    {
-        var conversationProjection = Builders<Domain.Models.Conversation>.Projection
-            .Include(conversation => conversation.Avatar)
-            .Include(conversation => conversation.Name)
-            .Include(conversation => conversation.ConversationType);
-        var conversation = await conversationRepository.FindSingleAsync(
-            group => group.Id == command.ConversationId
-                     && group.ConversationType == (ConversationTypeEnum)command.ConversationType,
-            conversationProjection,
-            cancellationToken);
-        
-        return conversation is null
-            ? Result.Failure<Domain.Models.Conversation>(ConversationErrors.NotFound)
-            : Result.Success(conversation);
-    }
-    
-    private async Task<Result<Participant>> GetSenderInfoHasPermissionAsync(ObjectId conversationId, string participantId,
+
+    private async Task<Result<ConversationWithParticipantDto>> GetConversationWithParticipantAsync(
+        CreateMessageCommand request,
         CancellationToken cancellationToken)
     {
-        var participant = await participantRepository.FindSingleAsync(
-            p => p.ConversationId == conversationId && p.UserId.Id == participantId,
-            cancellationToken: cancellationToken);
-        
-        return participant is null
-            ? Result.Failure<Participant>(ConversationErrors.YouNotConversationParticipant)
-            : Result.Success(participant);
+        var document = await conversationRepository.GetConversationWithParticipant(request.ConversationId,
+            request.UserId, (ConversationType)request.ConversationType, cancellationToken);
+
+        if (document is null)
+        {
+            return Result.Failure<ConversationWithParticipantDto>(ConversationErrors.NotFound);
+        }
+
+        var conversation = BsonSerializer.Deserialize<ConversationWithParticipantDto>(document);
+
+        if (conversation.Member is null)
+        {
+            return Result.Failure<ConversationWithParticipantDto>(ConversationErrors.NotFound);
+        }
+
+        return conversation.Status is ConversationStatusEnum.Closed 
+            ? Result.Failure<ConversationWithParticipantDto>(ConversationErrors.ThisConversationIsClosed) 
+            : Result.Success(conversation);
     }
 
-    private Domain.Models.Message MapToMessage(ObjectId groupId, UserId userId, CreateMessageCommand command)
-    {
-        var id = ObjectId.GenerateNewId();
-        var type = Mapper.MapMessageType(command.MessageType);
-        return Domain.Models.Message.Create(id, groupId, userId, command.Content!, type);
-    }
-
-    // private ChatCreatedEvent MapToDomainEvent(ObjectId groupId, Domain.Models.User sender, Domain.Models.Message message)
-    // {
-    //     return new ChatCreatedEvent
-    //     {
-    //         SenderId = sender.UserId.Id,
-    //         SenderFullName = sender.Fullname,
-    //         SenderAvatar = sender.Avatar.PublicUrl,
-    //         MessageId = message.Id.ToString(),
-    //         MessageContent = message.Content,
-    //         GroupId = groupId.ToString()
-    //     };
-    // }
-    
-    private MessageCreatedIntegrationEvent MapToIntegrationEvent(Domain.Models.Conversation conversation, Participant sender, Domain.Models.Message message)
+    private MessageCreatedIntegrationEvent MapToIntegrationEvent(ConversationWithParticipantDto conversation,
+        Domain.Models.Message message)
     {
         return new MessageCreatedIntegrationEvent
         {
             Sender = new SenderInfo
-                { SenderId = sender.UserId.Id, FullName = sender.FullName, Avatar = sender.Avatar.PublicUrl},
+            {
+                SenderId = conversation.Member!.User.UserId.Id,
+                FullName = conversation.Member!.User.FullName,
+                Avatar = conversation.Member!.User.Avatar.PublicUrl
+            },
             Conversation = conversation.ConversationType switch
             {
-                ConversationTypeEnum.Group =>new ConversationInfo
+                ConversationTypeEnum.Group => new ConversationInfo
                 {
-                    ConversationId = conversation.Id.ToString(),
+                    ConversationId = conversation.Id,
                     ConversationName = conversation.Name,
                     Avatar = conversation.Avatar.PublicUrl,
-                    ConversationType = (int)ConversationTypeEnum.Group,
+                    ConversationType = (int)ConversationType.Group
                 },
-                _ =>  new ConversationInfo
+                _ => new ConversationInfo
                 {
-                    ConversationId = conversation.Id.ToString(),
-                    ConversationType = (int)conversation.ConversationType,
+                    ConversationId = conversation.Id,
+                    ConversationType = (int)conversation.ConversationType
                 }
             },
             MessageId = message.Id.ToString(),
             MessageContent = message.Content,
-            MessageType = (int) message.Type,
-            CreatedDate = sender.CreatedDate
+            MessageType = (int)message.Type,
+            CreatedDate = message.CreatedDate
         };
     }
 }

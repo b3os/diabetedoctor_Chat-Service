@@ -2,27 +2,24 @@
 
 public class ConversationCreatedEventHandler(
     IUnitOfWork unitOfWork,
-    IParticipantRepository participantRepository)
+    IOptions<KafkaSettings> kafkaSettings,
+    IOutboxEventRepository outboxEventRepository)
     : IDomainEventHandler<ConversationCreatedEvent>
 {
     public async Task Handle(ConversationCreatedEvent notification, CancellationToken cancellationToken)
     {
-        var participants = MapToConversationParticipants(notification.ConversationId, notification.OwnerId, notification.Users);
-        await participantRepository.CreateManyAsync(unitOfWork.ClientSession, participants, cancellationToken);
+        var integrationEvent = MapToIntegrationEvent(notification);
+        var @event = OutboxEventExtension.ToOutboxEvent(kafkaSettings.Value.ConversationTopic, integrationEvent);
+        await outboxEventRepository.CreateAsync(unitOfWork.ClientSession, @event, cancellationToken);
     }
 
-    private IEnumerable<Participant> MapToConversationParticipants(ObjectId conversationId, UserId ownerId, List<User> users)
+    private ConversationCreatedIntegrationEvent MapToIntegrationEvent(ConversationCreatedEvent notification)
     {
-        var participants = users.Select(user =>
-            Participant.Create(
-                id: ObjectId.GenerateNewId(),
-                userId: user.UserId,
-                conversationId: conversationId,
-                fullName: user.FullName,
-                avatar: user.Avatar,
-                role: user.UserId == ownerId ? MemberRoleEnum.Owner : MemberRoleEnum.Member,
-                invitedBy: ownerId)
-        );
-        return participants;
+        return new ConversationCreatedIntegrationEvent
+        {
+            ConversationId = notification.ConversationId,
+            ConversationName = notification.ConversationName,
+            Members = notification.MemberIds
+        };
     }
 }

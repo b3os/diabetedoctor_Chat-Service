@@ -4,5 +4,5 @@ namespace ChatService.Contract.Services.Conversation.Responses;
 
 public record GetUserConversationsResponse
 {
-    public PagedList<ConversationDto> Conversations { get; init; } = null!;
+    public PagedList<ConversationResponseDto> Conversations { get; init; } = null!;
 }

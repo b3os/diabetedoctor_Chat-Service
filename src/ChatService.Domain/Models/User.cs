@@ -14,7 +14,9 @@ public class User : DomainEntity<ObjectId>
     [BsonElement("avatar")]
     public Image Avatar { get; private set; } = null!;
     [BsonElement("role")]
-    public RoleEnum Role { get; private set; } = default!;
+    public Role Role { get; private set; } = default!;
+    [BsonElement("status")]
+    public Status Status { get; private set; } = default!;
 
     public static User Create(ObjectId id, UserId userId, string fullname, Image avatar)
     {
@@ -24,6 +26,8 @@ public class User : DomainEntity<ObjectId>
             UserId = userId,
             Avatar = avatar,
             FullName = fullname,
+            // Role = RoleEnum.User,
+            Status = Status.Active,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false

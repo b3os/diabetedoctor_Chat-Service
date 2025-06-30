@@ -5,11 +5,11 @@ namespace ChatService.Contract.DTOs.UserDTOs;
 [BsonIgnoreExtraElements]
 public record UserDto
 {
-    [BsonElement("_id")]
-    public string Id { get; init; } = null!;
+    [BsonElement("user_id")]
+    public UserIdDto UserId { get; init; } = null!;
     
     [BsonElement("avatar")]
-    public string Avatar { get; init; } = null!;
+    public ImageDto Avatar { get; init; } = null!;
     
     [BsonElement("fullname")]
     public string FullName { get; init; } = null!;

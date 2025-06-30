@@ -1,13 +1,41 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Domain.Abstractions;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Domain.ValueObjects;
 
-public record Image()
+public sealed class Image : ValueObject
 {
+    [BsonElement("public_id")]
+    public string PublicId { get; } = null!;
+    
     [BsonElement("public_url")]
-    public string PublicUrl { get; init; } = null!;
-    public static Image Of(string? publicUrl)
+    public string PublicUrl { get; } = null!;
+
+    private Image() {}
+
+    [BsonConstructor]
+    private Image(string publicId, string publicUrl)
     {
-        return new Image {PublicUrl = publicUrl ?? string.Empty};
+        PublicId = publicId;
+        PublicUrl = publicUrl;
     }
+    
+    public static Image Of(string publicId, string publicUrl)
+    {
+        if (string.IsNullOrWhiteSpace(publicId))
+            throw new ArgumentException("PublicId bắt buộc phải có");
+        
+        if (!Uri.IsWellFormedUriString(publicUrl, UriKind.Absolute))
+            throw new ArgumentException("PublicUrl không phù hợp");
+
+        return new Image (publicId.Trim(), publicUrl.Trim());
+    }
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return PublicId;
+        yield return PublicUrl;
+    }
+    
+    public override string ToString() => PublicUrl;
 }

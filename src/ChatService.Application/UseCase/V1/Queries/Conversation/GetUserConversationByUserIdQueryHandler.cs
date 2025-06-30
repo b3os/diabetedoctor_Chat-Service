@@ -22,7 +22,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
         var filters = new List<FilterDefinition<Domain.Models.Conversation>>
         {
             builder.ElemMatch(c => c.Members, userId => userId.Id == request.UserId),
-            builder.Eq(c => c.ConversationType, ConversationTypeEnum.Group)
+            builder.Eq(c => c.ConversationType, ConversationType.Group)
         };
 
         if (!string.IsNullOrEmpty(request.Filter.Cursor)
@@ -56,7 +56,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
                 @as: "participant_info")
             .AppendStage<BsonDocument>(addParticipantInfoStage)
             .Project(conversationProjection)
-            .As<ConversationDto>()
+            .As<ConversationResponseDto>()
             .ToListAsync(cancellationToken: cancellationToken);
 
         var hasNext = result.Count > pageSize;
@@ -69,7 +69,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
         return Result.Success(new GetUserConversationsResponse
         {
             Conversations =
-                PagedList<ConversationDto>.Create(result, 0, pageSize, hasNext ? result[^1].ModifiedDate.ToString("O", CultureInfo.InvariantCulture) : string.Empty, hasNext)
+                PagedList<ConversationResponseDto>.Create(result, 0, pageSize, hasNext ? result[^1].ModifiedDate.ToString("O", CultureInfo.InvariantCulture) : string.Empty, hasNext)
         });
     }
 

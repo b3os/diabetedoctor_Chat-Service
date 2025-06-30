@@ -1,10 +1,11 @@
 ﻿using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
 using ChatService.Contract.Services.Conversation.Commands;
+using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 using MongoDB.Bson;
 
 namespace ChatService.Infrastructure.EventBus.Kafka.EventHandlers;
 
-public sealed class ChatIntegrationEventHandler(ISender sender, ILogger<MessageCreatedIntegrationEvent> logger) : 
+public sealed class ChatIntegrationEventHandler(ISender sender, ILogger<ChatIntegrationEventHandler> logger) : 
     IIntegrationEventHandler<MessageCreatedIntegrationEvent>
 {
     public async Task Handle(MessageCreatedIntegrationEvent notification, CancellationToken cancellationToken)

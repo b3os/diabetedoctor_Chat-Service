@@ -11,43 +11,88 @@ public class Participant : DomainEntity<ObjectId>
     
     [BsonElement("conversation_id")]
     public ObjectId ConversationId { get; private set; }
-    
-    [BsonElement("full_name")]
-    public string FullName { get; private set; } = null!;
-    
-    [BsonElement("avatar")]
-    public Image Avatar { get; private set; } = null!;
+
+    // [BsonElement("nickname")] 
+    // public string? Nickname { get; private set; }
     
     [BsonElement("role")]
-    public MemberRoleEnum Role { get; private set; }
+    public MemberRole Role { get; private set; }
     
     [BsonElement("invited_by")]
     public UserId InvitedBy { get; private set; } = null!;
     
-    // [BsonElement("last_seen_at")]
-    // public DateTime? LastSeenAt { get; private set; }
+    [BsonElement("status")]
+    public Status Status { get; private set; }
     
-    public static Participant Create(ObjectId id, UserId userId, ObjectId conversationId, string fullName, Image avatar ,MemberRoleEnum role, UserId invitedBy)
+    public static Participant CreateOwner(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
         return new Participant()
         {
             Id = id,
             UserId = userId,
             ConversationId = conversationId,
-            FullName = fullName,
-            Avatar = avatar,
-            // LastSeenAt = null,
-            Role = role,
+            Role = MemberRole.Owner,
             InvitedBy = invitedBy,
+            Status = Status.Active,
+            CreatedDate = CurrentTimeService.GetCurrentTime(),
+            ModifiedDate = CurrentTimeService.GetCurrentTime(),
+            IsDeleted = false
+        };
+    }
+    
+    public static Participant CreateDoctor(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
+    {
+        return new Participant()
+        {
+            Id = id,
+            UserId = userId,
+            ConversationId = conversationId,
+            Role = MemberRole.Doctor,
+            InvitedBy = invitedBy,
+            Status = Status.Active,
+            CreatedDate = CurrentTimeService.GetCurrentTime(),
+            ModifiedDate = CurrentTimeService.GetCurrentTime(),
+            IsDeleted = false
+        };
+    }
+    
+    public static Participant CreateMember(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
+    {
+        return new Participant()
+        {
+            Id = id,
+            UserId = userId,
+            ConversationId = conversationId,
+            Role = MemberRole.Member,
+            InvitedBy = invitedBy,
+            Status = Status.Active,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
         };
     }
 
-    public void ChangeRole(MemberRoleEnum role)
+    public void Promote()
     {
-        Role = role;
+        Role = MemberRole.Admin;
+        ModifiedDate = CurrentTimeService.GetCurrentTime();
+    }
+    
+    public void Demote()
+    {
+        Role = MemberRole.Member;
+        ModifiedDate = CurrentTimeService.GetCurrentTime();
+    }
+    
+    public void Ban()
+    {
+        Status = Status.LocalBan;
+        ModifiedDate = CurrentTimeService.GetCurrentTime();
+    }
+
+    public void Unban()
+    {
+        Status = Status.Active;
         ModifiedDate = CurrentTimeService.GetCurrentTime();
     }
 }

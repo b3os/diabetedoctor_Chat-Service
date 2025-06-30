@@ -19,8 +19,8 @@ public class Error : IEquatable<Error>
 
     public static readonly Error NullValue = new("Error.NullValue", "The specified result value is null.", ErrorType.Failure);
     
-    public static Error Failure(string code, string description) =>
-        new(code, description, ErrorType.Failure);
+    public static Error Failure(string description) =>
+        new("System.Failure", description, ErrorType.Failure);
     
     public static Error Validation(string code, string description) =>
         new(code, description, ErrorType.Validation);
@@ -36,6 +36,9 @@ public class Error : IEquatable<Error>
     
     public static Error Forbidden(string code, string description) =>
         new(code, description, ErrorType.Forbidden);
+    
+    public static Error BadRequest(string code, string description) =>
+        new(code, description, ErrorType.BadRequest);
     
     public static implicit operator string(Error error) => error.Code;
 
@@ -79,5 +82,6 @@ public enum ErrorType
     Validation = 1,
     NotFound = 2,
     Conflict = 3,
-    Forbidden = 4
+    Forbidden = 4,
+    BadRequest = 5,
 }

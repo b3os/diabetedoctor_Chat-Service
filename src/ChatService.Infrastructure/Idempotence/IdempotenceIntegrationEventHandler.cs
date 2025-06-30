@@ -32,14 +32,10 @@ public sealed class IdempotenceIntegrationEventHandler<TIntegrationEvent>(
             await consumerRepository.CreateEventAsync(eventConsumer, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
-        catch (DomainException ex)
+        catch (Exception)
         {
             await unitOfWork.AbortTransactionAsync(cancellationToken);
-            var dlqEvent = OutboxEventExtension.ToOutboxEvent(KafkaTopicConstraints.DeadTopic, notification);
-            await eventRepository.SaveAsync(dlqEvent, cancellationToken);
-            logger.LogWarning(
-                "A error occurred while processing event. The event has been moved to the Dead Letter Queue. Reason: {Reason}", 
-                ex.Message);
+            throw;
         }
     }
 }

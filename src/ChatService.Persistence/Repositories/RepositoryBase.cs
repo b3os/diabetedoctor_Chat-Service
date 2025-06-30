@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using ChatService.Contract.Helpers;
+using MongoDB.Bson;
 
 namespace ChatService.Persistence.Repositories;
 
@@ -74,10 +75,18 @@ public class RepositoryBase<TEntity> : IRepositoryBase<TEntity>, IDisposable whe
     {
         return await DbSet.UpdateManyAsync(session: session, filterDefinition, updateDefinition, new UpdateOptions { IsUpsert = false }, cancellationToken);
     }
-    
-    public async Task<DeleteResult> DeleteOneAsync(IClientSessionHandle session, ObjectId id, CancellationToken cancellationToken = default)
+
+    public async Task<UpdateResult> SoftDeleteAsync(IClientSessionHandle session, ObjectId id, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<TEntity>.Filter.Eq("_id", id);
+        var filter = Builders<TEntity>.Filter.Eq(x => x.Id, id);
+        var builder = Builders<TEntity>.Update
+            .Set(x => x.ModifiedDate, CurrentTimeService.GetCurrentTime())
+            .Set(x => x.IsDeleted, true);
+        return await DbSet.UpdateOneAsync(session, filter, builder, new UpdateOptions { IsUpsert = false }, cancellationToken: cancellationToken);
+    }
+
+    public async Task<DeleteResult> DeleteOneAsync(IClientSessionHandle session, FilterDefinition<TEntity> filter, CancellationToken cancellationToken = default)
+    {
         return await DbSet.DeleteOneAsync(session, filter, cancellationToken: cancellationToken);
     }
 

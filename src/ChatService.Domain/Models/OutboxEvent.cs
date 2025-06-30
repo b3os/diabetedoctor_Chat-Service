@@ -15,6 +15,9 @@ public class OutboxEvent : DomainEntity<ObjectId>
      [BsonElement("processed_at")]
      public DateTime? ProcessedAt { get; private set; }
      
+     [BsonElement("visible_at")]
+     public DateTime? VisibleAt  { get; private set; }
+     
      [BsonElement("error")]
      public string ErrorMessage { get; private init; } = null!;
 
@@ -22,7 +25,7 @@ public class OutboxEvent : DomainEntity<ObjectId>
      public int RetryCount { get; private set; }
      
 
-     public static OutboxEvent Create(ObjectId id, string topic, string eventTypeName, string message)
+     public static OutboxEvent Create(ObjectId id, string topic, string eventTypeName, string message, int retryCount, int delayMinutes)
      {
           return new OutboxEvent
           {
@@ -30,11 +33,12 @@ public class OutboxEvent : DomainEntity<ObjectId>
                Topic = topic,
                EventType = eventTypeName,
                Message = message,
+               ProcessedAt = null,
+               VisibleAt = CurrentTimeService.GetCurrentTime().AddMinutes(delayMinutes),
                ErrorMessage = string.Empty,
-               RetryCount = 0,
+               RetryCount = retryCount,
                CreatedDate = CurrentTimeService.GetCurrentTime(),
                ModifiedDate = CurrentTimeService.GetCurrentTime(),
-               ProcessedAt = null,
                IsDeleted = false
           };
      }

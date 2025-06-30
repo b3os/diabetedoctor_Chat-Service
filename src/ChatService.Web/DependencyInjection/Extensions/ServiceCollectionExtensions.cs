@@ -95,5 +95,7 @@ public static class ServiceCollectionExtensions
         {
             options.SerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         });
+        
+        builder.Services.AddCors(options => options.AddDefaultPolicy(cors => cors.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
     }
 }

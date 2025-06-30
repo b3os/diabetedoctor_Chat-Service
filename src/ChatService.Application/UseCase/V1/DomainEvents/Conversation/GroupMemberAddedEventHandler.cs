@@ -1,28 +1,20 @@
 ﻿namespace ChatService.Application.UseCase.V1.DomainEvents.Conversation;
 
 public sealed class GroupMemberAddedEventHandler(
-    IParticipantRepository participantRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IOptions<KafkaSettings> kafkaSettings,
+    IOutboxEventRepository outboxEventRepository)
     : IDomainEventHandler<GroupMembersAddedEvent>
 {
     public async Task Handle(GroupMembersAddedEvent notification, CancellationToken cancellationToken)
     {
-        var participants = MapToListParticipant(notification.ConversationId, notification.InvitedBy, notification.Users);
-        await participantRepository.CreateManyAsync(unitOfWork.ClientSession, participants, cancellationToken);
+        var integrationEvent = MapToIntegrationEvent(notification);
+        var @event = OutboxEventExtension.ToOutboxEvent(kafkaSettings.Value.ConversationTopic, integrationEvent);
+        await outboxEventRepository.CreateAsync(unitOfWork.ClientSession, @event, cancellationToken);
     }
     
-    private IEnumerable<Participant> MapToListParticipant(ObjectId conversationId, UserId invitedBy, List<User> users)
+    private GroupMembersAddedIntegrationEvent MapToIntegrationEvent(GroupMembersAddedEvent notification)
     {
-        var participants = users.Select(user =>
-            Participant.Create(
-                id: ObjectId.GenerateNewId(),
-                userId: user.UserId,
-                conversationId: conversationId,
-                fullName: user.FullName,
-                avatar: user.Avatar,
-                role: MemberRoleEnum.Member,
-                invitedBy: invitedBy)
-        );
-        return participants;
+        return new GroupMembersAddedIntegrationEvent(notification.ConversationId, notification.Members);
     }
 }

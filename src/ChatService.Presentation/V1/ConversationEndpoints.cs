@@ -19,7 +19,8 @@ public static class ConversationEndpoints
         // add members
         conversation.MapPost("{conversationId}/members", AddMembersToGroup).RequireAuthorization().WithSummary("Add new members to the group");
         conversation.MapPost("{conversationId}/doctors", AddDoctorToGroup).RequireAuthorization().WithSummary("Add new doctor to the group");
-
+        conversation.MapPost("{conversationId}/join", JoinGroup).RequireAuthorization().WithSummary("Join a group by link (just patient)");
+        
         // update
         conversation.MapPatch("{conversationId}", UpdateConversation).RequireAuthorization().WithSummary("Update a group");
         conversation.MapPatch("{conversationId}/members/{userId}", PromoteGroupMember).RequireAuthorization().WithSummary("Promote a group member to admin");
@@ -42,16 +43,10 @@ public static class ConversationEndpoints
     }
     
     private static async Task<IResult> UpdateConversation(ISender sender, IClaimsService claimsService, ObjectId conversationId,
-        [FromBody] ConversationUpdateDto dto)
+        [FromBody] UpdateGroupConversationCommand command)
     {
         var ownerId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new UpdateGroupConversationCommand
-        {
-            AdminId = ownerId,
-            ConversationId = conversationId, 
-            Name = dto.Name, 
-            AvatarId = dto.AvatarId
-        });
+        var result = await sender.Send(command with{ConversationId = conversationId, AdminId = ownerId});
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
@@ -63,23 +58,26 @@ public static class ConversationEndpoints
     }
     
     private static async Task<IResult> AddMembersToGroup(ISender sender, IClaimsService claimsService, ObjectId conversationId,
-        [FromBody] GroupAddMembersDto dto)
+        [FromBody] AddMembersToGroupCommand command)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new AddMembersToGroupCommand
-        {
-            AdminId = adminId,
-            ConversationId = conversationId,
-            UserIds = dto.UserIds
-        });
+        var result = await sender.Send(command with{ConversationId = conversationId, AdminId = adminId});
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     
     private static async Task<IResult> AddDoctorToGroup(ISender sender, IClaimsService claimsService, ObjectId conversationId,
-        [FromBody] GroupAddDoctorDto dto)
+        [FromBody] AddDoctorToGroupCommand command)
     {
         var adminId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new AddDoctorToGroupCommand(adminId, dto.DoctorId, conversationId));
+        var result = await sender.Send(command with {ConversationId = conversationId, AdminId = adminId});
+        return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
+    }
+    
+    private static async Task<IResult> JoinGroup(ISender sender, IClaimsService claimsService, ObjectId conversationId,
+        [FromBody] JoinGroupCommand command)
+    {
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(command with {UserId = userId, ConversationId = conversationId});
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();
     }
     

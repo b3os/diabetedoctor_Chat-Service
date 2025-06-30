@@ -10,13 +10,12 @@ public sealed class AddMembersToGroupCommandHandler(
     IPublisher publisher,
     IParticipantRepository participantRepository,
     IConversationRepository conversationRepository,
-    IUserRepository userRepository,
-    IOutboxEventRepository outboxEventRepository)
+    IUserRepository userRepository)
     : ICommandHandler<AddMembersToGroupCommand, Response>
 {
     public async Task<Result<Response>> Handle(AddMembersToGroupCommand request, CancellationToken cancellationToken)
     {
-        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.AdminId, cancellationToken);
+        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.AdminId!, cancellationToken);
         if (permissionResult.IsFailure)
         {
             return Result.Failure<Response>(permissionResult.Error);
@@ -105,7 +104,7 @@ public sealed class AddMembersToGroupCommandHandler(
             ConversationMessage.AddMemberToGroupSuccessfully.GetMessage().Message));
     }
     
-    private async Task<Result<Participant>> GetParticipantWithPermissionAsync(ObjectId conversationId, string adminId,
+    private async Task<Result<Participant>> GetParticipantWithPermissionAsync(ObjectId? conversationId, string adminId,
         CancellationToken cancellationToken)
     {
         var isConversationExisted = await conversationRepository.ExistsAsync(
@@ -122,7 +121,7 @@ public sealed class AddMembersToGroupCommandHandler(
         var participant = await participantRepository.FindSingleAsync(
             p => p.UserId.Id == adminId
                            && p.ConversationId == conversationId
-                           && p.Role != MemberRole.Member,
+                           && (p.Role == MemberRole.Owner || p.Role == MemberRole.Admin),
             projection,
             cancellationToken);
         
@@ -147,13 +146,13 @@ public sealed class AddMembersToGroupCommandHandler(
         return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<Domain.Models.User>>(UserErrors.NotFound);
     }
     
-    private IEnumerable<Participant> MapToListParticipant(ObjectId conversationId, UserId invitedBy, IEnumerable<UserId> userIds)
+    private IEnumerable<Participant> MapToListParticipant(ObjectId? conversationId, UserId invitedBy, IEnumerable<UserId> userIds)
     {
         var participants = userIds.Select(id =>
             Participant.CreateMember(
                 id: ObjectId.GenerateNewId(),
                 userId: id,
-                conversationId: conversationId,
+                conversationId: (ObjectId) conversationId!,
                 invitedBy: invitedBy)
         );
         return participants;
@@ -161,6 +160,6 @@ public sealed class AddMembersToGroupCommandHandler(
     
     private GroupMembersAddedEvent MapToDomainEvent(AddMembersToGroupCommand command)
     {
-        return new GroupMembersAddedEvent(command.ConversationId.ToString(), command.UserIds);
+        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, command.UserIds);
     }
 }

@@ -2,30 +2,30 @@
 
 namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
 
-public sealed class AddDoctorToGroupCommandHandler(
+public sealed class JoinGroupCommandHandler(
     IUnitOfWork unitOfWork,
     IPublisher publisher,
     IUserRepository userRepository,
     IConversationRepository conversationRepository,
     IParticipantRepository participantRepository)
-    : ICommandHandler<AddDoctorToGroupCommand, Response>
+    : ICommandHandler<JoinGroupCommand, Response>
 {
-    public async Task<Result<Response>> Handle(AddDoctorToGroupCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Response>> Handle(JoinGroupCommand request, CancellationToken cancellationToken)
     {
-        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.AdminId, cancellationToken);
+        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.InvitedBy, cancellationToken);
         if (permissionResult.IsFailure)
         {
             return Result.Failure<Response>(permissionResult.Error);
         }
         
-        var userExistsResult = await GetUserExistsAsync(request.DoctorId, cancellationToken);
+        var userExistsResult = await GetUserExistsAsync(request.UserId!, cancellationToken);
         if (userExistsResult.IsFailure)
         {
             return Result.Failure<Response>(userExistsResult.Error);
         }
         var userId = userExistsResult.Value.UserId;
-
-        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, request.DoctorId, cancellationToken);
+        
+        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, request.UserId!, cancellationToken);
         if (dupResult.IsFailure)
         {
             return Result.Failure<Response>(dupResult.Error);
@@ -77,7 +77,7 @@ public sealed class AddDoctorToGroupCommandHandler(
         var participant = await participantRepository.FindSingleAsync(
             p => p.UserId.Id == adminId
                  && p.ConversationId == conversationId
-                 && (p.Role == MemberRole.Owner || p.Role == MemberRole.Admin),
+                 && p.Role != MemberRole.Member,
             projection,
             cancellationToken);
         
@@ -103,8 +103,8 @@ public sealed class AddDoctorToGroupCommandHandler(
             return Result.Failure<Domain.Models.User>(UserErrors.NotFound);
         }
         
-        return user.Role is not Role.Doctor
-            ? Result.Failure<Domain.Models.User>(UserErrors.MustHaveThisRole(nameof(Role.Doctor)))
+        return user.Role is not Role.Patient
+            ? Result.Failure<Domain.Models.User>(UserErrors.MustHaveThisRole(nameof(Role.Patient)))
             : Result.Success(user);
     }
     
@@ -121,25 +121,25 @@ public sealed class AddDoctorToGroupCommandHandler(
 
         if (participant?.Status is Status.LocalBan)
         {
-            return Result.Failure<Participant?>(ConversationErrors.MemberIsBanned);
+            return Result.Failure<Participant?>(ConversationErrors.YouAreBanned);
         }
 
         return participant?.IsDeleted is false 
-            ? Result.Failure<Participant?>(ConversationErrors.MemberAlreadyExisted) 
+            ? Result.Failure<Participant?>(ConversationErrors.YouAlreadyInGroup) 
             : Result.Success(participant);
     }
     
     private Participant MapToParticipant(ObjectId? conversationId, UserId invitedBy, UserId userId)
     {
-        return Participant.CreateDoctor(
+        return Participant.CreateMember(
             id: ObjectId.GenerateNewId(),
             userId: userId,
             conversationId: (ObjectId) conversationId!,
             invitedBy: invitedBy);
     }
     
-    private GroupMembersAddedEvent MapToDomainEvent(AddDoctorToGroupCommand command)
+    private GroupMembersAddedEvent MapToDomainEvent(JoinGroupCommand command)
     {
-        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, [command.DoctorId]);
+        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, [command.UserId!]);
     }    
 }

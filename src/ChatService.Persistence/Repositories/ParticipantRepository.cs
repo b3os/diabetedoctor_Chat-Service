@@ -7,7 +7,7 @@ namespace ChatService.Persistence.Repositories;
 public class ParticipantRepository(IMongoDbContext context)
     : RepositoryBase<Participant>(context), IParticipantRepository
 {
-    public async Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId groupId, IEnumerable<string> userIds,
+    public async Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId? groupId, IEnumerable<string> userIds,
         CancellationToken cancellationToken = default)
     {
         var builder = Builders<Participant>.Filter;
@@ -49,7 +49,7 @@ public class ParticipantRepository(IMongoDbContext context)
         return dupParticipants;
     }
 
-    public async Task<UpdateResult> RejoinToConversationAsync(IClientSessionHandle session, ObjectId conversationId, IEnumerable<UserId> participantIds,
+    public async Task<UpdateResult> RejoinToConversationAsync(IClientSessionHandle session, ObjectId? conversationId, IEnumerable<UserId> participantIds,
         CancellationToken cancellationToken = default)
     {
         var builder = Builders<Participant>.Filter;

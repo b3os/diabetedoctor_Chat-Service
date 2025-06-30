@@ -69,7 +69,7 @@ public class ConversationRepository(IMongoDbContext context)
         return document;
     }
 
-    public async Task<UpdateResult> UpdateConversationAsync(IClientSessionHandle session, ObjectId conversationId, string? name, Image? avatar, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> UpdateConversationAsync(IClientSessionHandle session, ObjectId? conversationId, string? name, Image? avatar, CancellationToken cancellationToken = default)
     {
         var filter = Builders<Conversation>.Filter.Eq(conversation => conversation.Id, conversationId);
         var options = new UpdateOptions { IsUpsert = false };
@@ -91,7 +91,7 @@ public class ConversationRepository(IMongoDbContext context)
         return await DbSet.UpdateOneAsync(session, filter, Builders<Conversation>.Update.Combine(updates), options, cancellationToken);
     }
 
-    public async Task<UpdateResult> AddMemberToConversationAsync(IClientSessionHandle session, ObjectId conversationId, List<UserId> memberIds, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> AddMemberToConversationAsync(IClientSessionHandle session, ObjectId? conversationId, List<UserId> memberIds, CancellationToken cancellationToken = default)
     {
         var filter = Builders<Conversation>.Filter.Eq(conversation => conversation.Id, conversationId);
         var options = new UpdateOptions { IsUpsert = false };

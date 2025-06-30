@@ -40,6 +40,14 @@ public static class ConversationErrors
         ConversationMessage.MemberAlreadyExisted.GetMessage().Code,
         ConversationMessage.MemberAlreadyExisted.GetMessage().Message);
     
+    public static readonly Error YouAreBanned = Error.Forbidden(
+        ConversationMessage.YouAreBanned.GetMessage().Code,
+        ConversationMessage.YouAreBanned.GetMessage().Message);
+    
+    public static readonly Error YouAlreadyInGroup = Error.Conflict(
+        ConversationMessage.YouAlreadyInGroup.GetMessage().Code,
+        ConversationMessage.YouAlreadyInGroup.GetMessage().Message);
+    
     // Validation
     public static readonly Error SameAsCurrentName = Error.Validation(
         ConversationMessage.SameAsCurrentName.GetMessage().Code,

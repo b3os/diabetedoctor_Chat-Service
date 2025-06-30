@@ -7,13 +7,12 @@ public sealed class UpdateGroupConversationCommandHandler(
     IPublisher publisher,
     IMediaRepository mediaRepository,
     IParticipantRepository participantRepository,
-    IConversationRepository conversationRepository,
-    IOutboxEventRepository outboxEventRepository)
+    IConversationRepository conversationRepository)
     : ICommandHandler<UpdateGroupConversationCommand, Response>
 {
     public async Task<Result<Response>> Handle(UpdateGroupConversationCommand request, CancellationToken cancellationToken)
     {
-        var conversation = await GetConversationWithPermissionAsync(request.ConversationId, request.AdminId, cancellationToken);
+        var conversation = await GetConversationWithPermissionAsync(request.ConversationId, request.AdminId!, cancellationToken);
 
         if (conversation.IsFailure)
         {
@@ -44,12 +43,12 @@ public sealed class UpdateGroupConversationCommandHandler(
         try
         {
             await unitOfWork.StartTransactionAsync(cancellationToken);
-            await conversationRepository.UpdateConversationAsync(unitOfWork.ClientSession, request.ConversationId, request.Name, avatar, cancellationToken);
+            await conversationRepository.UpdateConversationAsync(unitOfWork.ClientSession, request.ConversationId!, request.Name, avatar, cancellationToken);
             if (media is not null)
             {
                 await mediaRepository.ReplaceOneAsync(unitOfWork.ClientSession, media, cancellationToken);
             }
-            var domainEvent = MapToDomainEvent(request.ConversationId, request.Name, avatar);
+            var domainEvent = MapToDomainEvent(request.ConversationId!, request.Name, avatar);
             await publisher.Publish(domainEvent, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
@@ -64,7 +63,7 @@ public sealed class UpdateGroupConversationCommandHandler(
             ConversationMessage.UpdatedGroupSuccessfully.GetMessage().Message));
     }
 
-    private async Task<Result<Domain.Models.Conversation>> GetConversationWithPermissionAsync(ObjectId conversationId,
+    private async Task<Result<Domain.Models.Conversation>> GetConversationWithPermissionAsync(ObjectId? conversationId,
         string ownerId,
         CancellationToken cancellationToken)
     {
@@ -72,8 +71,8 @@ public sealed class UpdateGroupConversationCommandHandler(
             .Include(conversation => conversation.Avatar)
             .Include(conversation => conversation.Name);
         var conversation = await conversationRepository.FindSingleAsync(
-            group => group.Id == conversationId
-                     && group.ConversationType == ConversationType.Group,
+            c => c.Id == conversationId
+                     && c.ConversationType == ConversationType.Group,
             conversationProjection,
             cancellationToken);
 
@@ -93,8 +92,8 @@ public sealed class UpdateGroupConversationCommandHandler(
             : Result.Success(conversation);
     }  
     
-    private ConversationUpdatedEvent MapToDomainEvent(ObjectId conversationId, string? name, Image? oldAvatar)
+    private ConversationUpdatedEvent MapToDomainEvent(ObjectId? conversationId, string? name, Image? oldAvatar)
     {
-        return new ConversationUpdatedEvent(conversationId.ToString(), name, oldAvatar?.ToString());
+        return new ConversationUpdatedEvent(conversationId.ToString()!, name, oldAvatar?.ToString());
     }
 }

@@ -38,6 +38,10 @@ public enum ConversationMessage
     MemberIsBanned,
     [Message("Thành viên này đã tồn tại", "group_error_09")]
     MemberAlreadyExisted,
+    [Message("Bạn đã bị cấm khỏi nhóm này", "group_error_10")]
+    YouAreBanned,
+    [Message("Bạn đã là thành viên trong nhóm", "group_error_11")]
+    YouAlreadyInGroup,
     
     
     //Validator

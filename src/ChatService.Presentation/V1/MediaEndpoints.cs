@@ -11,7 +11,7 @@ public static class MediaEndpoints
     public static IVersionedEndpointRouteBuilder MapMediaApiV1(this IVersionedEndpointRouteBuilder builder)
     {
         var media = builder.MapGroup(BaseUrl).HasApiVersion(1).DisableAntiforgery();
-        media.MapPost(string.Empty, UploadMedia).RequireAuthorization();
+        media.MapPost("upload", UploadMedia).RequireAuthorization();
         return builder;
     }
     

@@ -1,4 +1,5 @@
-﻿using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
+﻿using ChatService.Application.Mapping;
+using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 
 namespace ChatService.Application.UseCase.V1.Commands.Conversation.IntegrationCommandHandlers;
 
@@ -21,6 +22,7 @@ public sealed class UpdateLastMessageInConversationCommandHandler(
             conversationId: command.ConversationId,
             senderId: command.SenderId is null ? null : UserId.Of(command.SenderId),
             content: command.MessageContent,
+            file: Mapper.MapFileAttachment(command.FileAttachmentDto),
             createdDate: command.CreatedDate,
             type: (MessageType)command.MessageType);
     }

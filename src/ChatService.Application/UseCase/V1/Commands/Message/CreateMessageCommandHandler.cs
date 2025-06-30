@@ -16,6 +16,7 @@ public class CreateMessageCommandHandler(
     IConversationRepository conversationRepository,
     IMediaRepository mediaRepository,
     IOutboxEventRepository outboxEventRepository,
+    IOptions<KafkaSettings> kafkaSettings,
     IUnitOfWork unitOfWork,
     IAblyEventPublisher ablyEventPublisher)
     : ICommandHandler<CreateMessageCommand, Response>
@@ -65,7 +66,7 @@ public class CreateMessageCommandHandler(
             {
                 await mediaRepository.ReplaceOneAsync(unitOfWork.ClientSession, media, cancellationToken);
             }
-            var @event = OutboxEventExtension.ToOutboxEvent(KafkaTopicConstraints.ChatTopic, integrationEvent);
+            var @event = OutboxEventExtension.ToOutboxEvent(kafkaSettings.Value.ChatTopic, integrationEvent);
             await outboxEventRepository.CreateAsync(unitOfWork.ClientSession, @event, cancellationToken);
             await unitOfWork.CommitTransactionAsync(cancellationToken);
         }
@@ -135,6 +136,7 @@ public class CreateMessageCommandHandler(
             MessageId = message.Id.ToString(),
             MessageContent = message.Content,
             MessageType = (int)message.Type,
+            FileAttachment = Mapper.MapFileAttachmentDto(message.File),
             CreatedDate = message.CreatedDate
         };
     }

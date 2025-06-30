@@ -1,5 +1,4 @@
 ﻿using ChatService.Contract.Services.Media.Commands;
-using ChatService.Contract.Services.Message.Commands;
 
 namespace ChatService.Presentation.V1;
 

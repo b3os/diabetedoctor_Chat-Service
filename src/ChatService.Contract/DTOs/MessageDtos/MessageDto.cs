@@ -14,7 +14,10 @@ public class MessageDto
     public string Content { get; set; } = null!;
     
     [BsonElement("type")]
-    public int Type { get; set; } = 0!;
+    public int Type { get; set; }
+    
+    [BsonElement("file_attachment")]
+    public FileAttachmentDto? FileAttachment { get; set; }
     
     [BsonElement("created_date")]
     public DateTimeOffset CreatedDate { get; set; } = default!;

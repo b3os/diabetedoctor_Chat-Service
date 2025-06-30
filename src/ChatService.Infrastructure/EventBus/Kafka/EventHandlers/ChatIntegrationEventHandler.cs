@@ -27,6 +27,7 @@ public sealed class ChatIntegrationEventHandler(ISender sender, ILogger<ChatInte
             MessageId = messageId,
             MessageContent = notification.MessageContent,
             MessageType = notification.MessageType,
+            FileAttachmentDto = notification.FileAttachment,
             CreatedDate = notification.CreatedDate,
         }, cancellationToken);
     }

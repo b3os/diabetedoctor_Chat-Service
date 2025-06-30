@@ -53,7 +53,7 @@ public class Message : DomainEntity<ObjectId>
     }
     
     
-    public static Message CreateFromEvent(ObjectId id, ObjectId conversationId, UserId? senderId, string? content, DateTime? createdDate, MessageType type)
+    public static Message CreateFromEvent(ObjectId id, ObjectId conversationId, UserId? senderId, string? content, DateTime? createdDate, MessageType type, FileAttachment? file)
     {
         return new Message()
         {
@@ -62,6 +62,7 @@ public class Message : DomainEntity<ObjectId>
             SenderId = senderId,
             Content = content,
             Type = type,
+            File = file,
             CreatedDate = createdDate,
             IsDeleted = false
         };

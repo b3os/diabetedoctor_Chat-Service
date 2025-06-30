@@ -1,4 +1,6 @@
-﻿namespace ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
+﻿using ChatService.Contract.DTOs;
+
+namespace ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
 
 public record MessageCreatedIntegrationEvent : IntegrationEvent
 {
@@ -7,6 +9,7 @@ public record MessageCreatedIntegrationEvent : IntegrationEvent
     public string? MessageId { get; init; }
     public string? MessageContent { get; init; }
     public int MessageType { get; init; }
+    public FileAttachmentDto? FileAttachment { get; init; }
     public DateTime? CreatedDate { get; init; }
 }
 

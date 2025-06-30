@@ -2,6 +2,7 @@
 
 namespace ChatService.Contract.DTOs;
 
+[BsonIgnoreExtraElements]
 public class ImageDto
 {
     [BsonElement("public_id")] 

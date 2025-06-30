@@ -1,4 +1,6 @@
-﻿namespace ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
+﻿using ChatService.Contract.DTOs;
+
+namespace ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 
 public record UpdateLastMessageInConversationCommand : ICommand
 {
@@ -7,5 +9,6 @@ public record UpdateLastMessageInConversationCommand : ICommand
     public ObjectId MessageId { get; init; }
     public string? MessageContent { get; init; }
     public int MessageType { get; init; }
+    public FileAttachmentDto? FileAttachmentDto { get; init; }
     public DateTime? CreatedDate { get; init; }
 }

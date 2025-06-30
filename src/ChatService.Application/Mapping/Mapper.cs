@@ -12,4 +12,14 @@ public static class Mapper
     {
         return dto.ToDomain();
     }
+
+    public static FileAttachment? MapFileAttachment(FileAttachmentDto? dto)
+    {
+        return dto.ToDomain();
+    }
+    
+    public static FileAttachmentDto? MapFileAttachmentDto(FileAttachment? attachment)
+    {
+        return attachment.ToDto();
+    }
 }

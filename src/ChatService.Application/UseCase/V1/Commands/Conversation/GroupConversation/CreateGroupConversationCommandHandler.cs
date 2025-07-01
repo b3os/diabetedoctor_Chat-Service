@@ -64,7 +64,7 @@ public sealed class CreateGroupConversationCommandHandler(
     private Domain.Models.Conversation MapToConversation(CreateGroupConversationCommand command, List<UserId> userIds)
     {
         var id = ObjectId.GenerateNewId();
-        var avatar = Image.Of(string.Empty, settings.Value.GroupAvatarDefault);
+        var avatar = Image.Of("default-avatar", settings.Value.GroupAvatarDefault);
         return Domain.Models.Conversation.CreateGroup(id, command.Name!, avatar, userIds);
     }
     

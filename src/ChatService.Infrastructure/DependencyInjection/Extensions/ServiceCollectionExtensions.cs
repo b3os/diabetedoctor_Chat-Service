@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
     {
         builder.AddKafka();
         builder.AddAbly();
-        // builder.AddOutboxService();
+        builder.AddOutboxService();
         // builder.Services.AddSingleton(typeof(IntegrationEventFactory));
         builder.Services.AddSingleton<IIntegrationEventFactory, IntegrationEventFactory>();
         builder.Services

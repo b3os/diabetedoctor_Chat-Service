@@ -18,7 +18,7 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
         
         var id = ObjectId.GenerateNewId();
         var userId = UserId.Of(command.Id);
-        var avatar = Image.Of("", command.Avatar);
+        var avatar = Image.Of("default-avatar", command.Avatar);
         return Domain.Models.User.Create(id: id, userId, command.FullName, avatar);
     }
 }

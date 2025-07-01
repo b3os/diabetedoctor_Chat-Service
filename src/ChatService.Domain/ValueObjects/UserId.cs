@@ -10,7 +10,6 @@ public sealed class UserId : ValueObject
 
     private UserId(){}
 
-    [BsonConstructor]
     private UserId(string id)
     {
         Id = id;

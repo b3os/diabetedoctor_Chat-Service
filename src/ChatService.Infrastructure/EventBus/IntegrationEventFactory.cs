@@ -13,7 +13,9 @@ public class IntegrationEventFactory : IIntegrationEventFactory
     {
         var t = Type.GetType(type);
 
-        return t;
+        return t ?? AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a => a.GetTypes())
+            .FirstOrDefault(aType => aType.Name == type);;
     }
 
     public static readonly IntegrationEventFactory Instance = new();

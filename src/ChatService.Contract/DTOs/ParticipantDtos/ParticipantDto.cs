@@ -7,7 +7,7 @@ namespace ChatService.Contract.DTOs.ParticipantDtos;
 public record ParticipantDto
 {
     [BsonElement("_id")]
-    [BsonRepresentation(BsonType.String)]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; init; }
     
     [BsonElement("conversation_id")]
@@ -16,7 +16,7 @@ public record ParticipantDto
     [BsonElement("role")]
     public int Role { get; init; }
     
-    [BsonElement("invited_by")]
+    [BsonElement("invited_by._id")]
     public string InvitedBy { get; init; } = null!;
     
     [BsonElement("user")]

@@ -16,8 +16,7 @@ public sealed class FileAttachment : ValueObject
     public MediaType Type { get; }
     
     private FileAttachment() { }
-
-    [BsonConstructor]
+    
     private FileAttachment(string publicId, string publicUrl, MediaType fileType)
     {
         PublicId = publicId;

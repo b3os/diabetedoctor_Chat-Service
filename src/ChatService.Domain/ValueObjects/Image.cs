@@ -12,8 +12,7 @@ public sealed class Image : ValueObject
     public string PublicUrl { get; } = null!;
 
     private Image() {}
-
-    [BsonConstructor]
+    
     private Image(string publicId, string publicUrl)
     {
         PublicId = publicId;

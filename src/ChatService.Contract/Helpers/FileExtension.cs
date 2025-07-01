@@ -11,20 +11,20 @@ public static class FileExtension
         return allowedExtensions.Contains(ext);
     }
     
-    public static MediaEnum DetectFromExtension(string fileName)
+    public static MediaTypeEnum DetectFromExtension(string fileName)
     {
         var ext = Path.GetExtension(fileName);
-        return Map.TryGetValue(ext, out var result) ? result : MediaEnum.Raw;
+        return Map.TryGetValue(ext, out var result) ? result : MediaTypeEnum.Raw;
     }
     
-    private static readonly Dictionary<string, MediaEnum> Map = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, MediaTypeEnum> Map = new(StringComparer.OrdinalIgnoreCase)
     {
-        [".jpg"] = MediaEnum.Image,
-        [".jpeg"] = MediaEnum.Image,
-        [".png"] = MediaEnum.Image,
-        [".gif"] = MediaEnum.Image,
-        [".mp4"] = MediaEnum.Video,
-        [".mkv"] = MediaEnum.Video,
-        [".avi"] = MediaEnum.Video
+        [".jpg"] = MediaTypeEnum.Image,
+        [".jpeg"] = MediaTypeEnum.Image,
+        [".png"] = MediaTypeEnum.Image,
+        [".gif"] = MediaTypeEnum.Image,
+        [".mp4"] = MediaTypeEnum.Video,
+        [".mkv"] = MediaTypeEnum.Video,
+        [".avi"] = MediaTypeEnum.Video
     };
 }

@@ -13,15 +13,16 @@ public static class ServiceCollectionExtensions
     {
         builder.Services
             .Configure<KafkaSettings>(builder.Configuration.GetSection(KafkaSettings.SectionName))
-            .Configure<MongoDbSetting>(builder.Configuration.GetSection(MongoDbSetting.SectionName))
-            .Configure<AuthSetting>(builder.Configuration.GetSection(AuthSetting.SectionName))
+            .Configure<MongoDbSettings>(builder.Configuration.GetSection(MongoDbSettings.SectionName))
+            .Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName))
             .Configure<AblySetting>(builder.Configuration.GetSection(AblySetting.SectionName))
+            .Configure<CloudinarySettings>(builder.Configuration.GetSection(CloudinarySettings.SectionName))
             .Configure<AppDefaultSettings>(builder.Configuration.GetSection(AppDefaultSettings.SectionName));
     }
 
     private static void AddAuthenticationAndAuthorization(this IHostApplicationBuilder builder)
     {
-        var authSettings = builder.Configuration.GetSection(AuthSetting.SectionName).Get<AuthSetting>() ?? new AuthSetting();
+        var authSettings = builder.Configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>() ?? new AuthSettings();
 
 
         builder.Services.AddAuthentication(options =>

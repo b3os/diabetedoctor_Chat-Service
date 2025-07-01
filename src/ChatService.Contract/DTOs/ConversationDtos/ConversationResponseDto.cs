@@ -21,7 +21,7 @@ public record ConversationResponseDto
     public int ConversationType { get; init; }
     
     [BsonElement("last_message")]
-    public MessageDto? Message { get; init; }
+    public MessageResponseDto? Message { get; init; }
     
     [BsonElement("members")]
     public IEnumerable<ParticipantResponseDto> Members { get; init; } = [];

@@ -53,10 +53,10 @@ public sealed class UploadMediaCommandHandler(
             new UploadMediaResponse{MediaIds = mediaIds}));
     }
 
-    private Domain.Models.Media MapToMedia(ObjectId id, RawUploadResult uploadResult, MediaEnum type, string uploadBy)
+    private Domain.Models.Media MapToMedia(ObjectId id, RawUploadResult uploadResult, MediaTypeEnum type, string uploadBy)
     {
         var userId = UserId.Of(uploadBy);
-        var mediaType = type.ToEnum<MediaEnum, MediaType>();
+        var mediaType = type.ToEnum<MediaTypeEnum, MediaType>();
         return Domain.Models.Media.Create(
             id: id,
             publicId: uploadResult.FullyQualifiedPublicId,

@@ -1,4 +1,4 @@
-﻿namespace ChatService.Contract.DTOs.EnumDtos;
+﻿namespace ChatService.Contract.Enums;
 
 public enum ConversationTypeEnum
 {

@@ -1,6 +1,5 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.DTOs.ConversationDtos;
-using ChatService.Contract.DTOs.EnumDtos;
 using ChatService.Contract.Enums;
 using ChatService.Contract.EventBus.Abstractions;
 using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;

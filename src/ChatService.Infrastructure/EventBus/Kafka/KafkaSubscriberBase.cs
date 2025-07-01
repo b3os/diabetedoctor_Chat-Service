@@ -108,7 +108,6 @@ public class KafkaSubscriberBase<T> : BackgroundService
                     catch (Exception ex)
                     {
                         retries++;
-                        _logger.LogError(ex, "Error retry {retries}/{max}", retries, _options.MaxRetries);
 
                         if (retries > _options.ServiceRetries)
                         {
@@ -126,7 +125,7 @@ public class KafkaSubscriberBase<T> : BackgroundService
                             _logger.LogWarning("Moved to Retry topic");
                             return;
                         }
-
+                        _logger.LogError(ex, "Error retry {retries}/{max}", retries, _options.MaxRetries);
                         await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retries)), stoppingToken);
                     }
                 }

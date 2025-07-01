@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
     private static void AddConfigurationService(this IHostApplicationBuilder builder, IConfiguration configuration)
     {
         builder.Services
-            .Configure<MongoDbSetting>(configuration.GetSection(MongoDbSetting.SectionName));
+            .Configure<MongoDbSettings>(configuration.GetSection(MongoDbSettings.SectionName));
     }
 
     private static void AddDatabaseConfiguration(this IHostApplicationBuilder builder)

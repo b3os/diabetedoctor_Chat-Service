@@ -1,5 +1,5 @@
 ﻿namespace ChatService.Contract.Settings;
-public class AuthSetting
+public class AuthSettings
 {
     public const string SectionName = "AuthSettings";
     public string Issuer { get; init; } = null!;

@@ -4,5 +4,5 @@ namespace ChatService.Contract.Services.Message.Responses;
 
 public record GetMessagesResponse
 {
-    public PagedList<MessageDto> Messages { get; init; } = null!;
+    public PagedList<MessageResponseDto> Messages { get; init; } = null!;
 }

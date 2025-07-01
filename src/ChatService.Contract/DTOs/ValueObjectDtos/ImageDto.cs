@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace ChatService.Contract.DTOs;
+namespace ChatService.Contract.DTOs.ValueObjectDtos;
 
 [BsonIgnoreExtraElements]
 public class ImageDto

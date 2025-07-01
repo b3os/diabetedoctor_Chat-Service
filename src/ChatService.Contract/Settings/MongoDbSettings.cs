@@ -1,6 +1,6 @@
 namespace ChatService.Contract.Settings;
 
-public class MongoDbSetting
+public class MongoDbSettings
 {
     public const string SectionName = "MongoDbSettings";
     public string ConnectionString { get; init; } = null!;

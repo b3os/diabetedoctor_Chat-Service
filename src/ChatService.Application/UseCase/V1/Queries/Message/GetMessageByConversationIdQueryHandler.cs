@@ -53,7 +53,7 @@ public class GetMessageByConversationIdQueryHandler(
                 @as: "participant_info")
             .AppendStage<BsonDocument>(addParticipantInfoStage)
             .Project(messageProjection)
-            .As<MessageDto>()
+            .As<MessageResponseDto>()
             .ToListAsync(cancellationToken: cancellationToken);
         
         var hasNext = result.Count > pageSize;
@@ -68,7 +68,7 @@ public class GetMessageByConversationIdQueryHandler(
         return Result.Success(new GetMessagesResponse
         {
             Messages =
-                PagedList<MessageDto>.Create(result, 0, pageSize, hasNext ? result[^1].Id : string.Empty, hasNext)
+                PagedList<MessageResponseDto>.Create(result, 0, pageSize, hasNext ? result[^1].Id : string.Empty, hasNext)
         });
     }
 
@@ -142,6 +142,7 @@ public class GetMessageByConversationIdQueryHandler(
             { "_id", 1 },
             { "content", 1 },
             { "type", 1 },
+            { "file_attachment", 1},
             { "created_date", 1 },
             {
                 "participant_info", new BsonDocument

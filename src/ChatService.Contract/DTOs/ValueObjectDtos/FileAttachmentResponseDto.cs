@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace ChatService.Contract.DTOs;
+namespace ChatService.Contract.DTOs.ValueObjectDtos;
 
 [BsonIgnoreExtraElements]
-public record FileAttachmentDto
+public record FileAttachmentResponseDto
 {
     [BsonElement("public_url")]
     public string PublicUrl { get; init; } = null!;

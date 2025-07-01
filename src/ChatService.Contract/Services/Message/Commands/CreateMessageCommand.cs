@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.EnumDtos;
-using ChatService.Contract.Enums;
+﻿using ChatService.Contract.Enums;
 
 namespace ChatService.Contract.Services.Message.Commands;
 

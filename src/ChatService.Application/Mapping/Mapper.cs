@@ -1,5 +1,5 @@
 ﻿using ChatService.Contract.DTOs;
-using ChatService.Contract.DTOs.EnumDtos;
+using ChatService.Contract.DTOs.ValueObjectDtos;
 
 namespace ChatService.Application.Mapping;
 

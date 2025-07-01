@@ -24,14 +24,14 @@ public class CloudinaryService : ICloudinaryService
         _cloudinary = new Cloudinary(account);
     }
 
-    public async Task<RawUploadResult> UploadAsync(string id, MediaEnum type, IFormFile formFile, CancellationToken cancellationToken = default)
+    public async Task<RawUploadResult> UploadAsync(string id, MediaTypeEnum type, IFormFile formFile, CancellationToken cancellationToken = default)
     {
         await using var stream = formFile.OpenReadStream();
         var file = new FileDescription(Path.GetFileName(formFile.FileName), stream);
         var publicId = _cloudinarySettings.Value.Folder + "/" + type.ToString().ToLower() + "/" + id;
         return type switch
         {
-            MediaEnum.Image => await _cloudinary.UploadAsync(new ImageUploadParams
+            MediaTypeEnum.Image => await _cloudinary.UploadAsync(new ImageUploadParams
             {
                 File = file,
                 PublicId = publicId,
@@ -39,7 +39,7 @@ public class CloudinaryService : ICloudinaryService
                 Overwrite = true,
             }),
 
-            MediaEnum.Video => await _cloudinary.UploadAsync(new VideoUploadParams
+            MediaTypeEnum.Video => await _cloudinary.UploadAsync(new VideoUploadParams
             {
                 File = file,
                 PublicId = publicId,

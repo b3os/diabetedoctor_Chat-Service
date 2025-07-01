@@ -140,7 +140,8 @@ public sealed class GetUserConversationByUserIdQueryHandler(
                         {
                             { "_id", "$last_message._id" },
                             { "content", "$last_message.content" },
-                            { "type", "$last_message.type" },
+                            { "type", "$last_message.message_type" },
+                            { "file_attachment", "$last_message.file_attachment" },
                             {
                                 "created_date", new BsonDocument("$dateToString", new BsonDocument
                                 {

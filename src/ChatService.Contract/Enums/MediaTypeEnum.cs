@@ -1,6 +1,6 @@
 ﻿namespace ChatService.Contract.Enums;
 
-public enum MediaEnum
+public enum MediaTypeEnum
 {
     Image = 0,
     Video = 1,

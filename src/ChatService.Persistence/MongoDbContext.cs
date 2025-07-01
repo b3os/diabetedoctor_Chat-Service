@@ -2,7 +2,7 @@ namespace ChatService.Persistence;
 
 public class MongoDbContext : IMongoDbContext
 {
-    public MongoDbContext(IOptions<MongoDbSetting> mongoDbSetting)
+    public MongoDbContext(IOptions<MongoDbSettings> mongoDbSetting)
     {
         Client = new MongoClient(mongoDbSetting.Value.ConnectionString);
         Database = Client.GetDatabase(mongoDbSetting.Value.DatabaseName);

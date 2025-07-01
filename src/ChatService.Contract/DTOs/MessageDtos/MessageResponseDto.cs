@@ -4,9 +4,8 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.MessageDtos;
 
-
 [BsonIgnoreExtraElements]
-public class MessageDto
+public class MessageResponseDto
 {
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
@@ -18,11 +17,11 @@ public class MessageDto
     public int Type { get; set; }
     
     [BsonElement("file_attachment")]
-    public FileAttachmentDto? FileAttachment { get; set; }
+    public FileAttachmentResponseDto? FileAttachment { get; set; }
     
     [BsonElement("created_date")]
     public DateTimeOffset CreatedDate { get; set; } = default!;
     
     [BsonElement("participant_info")]
-    public ParticipantDto Participant { get; set; } = null!;
-}
+    public ParticipantResponseDto Participant { get; set; } = null!;
+};

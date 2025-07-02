@@ -99,6 +99,6 @@ public static class ConversationEndpoints
     {
         var userId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new GetUserConversationsByUserIdQuery() { UserId = userId, Filter = filter });
-        return Results.Ok(result);
+        return Results.Ok(result.Value);
     }
 }

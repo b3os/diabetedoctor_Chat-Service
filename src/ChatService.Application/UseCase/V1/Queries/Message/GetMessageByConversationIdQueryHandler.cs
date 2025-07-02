@@ -9,7 +9,7 @@ using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Queries.Message;
 
-public class GetMessageByConversationIdQueryHandler(
+public sealed class GetMessageByConversationIdQueryHandler(
     IMongoDbContext mongoDbContext,
     IOptions<AppDefaultSettings> settings)
     : IQueryHandler<GetMessageByConversationIdQuery, GetMessagesResponse>

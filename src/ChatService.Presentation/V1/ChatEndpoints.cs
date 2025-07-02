@@ -36,11 +36,11 @@ public static class ChatEndpoints
     }
 
     private static async Task<IResult> GetGroupMessages(ISender sender, IClaimsService claimsService,
-        [FromQuery, Required] ObjectId groupId, [AsParameters] QueryFilter filter)
+        [FromQuery, Required] ObjectId conversationId, [AsParameters] QueryFilter filter)
     {
         var userId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new GetMessageByConversationIdQuery()
-            { ConversationId = groupId, UserId = userId, Filter = filter });
+            { ConversationId = conversationId, UserId = userId, Filter = filter });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();    
     }
     

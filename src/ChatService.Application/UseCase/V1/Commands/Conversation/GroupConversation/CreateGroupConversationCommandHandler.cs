@@ -9,7 +9,6 @@ public sealed class CreateGroupConversationCommandHandler(
     IConversationRepository conversationRepository,
     IParticipantRepository participantRepository,
     IUserRepository userRepository,
-    IOutboxEventRepository outboxEventRepository,
     IPublisher publisher,
     IOptions<AppDefaultSettings> settings) 
     : ICommandHandler<CreateGroupConversationCommand, Response<CreateGroupConversationResponse>>
@@ -55,8 +54,8 @@ public sealed class CreateGroupConversationCommandHandler(
             .Include(user => user.FullName)
             .Include(user => user.Avatar);
         var users = await userRepository.FindListAsync(user => userIds.Contains(user.UserId.Id),
-            projection, 
-            cancellationToken);
+            // projection, 
+            cancellationToken: cancellationToken);
         
         return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<Domain.Models.User>>(UserErrors.NotFound);
     }

@@ -7,13 +7,13 @@ namespace ChatService.Domain.ValueObjects;
 public sealed class FileAttachment : ValueObject
 {
     [BsonElement("public_id")]
-    public string PublicId { get; } = null!;
+    public string PublicId { get; private init; } = null!;
     
     [BsonElement("public_url")]
-    public string PublicUrl { get; } = null!;
+    public string PublicUrl { get; private init; } = null!;
     
     [BsonElement("file_type")]
-    public MediaType Type { get; }
+    public MediaType Type { get; private init; }
     
     private FileAttachment() { }
     

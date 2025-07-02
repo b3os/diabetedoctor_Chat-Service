@@ -1,12 +1,10 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace ChatService.Domain.ValueObjects;
+﻿namespace ChatService.Domain.ValueObjects;
 
 public sealed class UserId : ValueObject
 {
     [BsonElement("_id")]
     [BsonRepresentation(BsonType.String)]
-    public string Id { get; } = null!;
+    public string Id { get; private init; } = null!;
 
     private UserId(){}
 

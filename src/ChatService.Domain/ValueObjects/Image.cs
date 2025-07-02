@@ -6,10 +6,10 @@ namespace ChatService.Domain.ValueObjects;
 public sealed class Image : ValueObject
 {
     [BsonElement("public_id")]
-    public string PublicId { get; } = null!;
+    public string PublicId { get; private init;} = null!;
     
     [BsonElement("public_url")]
-    public string PublicUrl { get; } = null!;
+    public string PublicUrl { get; private init;} = null!;
 
     private Image() {}
     

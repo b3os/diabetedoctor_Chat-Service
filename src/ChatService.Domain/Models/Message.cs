@@ -15,7 +15,7 @@ public class Message : DomainEntity<ObjectId>
     [BsonElement("content")]
     public string? Content { get; private set; } = null!;
     
-    [BsonElement("message_type")]
+    [BsonElement("type")]
     public MessageType Type { get; private set; }
     
     [BsonElement("file_attachment")]

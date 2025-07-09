@@ -15,7 +15,7 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
         var pageIndex = request.OffsetFilter.PageIndex is > 0 ? request.OffsetFilter.PageIndex.Value : 1;
         var pageSize = request.OffsetFilter.PageSize is > 0 ? request.OffsetFilter.PageSize.Value : 20;
         
-        var filters = BuildFilter(request.OffsetFilter, request.Role);
+        var filters = await BuildFilter(request.OffsetFilter, request.Role, request.UserId, cancellationToken);
         var sorter = BuildUserSort();
         var participantLookup = ParticipantLookup(request.ConversationId);
         var addStatusStage = AddStatusStage();
@@ -47,12 +47,21 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
         });
     }
 
-    private static FilterDefinition<Domain.Models.User> BuildFilter(QueryOffsetFilter offsetFilter, RoleEnum roleEnum)
+    private async Task<FilterDefinition<Domain.Models.User>> BuildFilter(QueryOffsetFilter offsetFilter, RoleEnum roleEnum, 
+        string staffId, CancellationToken cancellationToken = default)
     {
         var role = roleEnum.ToEnum<RoleEnum, Role>();
         var builder = Builders<Domain.Models.User>.Filter;
+        
         var filters = new List<FilterDefinition<Domain.Models.User>> { builder.Eq(u => u.Role, role) };
-
+        
+        if (role is Role.HospitalStaff or Role.Doctor)
+        {
+            var userId = UserId.Of(staffId); 
+            var user = await mongoDbContext.Users.Find(u => u.UserId == userId).FirstOrDefaultAsync(cancellationToken);
+            filters.Add(builder.Eq(u => u.HospitalId, user.HospitalId));   
+        }
+        
         if (!string.IsNullOrWhiteSpace(offsetFilter.Search))
         {
             var search = SearchHelper.NormalizeSearchText(offsetFilter.Search);

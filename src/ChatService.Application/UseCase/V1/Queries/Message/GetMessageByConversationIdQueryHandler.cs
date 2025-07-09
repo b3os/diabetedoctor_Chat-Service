@@ -17,9 +17,10 @@ public sealed class GetMessageByConversationIdQueryHandler(
     public async Task<Result<GetMessagesResponse>> Handle(GetMessageByConversationIdQuery request,
         CancellationToken cancellationToken)
     {
-        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 50;
+        var pageSize = request.CursorFilter.PageSize is > 0 ? request.CursorFilter.PageSize.Value : 50;
 
-        var checkPermissionResult = await CheckConversationPermissionAsync(request.ConversationId, request.UserId, cancellationToken);
+        var checkPermissionResult =
+            await CheckConversationPermissionAsync(request.ConversationId, request.UserId, cancellationToken);
         if (checkPermissionResult.IsFailure)
         {
             return Result.Failure<GetMessagesResponse>(checkPermissionResult.Error);
@@ -27,26 +28,27 @@ public sealed class GetMessageByConversationIdQueryHandler(
 
         var builder = Builders<Domain.Models.Message>.Filter;
         var sorter = Builders<Domain.Models.Message>.Sort;
-        
+
         var filters = new List<FilterDefinition<Domain.Models.Message>>
         {
             builder.Eq(m => m.ConversationId, request.ConversationId)
         };
-        
-        if (!string.IsNullOrEmpty(request.Filter.Cursor) && ObjectId.TryParse(request.Filter.Cursor, out var cursor))
+
+        if (!string.IsNullOrEmpty(request.CursorFilter.Cursor) && ObjectId.TryParse(request.CursorFilter.Cursor, out var cursor))
         {
             filters.Add(builder.Lt(m => m.Id, cursor));
         }
-        
+
         var participantLookup = ParticipantLookup();
-        var addParticipantInfoStage = AddParticipantInfoWithFallback(settings.Value.UserAvatarDefault);
-        var messageProjection = BuildMessageProjection();
+        var addParticipantInfoStage = AddParticipantInfo();
+        var messageProjection = BuildMessageProjection(settings.Value.UserAvatarDefault);
+
         var result = await mongoDbContext.Messages
             .Aggregate()
             .Match(builder.And(filters))
             .Sort(sorter.Descending(m => m.Id))
             .Limit(pageSize + 1)
-            .Lookup<Participant, Participant, IEnumerable<Participant>, Domain.Models.Message>(
+            .Lookup<Participant, BsonDocument, IEnumerable<BsonDocument>, BsonDocument>(
                 foreignCollection: mongoDbContext.Participants,
                 let: new BsonDocument("senderId", "$sender_id"),
                 lookupPipeline: participantLookup,
@@ -55,7 +57,7 @@ public sealed class GetMessageByConversationIdQueryHandler(
             .Project(messageProjection)
             .As<MessageResponseDto>()
             .ToListAsync(cancellationToken: cancellationToken);
-        
+
         var hasNext = result.Count > pageSize;
 
         if (hasNext)
@@ -64,11 +66,12 @@ public sealed class GetMessageByConversationIdQueryHandler(
         }
 
         result.Reverse();
-        
+
         return Result.Success(new GetMessagesResponse
         {
             Messages =
-                PagedList<MessageResponseDto>.Create(result, 0, pageSize, hasNext ? result[^1].Id : string.Empty, hasNext)
+                PagedList<MessageResponseDto>.Create(result, 0, pageSize, hasNext ? result[^1].Id : string.Empty,
+                    hasNext)
         });
     }
 
@@ -76,25 +79,51 @@ public sealed class GetMessageByConversationIdQueryHandler(
         string userId,
         CancellationToken cancellationToken)
     {
-        var isConversationExisted = await mongoDbContext.Conversations.Find(
-            c => c.Id == conversationId
-            && c.Members.Any(member => member.Id == userId))
+        var isConversationExisted = await mongoDbContext.Conversations.Find(c => c.Id == conversationId
+                && c.Members.Any(member => member.Id == userId))
             .AnyAsync(cancellationToken);
 
         return isConversationExisted
             ? Result.Success()
             : Result.Failure(ConversationErrors.NotFound);
     }
-    
-    private static PipelineDefinition<Participant, Participant> ParticipantLookup()
+
+    private static PipelineDefinition<Participant, BsonDocument> ParticipantLookup()
     {
-        return new EmptyPipelineDefinition<Participant>()
-            .Match(new BsonDocument
-                { { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$senderId" }) } })
-            .Limit(1);
+        return PipelineDefinition<Participant, BsonDocument>.Create(
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$senderId" }) }
+            }),
+            new BsonDocument("$limit", 1),
+            new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", nameof(User) },
+                { "let", new BsonDocument("userId", "$user_id") },
+                {
+                    "pipeline", new BsonArray
+                    {
+                        new BsonDocument("$match", new BsonDocument
+                        {
+                            { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$userId" }) }
+                        }),
+                        new BsonDocument("$project", new BsonDocument
+                        {
+                            { "full_name", 1 },
+                            { "avatar", 1 }
+                        })
+                    }
+                },
+                { "as", "user_info" }
+            }),
+            new BsonDocument("$unwind", new BsonDocument
+            {
+                { "path", "$user_info" },
+                { "preserveNullAndEmptyArrays", true }
+            }));
     }
-    
-    private static BsonDocument AddParticipantInfoWithFallback(string avatar)
+
+    private static BsonDocument AddParticipantInfo()
     {
         return new BsonDocument
         {
@@ -104,53 +133,53 @@ public sealed class GetMessageByConversationIdQueryHandler(
                     {
                         {
                             "if",
-                            new BsonDocument("$eq", new BsonArray { "$last_message", BsonNull.Value })
+                            new BsonDocument("$eq", new BsonArray { new BsonDocument("$size", "$participant_info"), 0 })
                         },
                         { "then", BsonNull.Value },
                         {
-                            "else", new BsonDocument("$cond", new BsonDocument
-                            {
-                                {
-                                    "if",
-                                    new BsonDocument("$eq",
-                                        new BsonArray { new BsonDocument("$size", "$participant_info"), 0 })
-                                },
-                                {
-                                    "then", new BsonDocument
-                                    {
-                                        { "full_name", "Người dùng không xác định" },
-                                        { "avatar", avatar },
-                                        { "role", -1 }
-                                    }
-                                },
-                                {
-                                    "else",
-                                    new BsonDocument("$arrayElemAt", new BsonArray { "$participant_info", 0 })
-                                }
-                            })
+                            "else", 
+                            new BsonDocument("$arrayElemAt", new BsonArray { "$participant_info", 0 })
                         }
                     })
                 )
             }
         };
     }
-    
-    private BsonDocument BuildMessageProjection()
+
+    private BsonDocument BuildMessageProjection(string avatarDefault)
     {
         return new BsonDocument
         {
             { "_id", 1 },
             { "content", 1 },
             { "type", 1 },
-            { "file_attachment", 1},
+            { "file_attachment", 1 },
             { "created_date", 1 },
             {
                 "participant_info", new BsonDocument
                 {
                     { "_id", "$participant_info.user_id._id" },
-                    { "full_name", "$participant_info.full_name" },
-                    { "avatar", "$participant_info.avatar.public_url" },
-                    { "role", "$participant_info.role" }
+                    {
+                        "full_name", new BsonDocument("$ifNull", new BsonArray
+                        {
+                            "$participant_info.user_info.full_name",
+                            "Người dùng không xác định"
+                        })
+                    },
+                    {
+                        "avatar", new BsonDocument("$ifNull", new BsonArray
+                        {
+                            "$participant_info.user_info.avatar.public_url",
+                            avatarDefault
+                        })
+                    },
+                    {
+                        "role", new BsonDocument("$ifNull", new BsonArray
+                        {
+                            "$participant_info.role",
+                            -1
+                        })
+                    }
                 }
             }
         };

@@ -25,8 +25,11 @@ public class Conversation : DomainEntity<ObjectId>
     
     [BsonElement("last_message")]
     public Message? LastMessage { get; private set; }
+    
+    [BsonElement("hospital_id")]
+    public HospitalId? HospitalId { get; private set; }
 
-    public static Conversation CreateGroup(ObjectId id, string name, Image avatar, List<UserId> members)
+    public static Conversation CreateGroup(ObjectId id, string name, Image avatar, List<UserId> members, HospitalId hospitalId)
     {
         return new Conversation()
         {
@@ -38,6 +41,7 @@ public class Conversation : DomainEntity<ObjectId>
             Status = ConversationStatus.Open,
             CreatedDate = CurrentTimeService.GetCurrentTime(),
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
+            HospitalId = hospitalId,
             IsDeleted = false
         };
     }

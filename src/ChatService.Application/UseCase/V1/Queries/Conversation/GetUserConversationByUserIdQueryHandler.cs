@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using ChatService.Contract.DTOs.ConversationDtos;
+using ChatService.Contract.DTOs.ConversationDtos.Responses;
 using ChatService.Contract.Services.Conversation.Queries;
 using ChatService.Contract.Settings;
 using Microsoft.Extensions.Options;
@@ -14,7 +15,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
     public async Task<Result<GetUserConversationsResponse>> Handle(GetUserConversationsByUserIdQuery request,
         CancellationToken cancellationToken)
     {
-        var pageSize = request.Filter.PageSize is > 0 ? request.Filter.PageSize.Value : 10;
+        var pageSize = request.CursorFilter.PageSize is > 0 ? request.CursorFilter.PageSize.Value : 10;
 
         var builder = Builders<Domain.Models.Conversation>.Filter;
         var sorter = Builders<Domain.Models.Conversation>.Sort;
@@ -25,9 +26,9 @@ public sealed class GetUserConversationByUserIdQueryHandler(
             builder.Eq(c => c.ConversationType, ConversationType.Group)
         };
 
-        if (!string.IsNullOrEmpty(request.Filter.Cursor)
+        if (!string.IsNullOrWhiteSpace(request.CursorFilter.Cursor)
             && DateTime.TryParseExact(
-                request.Filter.Cursor,
+                request.CursorFilter.Cursor,
                 "O",
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.RoundtripKind,
@@ -39,17 +40,17 @@ public sealed class GetUserConversationByUserIdQueryHandler(
         // var totalCount = await mongoDbContext.Conversations.CountDocumentsAsync(builder.And(filters), cancellationToken: cancellationToken);
 
         var participantLookup = ParticipantLookup();
-        var addParticipantInfoStage = AddParticipantInfoWithFallback(settings.Value.UserAvatarDefault);
-        var conversationProjection = BuildConversationProjection();
+        var addParticipantInfoStage = AddParticipantInfo();
+        var conversationProjection = BuildConversationProjection(settings.Value.UserAvatarDefault);
 
         var result = await mongoDbContext.Conversations
             .Aggregate()
             .Match(builder.And(filters))
-            .Sort(sorter
-                .Descending(c => c.ModifiedDate)
-                .Descending(c => c.Id))
+            .Sort(sorter.Combine(
+                sorter.Descending(c => c.ModifiedDate),
+                sorter.Descending(c => c.Id)))
             .Limit(pageSize + 1)
-            .Lookup<Participant, Participant, IEnumerable<Participant>, Domain.Models.Conversation>(
+            .Lookup<Participant, BsonDocument, IEnumerable<BsonDocument>, BsonDocument>(
                 foreignCollection: mongoDbContext.Participants,
                 let: new BsonDocument("senderId", "$last_message.sender_id"),
                 lookupPipeline: participantLookup,
@@ -69,19 +70,48 @@ public sealed class GetUserConversationByUserIdQueryHandler(
         return Result.Success(new GetUserConversationsResponse
         {
             Conversations =
-                PagedList<ConversationResponseDto>.Create(result, 0, pageSize, hasNext ? result[^1].ModifiedDate.ToString("O", CultureInfo.InvariantCulture) : string.Empty, hasNext)
+                PagedList<ConversationResponseDto>.Create(result, 0, pageSize,
+                    hasNext ? result[^1].ModifiedDate.ToString("O", CultureInfo.InvariantCulture) : string.Empty,
+                    hasNext)
         });
     }
 
-    private static PipelineDefinition<Participant, Participant> ParticipantLookup()
+    private static PipelineDefinition<Participant, BsonDocument> ParticipantLookup()
     {
-        return new EmptyPipelineDefinition<Participant>()
-            .Match(new BsonDocument
-                { { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$senderId" }) } })
-            .Limit(1);
+        return PipelineDefinition<Participant, BsonDocument>.Create(
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$senderId" }) }
+            }),
+            new BsonDocument("$limit", 1),
+            new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", nameof(User) },
+                { "let", new BsonDocument("userId", "$user_id") },
+                {
+                    "pipeline", new BsonArray
+                    {
+                        new BsonDocument("$match", new BsonDocument
+                        {
+                            { "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$userId" }) }
+                        }),
+                        new BsonDocument("$project", new BsonDocument
+                        {
+                            { "full_name", 1 },
+                            { "avatar", 1 }
+                        })
+                    }
+                },
+                { "as", "user_info" }
+            }),
+            new BsonDocument("$unwind", new BsonDocument
+            {
+                { "path", "$user_info" },
+                { "preserveNullAndEmptyArrays", true }
+            }));
     }
 
-    private static BsonDocument AddParticipantInfoWithFallback(string avatar)
+    private static BsonDocument AddParticipantInfo()
     {
         return new BsonDocument
         {
@@ -90,31 +120,13 @@ public sealed class GetUserConversationByUserIdQueryHandler(
                     new BsonDocument("$cond", new BsonDocument
                     {
                         {
-                            "if",
+                            "if", 
                             new BsonDocument("$eq", new BsonArray { "$last_message", BsonNull.Value })
                         },
                         { "then", BsonNull.Value },
                         {
-                            "else", new BsonDocument("$cond", new BsonDocument
-                            {
-                                {
-                                    "if",
-                                    new BsonDocument("$eq",
-                                        new BsonArray { new BsonDocument("$size", "$participant_info"), 0 })
-                                },
-                                {
-                                    "then", new BsonDocument
-                                    {
-                                        { "full_name", "Người dùng không xác định" },
-                                        { "avatar", avatar },
-                                        { "role", -1 }
-                                    }
-                                },
-                                {
-                                    "else",
-                                    new BsonDocument("$arrayElemAt", new BsonArray { "$participant_info", 0 })
-                                }
-                            })
+                            "else", 
+                            new BsonDocument("$arrayElemAt", new BsonArray { "$participant_info", 0 })
                         }
                     })
                 )
@@ -122,7 +134,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
         };
     }
 
-    private static BsonDocument BuildConversationProjection()
+    private static BsonDocument BuildConversationProjection(string avatarDefault)
     {
         return new BsonDocument
         {
@@ -132,38 +144,49 @@ public sealed class GetUserConversationByUserIdQueryHandler(
             { "type", 1 },
             {
                 "last_message", new BsonDocument("$cond", new BsonDocument
+            {
+                { "if", new BsonDocument("$eq", new BsonArray { "$last_message", BsonNull.Value }) },
+                { "then", BsonNull.Value },
                 {
-                    { "if", new BsonDocument("$eq", new BsonArray { "$last_message", BsonNull.Value }) },
-                    { "then", BsonNull.Value },
+                    "else", new BsonDocument
                     {
-                        "else", new BsonDocument
+                        { "_id", "$last_message._id" },
+                        { "content", "$last_message.content" },
+                        { "type", "$last_message.message_type" },
+                        { "file_attachment", "$last_message.file_attachment" },
+                        { "created_date", "$last_message.created_date" },
                         {
-                            { "_id", "$last_message._id" },
-                            { "content", "$last_message.content" },
-                            { "type", "$last_message.message_type" },
-                            { "file_attachment", "$last_message.file_attachment" },
+                            "participant_info", new BsonDocument
                             {
-                                "created_date", new BsonDocument("$dateToString", new BsonDocument
+                                { "_id", "$participant_info.user_id._id" },
                                 {
-                                    { "format", "%Y-%m-%dT%H:%M:%S.%L%z" },
-                                    { "date", "$created_date" },
-                                    { "timezone", "+07:00" }
-                                })
-                            },
-                            {
-                                "participant_info", new BsonDocument
+                                    "full_name", new BsonDocument("$ifNull", new BsonArray
+                                    {
+                                        "$participant_info.user_info.full_name",
+                                        "Người dùng không xác định"
+                                    })
+                                },
                                 {
-                                    { "_id", "$participant_info.user_id._id" },
-                                    { "full_name", "$participant_info.full_name" },
-                                    { "avatar", "$participant_info.avatar.public_url" },
-                                    { "role", "$participant_info.role" }
+                                    "avatar", new BsonDocument("$ifNull", new BsonArray
+                                    {
+                                        "$participant_info.user_info.avatar.public_url",
+                                        avatarDefault
+                                    })
+                                },
+                                {
+                                    "role", new BsonDocument("$ifNull", new BsonArray
+                                    {
+                                        "$participant_info.role",
+                                        -1
+                                    })
                                 }
                             }
                         }
                     }
-                })
-            },
-            { "modified_date", 1}
+                }
+            })
+        },
+            { "modified_date", 1 }
         };
     }
 }

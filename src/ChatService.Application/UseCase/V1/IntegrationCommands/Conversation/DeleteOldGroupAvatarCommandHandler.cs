@@ -1,7 +1,7 @@
 ﻿using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.IntegrationCommandHandlers;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.Conversation;
 
 public sealed class DeleteOldGroupAvatarCommandHandler(
     IUnitOfWork unitOfWork,

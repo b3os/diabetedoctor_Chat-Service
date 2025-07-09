@@ -2,7 +2,7 @@
 
 public interface IParticipantRepository : IRepositoryBase<Participant>
 {
-    Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId? groupId, IEnumerable<string> userIds,
+    Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId conversationId, IEnumerable<string> userIds,
         CancellationToken cancellationToken = default);
     
     Task<UpdateResult> RejoinToConversationAsync(IClientSessionHandle session, ObjectId? conversationId, IEnumerable<UserId> participantIds,

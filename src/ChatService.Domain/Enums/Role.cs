@@ -2,9 +2,9 @@
 
 public enum Role
 {
-    None = 0,
-    Patient = 1,
-    Doctor = 2,
-    HospitalStaff = 3,
-    SystemAdmin = 4,
+    SystemAdmin = 0,
+    Moderator = 1,
+    HospitalStaff = 2,
+    Doctor = 3,
+    Patient = 4,
 }

@@ -49,7 +49,14 @@ public class ConversationRepository(IMongoDbContext context)
             { "avatar", 1 },
             { "type", 1 },
             { "status", 1 },
-            { "member", 1 }
+            { "member", new BsonDocument
+            {
+                { "user_id", "$member.user_id" },
+                { "full_name", "$member.user.display_name" },
+                { "avatar", "$member.user.avatar.public_url" },
+                { "status", 1 },
+                { "is_deleted", 1 }
+            } }
         };
         
         var document = await DbSet.Aggregate()

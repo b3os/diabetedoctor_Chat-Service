@@ -1,6 +1,7 @@
-﻿using ChatService.Contract.Services.User.Commands;
+﻿using ChatService.Application.Mapping;
+using ChatService.Contract.Services.User.Commands;
 
-namespace ChatService.Application.UseCase.V1.Commands.User;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.User;
 
 public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
 {
@@ -13,7 +14,9 @@ public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
             throw new UserExceptions.UserNotFoundException();
         }
 
-        // user.Modify(request.FullName, string.IsNullOrWhiteSpace(request.Avatar) ? null : Image.Of("",request.Avatar));
+        var avatar = !string.IsNullOrWhiteSpace(request.Avatar) ? Image.Of("avatar",request.Avatar) : null;
+        var fullname = request.FullName is not null ? Mapper.MapFullName(request.FullName) : null;
+        user.Modify(fullname, avatar, request.PhoneNumber);
         
         await userRepository.ReplaceOneAsync(unitOfWork.ClientSession, user, cancellationToken);
         await unitOfWork.CommitTransactionAsync(cancellationToken);

@@ -12,7 +12,7 @@ public record UserDto
     [BsonElement("avatar")]
     public ImageDto Avatar { get; init; } = null!;
     
-    [BsonElement("fullname")]
+    [BsonElement("display_name")]
     public string FullName { get; init; } = null!;
     
     [BsonElement("role")]

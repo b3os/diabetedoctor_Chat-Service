@@ -7,42 +7,44 @@ namespace ChatService.Persistence.Repositories;
 public class ParticipantRepository(IMongoDbContext context)
     : RepositoryBase<Participant>(context), IParticipantRepository
 {
-    public async Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId? groupId, IEnumerable<string> userIds,
+    public async Task<List<BsonDocument>> CheckDuplicatedParticipantsAsync(ObjectId conversationId, IEnumerable<string> userIds,
         CancellationToken cancellationToken = default)
     {
         var builder = Builders<Participant>.Filter;
         var filter = builder.And(
-            builder.Eq(participant => participant.ConversationId, groupId),
+            builder.Eq(participant => participant.ConversationId, conversationId),
             builder.In(participant => participant.UserId.Id, userIds)
         );
 
-        var projection = new BsonDocument()
-        {
-            { "_id", 1 },
-            { "conversation_id", 1 },
-            { "role", 1 },
-            { "invited_by", 1 },
-            { "status", 1 },
-            { "is_deleted", 1 },
+        var userLookup = new EmptyPipelineDefinition<User>()
+            .Match(new BsonDocument
             {
-                "user", new BsonDocument
                 {
-                    { "_id", "$user.user_id._id" },
-                    { "avatar", "$user.avatar.public_url" },
-                    { "fullname", "$user.full_name" },
-                    { "role", "$role" }
+                    "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$userId" })
                 }
-            }
+            })
+            .Limit(1);
+        
+        var projection = new BsonDocument
+        {
+            { "user_id", "$user_id" },
+            { "full_name", "$user.display_name" },
+            { "avatar", "$user.avatar.public_url" },
+            { "status", 1 },
+            { "is_deleted", 1 }
         };
-
+        
         var dupParticipants = await DbSet.Aggregate()
             .Match(filter)
-            .Lookup(
-                foreignCollectionName: nameof(User),
-                localField: "userId",
-                foreignField: "userId",
+            .Lookup<User, User, IEnumerable<User>, BsonDocument>(
+                foreignCollection: context.Users,
+                let: new BsonDocument("userId", "$user_id"),
+                lookupPipeline: userLookup,
                 @as: "user")
-            .Unwind("user")
+            .Unwind("user", new AggregateUnwindOptions<BsonDocument>
+            {
+                PreserveNullAndEmptyArrays = true
+            })
             .Project(projection)
             .ToListAsync(cancellationToken);
 

@@ -20,4 +20,10 @@
       <Folder Include="UseCase\V1\Commands\Participant\" />
     </ItemGroup>
     
+    <ItemGroup>
+      <Compile Remove="UseCase\V1\DomainEvents\Conversation\ConversationCreatedEventHandler.cs" />
+      <Compile Remove="UseCase\V1\DomainEvents\Conversation\ConversationDeletedEventHandler.cs" />
+      <Compile Remove="UseCase\V1\DomainEvents\Conversation\ConversationUpdatedEventHandler.cs" />
+    </ItemGroup>
+    
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ChatService.Contract.Common.Filters;
 using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.Services;
 using ChatService.Contract.Services.Message.Commands;
@@ -36,11 +37,11 @@ public static class ChatEndpoints
     }
 
     private static async Task<IResult> GetGroupMessages(ISender sender, IClaimsService claimsService,
-        [FromQuery, Required] ObjectId conversationId, [AsParameters] QueryFilter filter)
+        [FromQuery, Required] ObjectId conversationId, [AsParameters] QueryCursorFilter cursorFilter)
     {
         var userId = claimsService.GetCurrentUserId;
         var result = await sender.Send(new GetMessageByConversationIdQuery()
-            { ConversationId = conversationId, UserId = userId, Filter = filter });
+            { ConversationId = conversationId, UserId = userId, CursorFilter = cursorFilter });
         return result.IsSuccess ? Results.Ok(result.Value) : result.HandlerFailure();    
     }
     

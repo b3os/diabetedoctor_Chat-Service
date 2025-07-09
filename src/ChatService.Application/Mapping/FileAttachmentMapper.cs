@@ -10,11 +10,12 @@ public static class FileAttachmentMapper
     {
         if (attachment is null) return null;
 
+        var type = attachment.Type.ToEnum<MediaType, MediaTypeEnum>();
         return new FileAttachmentDto
         {
             PublicId = attachment.PublicId,
             PublicUrl = attachment.PublicUrl,
-            Type = attachment.Type.ToEnum<MediaType, MediaTypeEnum>()
+            Type = type
         };
     }
     

@@ -1,28 +1,24 @@
 ﻿using ChatService.Contract.DTOs.UserDTOs;
+using ChatService.Contract.DTOs.ValueObjectDtos;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.ParticipantDtos;
 
+[BsonIgnoreExtraElements]
 public record ParticipantWithUserDto
 {
-    [BsonElement("_id")] 
-    public string Id { get; init; } = null!;
+    [BsonElement("user_id")] 
+    public UserIdDto UserId { get; init; } = null!;
     
-    [BsonElement("conversation_id")]
-    public ObjectId ConversationId { get; init; }
+    [BsonElement("avatar")]
+    public string? Avatar { get; init; }
     
-    [BsonElement("role")]
-    public int Role { get; init; }
-    
-    [BsonElement("invited_by")]
-    public string InvitedBy { get; init; } = null!;
+    [BsonElement("full_name")]
+    public string? FullName { get; init; }
     
     [BsonElement("status")]
     public int Status { get; init; }
     
     [BsonElement("is_deleted"), BsonRepresentation(BsonType.Boolean)]
     public bool? IsDeleted { get; init; }
-    
-    [BsonElement("user")]
-    public UserDto User { get; init; } = null!; 
 };

@@ -1,7 +1,7 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.IntegrationCommandHandlers;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.Conversation;
 
 public sealed class UpdateLastMessageInConversationCommandHandler(
     IUnitOfWork unitOfWork,
@@ -15,9 +15,9 @@ public sealed class UpdateLastMessageInConversationCommandHandler(
         return Result.Success(); 
     }
 
-    private Domain.Models.Message MapToLastMessage(UpdateLastMessageInConversationCommand command)
+    private Message MapToLastMessage(UpdateLastMessageInConversationCommand command)
     {
-        return Domain.Models.Message.CreateFromEvent(
+        return Message.CreateFromEvent(
             id: command.MessageId,
             conversationId: command.ConversationId,
             senderId: command.SenderId is null ? null : UserId.Of(command.SenderId),

@@ -12,20 +12,14 @@ public sealed class JoinGroupCommandHandler(
 {
     public async Task<Result<Response>> Handle(JoinGroupCommand request, CancellationToken cancellationToken)
     {
-        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.InvitedBy, cancellationToken);
-        if (permissionResult.IsFailure)
-        {
-            return Result.Failure<Response>(permissionResult.Error);
-        }
-        
-        var userExistsResult = await GetUserExistsAsync(request.UserId!, cancellationToken);
+        var userExistsResult = await GetUserExistsAsync(request.UserId, cancellationToken);
         if (userExistsResult.IsFailure)
         {
             return Result.Failure<Response>(userExistsResult.Error);
         }
         var userId = userExistsResult.Value.UserId;
         
-        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, request.UserId!, cancellationToken);
+        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, request.UserId, cancellationToken);
         if (dupResult.IsFailure)
         {
             return Result.Failure<Response>(dupResult.Error);
@@ -37,7 +31,7 @@ public sealed class JoinGroupCommandHandler(
             await conversationRepository.AddMemberToConversationAsync(unitOfWork.ClientSession, request.ConversationId, [userId], cancellationToken);
             if (dupResult.Value is null)
             {
-                var participant = MapToParticipant(request.ConversationId, permissionResult.Value.UserId, userId);
+                var participant = MapToParticipant(request.ConversationId, userId, UserId.Of(request.InvitedBy));
                 await participantRepository.CreateAsync(unitOfWork.ClientSession, participant, cancellationToken);
             }
             else
@@ -59,36 +53,9 @@ public sealed class JoinGroupCommandHandler(
             ConversationMessage.AddDoctorToGroupSuccessfully.GetMessage().Message));
     }
     
-    private async Task<Result<Participant>> GetParticipantWithPermissionAsync(ObjectId? conversationId, string adminId,
-        CancellationToken cancellationToken)
+    private async Task<Result<User>> GetUserExistsAsync(string userId, CancellationToken cancellationToken)
     {
-        var isConversationExisted = await conversationRepository.ExistsAsync(
-            c => c.Id == conversationId
-                 && c.ConversationType == ConversationType.Group,
-            cancellationToken);
-
-        if (!isConversationExisted)
-        {
-            return Result.Failure<Participant>(ConversationErrors.NotFound);
-        }
-
-        var projection = Builders<Participant>.Projection
-            .Include(p => p.UserId);
-        var participant = await participantRepository.FindSingleAsync(
-            p => p.UserId.Id == adminId
-                 && p.ConversationId == conversationId
-                 && p.Role != MemberRole.Member,
-            projection,
-            cancellationToken);
-        
-        return participant is null
-            ? Result.Failure<Participant>(ConversationErrors.Forbidden)
-            : Result.Success(participant);
-    }
-    
-    private async Task<Result<Domain.Models.User>> GetUserExistsAsync(string userId, CancellationToken cancellationToken)
-    {
-        var projection = Builders<Domain.Models.User>.Projection
+        var projection = Builders<User>.Projection
             .Include(user => user.UserId)
             .Include(user => user.Role);
         
@@ -100,15 +67,15 @@ public sealed class JoinGroupCommandHandler(
 
         if (user is null)
         {
-            return Result.Failure<Domain.Models.User>(UserErrors.NotFound);
+            return Result.Failure<User>(UserErrors.NotFound);
         }
         
         return user.Role is not Role.Patient
-            ? Result.Failure<Domain.Models.User>(UserErrors.MustHaveThisRole(nameof(Role.Patient)))
+            ? Result.Failure<User>(UserErrors.MustHaveThisRole(nameof(Role.Patient)))
             : Result.Success(user);
     }
     
-    private async Task<Result<Participant?>> CheckDuplicatedParticipantAsync(ObjectId? conversationId, string userId, CancellationToken cancellationToken)
+    private async Task<Result<Participant?>> CheckDuplicatedParticipantAsync(ObjectId conversationId, string userId, CancellationToken cancellationToken)
     {
         var projection = Builders<Participant>.Projection
             .Include(p => p.UserId)
@@ -129,17 +96,17 @@ public sealed class JoinGroupCommandHandler(
             : Result.Success(participant);
     }
     
-    private Participant MapToParticipant(ObjectId? conversationId, UserId invitedBy, UserId userId)
+    private Participant MapToParticipant(ObjectId conversationId, UserId userId, UserId invitedBy)
     {
         return Participant.CreateMember(
             id: ObjectId.GenerateNewId(),
             userId: userId,
-            conversationId: (ObjectId) conversationId!,
+            conversationId: conversationId,
             invitedBy: invitedBy);
     }
     
     private GroupMembersAddedEvent MapToDomainEvent(JoinGroupCommand command)
     {
-        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, [command.UserId!]);
+        return new GroupMembersAddedEvent(command.ConversationId.ToString(), [command.UserId!]);
     }    
 }

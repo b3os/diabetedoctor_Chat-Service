@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<IMessageRepository, MessageRepository>()
             .AddScoped<IParticipantRepository, ParticipantRepository>()
             .AddScoped<IMediaRepository, MediaRepository>()
+            .AddScoped<IHospitalRepository, HospitalRepository>()
             .AddScoped<IOutboxEventRepository, OutboxEventRepository>()
             .AddScoped<IOutBoxEventConsumerRepository, OutBoxEventConsumerRepository>();
     }

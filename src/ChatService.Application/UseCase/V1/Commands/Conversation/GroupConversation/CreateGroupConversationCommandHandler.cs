@@ -1,6 +1,9 @@
-﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
+﻿using ChatService.Application.Mapping;
+using ChatService.Contract.DTOs.ValueObjectDtos;
+using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 using ChatService.Contract.Settings;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization;
 
 namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
 
@@ -15,6 +18,12 @@ public sealed class CreateGroupConversationCommandHandler(
 {
     public async Task<Result<Response<CreateGroupConversationResponse>>> Handle(CreateGroupConversationCommand request, CancellationToken cancellationToken)
     {
+        var user = await GetUserWithHospitalAsync(request.OwnerId, cancellationToken);
+        if (user.IsFailure)
+        {
+            return Result.Failure<Response<CreateGroupConversationResponse>>(user.Error);
+        }
+        
         var usersExistsResult = await GetUsersExistsAsync(request.Members, cancellationToken);
         
         if (usersExistsResult.IsFailure)
@@ -22,7 +31,7 @@ public sealed class CreateGroupConversationCommandHandler(
             return Result.Failure<Response<CreateGroupConversationResponse>>(usersExistsResult.Error);
         }
         
-        var conversation = MapToConversation(request, usersExistsResult.Value.Select(u => u.UserId).ToList());
+        var conversation = MapToConversation(request, usersExistsResult.Value.Select(u => u.UserId).ToList(), user.Value.HospitalId!);
         var ownerUserId = usersExistsResult.Value.Where(u => u.UserId.Id == request.OwnerId).Select(u => u.UserId).FirstOrDefault();
         var participants = MapToConversationParticipants(conversation.Id, ownerUserId!, usersExistsResult.Value);
 
@@ -46,28 +55,43 @@ public sealed class CreateGroupConversationCommandHandler(
             ConversationMessage.CreatedGroupSuccessfully.GetMessage().Message, 
             new CreateGroupConversationResponse(conversation.Id.ToString())));
     }
-    
-    private async Task<Result<List<Domain.Models.User>>> GetUsersExistsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken)
+
+    private async Task<Result<UserWithHospitalDto>> GetUserWithHospitalAsync(string ownerId, CancellationToken cancellationToken)
     {
-        var projection = Builders<Domain.Models.User>.Projection
-            .Include(user => user.UserId)
-            .Include(user => user.FullName)
-            .Include(user => user.Avatar);
-        var users = await userRepository.FindListAsync(user => userIds.Contains(user.UserId.Id),
-            // projection, 
-            cancellationToken: cancellationToken);
+        var userId = UserId.Of(ownerId);
+        var document = await userRepository.GetUserWithHospital(userId, cancellationToken);
+
+        if (document is null)
+        {
+            return Result.Failure<UserWithHospitalDto>(UserErrors.NotFound);
+        }
         
-        return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<Domain.Models.User>>(UserErrors.NotFound);
+        var user = BsonSerializer.Deserialize<UserWithHospitalDto>(document);
+        
+        return user.HospitalId is not null ? Result.Success(user) : Result.Failure<UserWithHospitalDto>(HospitalErrors.HospitalNotFound);
     }
     
-    private Domain.Models.Conversation MapToConversation(CreateGroupConversationCommand command, List<UserId> userIds)
+    private async Task<Result<List<User>>> GetUsersExistsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken)
+    {
+        var projection = Builders<User>.Projection
+            .Include(user => user.UserId);
+        
+        var users = await userRepository.FindListAsync(user => userIds.Contains(user.UserId.Id),
+            projection,
+            cancellationToken: cancellationToken);
+        
+        return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<User>>(UserErrors.NotFound);
+    }
+    
+    private Domain.Models.Conversation MapToConversation(CreateGroupConversationCommand command, List<UserId> userIds, HospitalIdDto hospitalIdDto)
     {
         var id = ObjectId.GenerateNewId();
         var avatar = Image.Of("default-avatar", settings.Value.GroupAvatarDefault);
-        return Domain.Models.Conversation.CreateGroup(id, command.Name!, avatar, userIds);
+        var hospitalId = Mapper.MapHospitalId(hospitalIdDto);
+        return Domain.Models.Conversation.CreateGroup(id, command.Name, avatar, userIds, hospitalId);
     }
     
-    private IEnumerable<Participant> MapToConversationParticipants(ObjectId conversationId, UserId ownerId, List<Domain.Models.User> users)
+    private IEnumerable<Participant> MapToConversationParticipants(ObjectId conversationId, UserId ownerId, List<User> users)
     {
         var participants = users.Select(user =>
             {

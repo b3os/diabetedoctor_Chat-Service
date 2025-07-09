@@ -29,7 +29,7 @@ public class CreateMessageCommandHandler(
         }
 
         var id = ObjectId.GenerateNewId();
-        var userId = Mapper.MapUserId(conversation.Value.Member!.User.UserId);
+        var userId = Mapper.MapUserId(conversation.Value.Member!.UserId);
 
         Domain.Models.Media? media = null;
         Domain.Models.Message message;
@@ -113,9 +113,9 @@ public class CreateMessageCommandHandler(
         {
             Sender = new SenderInfo
             {
-                SenderId = conversation.Member!.User.UserId.Id,
-                FullName = conversation.Member!.User.FullName,
-                Avatar = conversation.Member!.User.Avatar.PublicUrl
+                SenderId = conversation.Member!.UserId.Id,
+                FullName = conversation.Member!.FullName,
+                Avatar = conversation.Member!.Avatar
             },
             Conversation = conversation.ConversationType switch
             {

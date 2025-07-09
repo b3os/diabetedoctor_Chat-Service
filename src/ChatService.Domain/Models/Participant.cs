@@ -40,6 +40,22 @@ public class Participant : DomainEntity<ObjectId>
         };
     }
     
+    public static Participant CreateAdmin(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
+    {
+        return new Participant()
+        {
+            Id = id,
+            UserId = userId,
+            ConversationId = conversationId,
+            Role = MemberRole.Admin,
+            InvitedBy = invitedBy,
+            Status = Status.Active,
+            CreatedDate = CurrentTimeService.GetCurrentTime(),
+            ModifiedDate = CurrentTimeService.GetCurrentTime(),
+            IsDeleted = false
+        };
+    }
+    
     public static Participant CreateDoctor(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
         return new Participant()
@@ -70,18 +86,6 @@ public class Participant : DomainEntity<ObjectId>
             ModifiedDate = CurrentTimeService.GetCurrentTime(),
             IsDeleted = false
         };
-    }
-
-    public void Promote()
-    {
-        Role = MemberRole.Admin;
-        ModifiedDate = CurrentTimeService.GetCurrentTime();
-    }
-    
-    public void Demote()
-    {
-        Role = MemberRole.Member;
-        ModifiedDate = CurrentTimeService.GetCurrentTime();
     }
     
     public void Ban()

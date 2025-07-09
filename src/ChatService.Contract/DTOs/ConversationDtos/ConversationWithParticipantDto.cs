@@ -23,12 +23,6 @@ public record ConversationWithParticipantDto
     [BsonElement("status")]
     public ConversationStatusEnum Status { get; private set; }
     
-    [BsonElement("last_message")]
-    public MessageDto? Message { get; init; }
-    
-    [BsonElement("modified_date")]
-    public DateTime ModifiedDate { get; init; }
-    
     [BsonElement("member")]
-    public ParticipantDto? Member { get; init; }
+    public ParticipantWithUserDto? Member { get; init; }
 };

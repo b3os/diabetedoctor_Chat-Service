@@ -1,7 +1,13 @@
-﻿using ChatService.Contract.Abstractions.Message;
+﻿using System.ComponentModel.DataAnnotations;
+using ChatService.Contract.Abstractions.Message;
+using ChatService.Contract.Common.Filters;
+using ChatService.Contract.DTOs.ValueObjectDtos;
+using ChatService.Contract.Enums;
 using ChatService.Contract.EventBus.Abstractions;
 using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
+using ChatService.Contract.Services;
 using ChatService.Contract.Services.User.Commands;
+using ChatService.Contract.Services.User.Queries;
 using FluentValidation;
 
 namespace ChatService.Presentation.V1;
@@ -13,11 +19,12 @@ public static class UserEndpoints
 
     public static IVersionedEndpointRouteBuilder MapUserApiV1(this IVersionedEndpointRouteBuilder builder)
     {
-        var group = builder.MapGroup(BaseUrl).HasApiVersion(1);
+        var users = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        // group.MapPost("", CreateUser);
+        users.MapGet("", GetAvailableUsers);
+        // users.MapPost("", CreateUser);
         // group.MapPatch("", UpdateUser);
-        group.MapPost("/user/{objectId}", Test);
+        // users.MapPost("/user/{objectId}", Test);
 
         return builder;
     }
@@ -28,49 +35,31 @@ public static class UserEndpoints
     //     var result = await sender.Send(new UpdateUserCommand {Id = userid, FullName = "Nguyễn Đỗ Chung Quý"});
     // }
 
-    private static IResult Test(ISender sender, [FromBody]Test test, string testId)
+    private static async Task<IResult> GetAvailableUsers(ISender sender, IClaimsService claimsService,
+        [FromQuery, Required] ObjectId conversationId, [FromQuery, Required] RoleEnum role, [AsParameters] QueryOffsetFilter filters)
     {
-        IValidator<Test> validator = new TestValidation();
-        if (!ObjectId.TryParse(testId, out var objectId))
+        var userId = claimsService.GetCurrentUserId;
+        var result = await sender.Send(new GetAvailableUsersForConversationQuery()
         {
-            throw new FormatException("Invalid ObjectId");
-        }
-        test.Id = objectId;
-        
-        var result = validator.Validate(test);
-        return result.IsValid ? Results.Ok(test) : Results.Ok(result);
+            UserId = userId,
+            ConversationId = conversationId,
+            OffsetFilter = filters,
+            Role = role
+        });
+        return Results.Ok(result.Value);
     } 
     
     private static async Task<IResult> CreateUser(ISender sender, IEventPublisher eventPublisher)
     {
-        var @event = new UserCreatedIntegrationEvent()
+        var test = new CreateUserCommand
         {
-            UserId = "4da28295-2ec3-4b48-9a7f-7f74d0152138",
-            Avatar = "",
-            FullName = "string"
+            Id = "d9af5b42-f881-4de1-9ae3-08f0644d2da2",
+            FullName = new FullNameDto(){FirstName = "aaaa", LastName = "bbbb"},
+            Avatar = "https://pin.it/31iFcs4aU",
+            PhoneNumber = "0987654321",
+            Role = 1
         };
-
-        await eventPublisher.PublishAsync("user_topic", @event, 0);
-        // var result = await sender.Send(new CreateUserCommand
-        // {
-        //     Id = "ab88428d-2c9b-439f-b497-6c39cb77f80f",
-        //     FullName = "Nguyễn Đỗ Chung Quý",
-        //     Avatar = ""
-        // });
+        await sender.Send(test);
         return Results.Ok();
     } 
-}
-
-public class Test : ICommand
-{
-    public ObjectId? Id { get; set; }
-    public string Avatar { get; set; }
-}
-
-public class TestValidation : AbstractValidator<Test>
-{
-    public TestValidation()
-    {
-        RuleFor(x => x.Id).NotEmpty();
-    }
 }

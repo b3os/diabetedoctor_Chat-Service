@@ -2,7 +2,7 @@
 using ChatService.Contract.DTOs.ParticipantDtos;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace ChatService.Contract.DTOs.ConversationDtos;
+namespace ChatService.Contract.DTOs.ConversationDtos.Responses;
 
 
 [BsonIgnoreExtraElements]

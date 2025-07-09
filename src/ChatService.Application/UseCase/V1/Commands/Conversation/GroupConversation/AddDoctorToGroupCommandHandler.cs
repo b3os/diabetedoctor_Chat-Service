@@ -1,4 +1,7 @@
-﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
+﻿using ChatService.Application.Mapping;
+using ChatService.Contract.DTOs.ValueObjectDtos;
+using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
+using MongoDB.Bson.Serialization;
 
 namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
 
@@ -12,20 +15,26 @@ public sealed class AddDoctorToGroupCommandHandler(
 {
     public async Task<Result<Response>> Handle(AddDoctorToGroupCommand request, CancellationToken cancellationToken)
     {
-        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.AdminId, cancellationToken);
-        if (permissionResult.IsFailure)
+        var user = await GetUserWithPermissionAsync(request.StaffId, cancellationToken);
+        if (user.IsFailure)
         {
-            return Result.Failure<Response>(permissionResult.Error);
+            return Result.Failure<Response>(user.Error);
         }
         
-        var userExistsResult = await GetUserExistsAsync(request.DoctorId, cancellationToken);
+        var checkResult = await CheckConversationPermissionAsync(request.ConversationId, user.Value, cancellationToken);
+        if (checkResult.IsFailure)
+        {
+            return Result.Failure<Response>(checkResult.Error);
+        }
+        
+        var userExistsResult = await GetUserExistsAsync(request.DoctorId, user.Value, cancellationToken);
         if (userExistsResult.IsFailure)
         {
             return Result.Failure<Response>(userExistsResult.Error);
         }
         var userId = userExistsResult.Value.UserId;
 
-        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, request.DoctorId, cancellationToken);
+        var dupResult = await CheckDuplicatedParticipantAsync(request.ConversationId, userId, cancellationToken);
         if (dupResult.IsFailure)
         {
             return Result.Failure<Response>(dupResult.Error);
@@ -37,7 +46,7 @@ public sealed class AddDoctorToGroupCommandHandler(
             await conversationRepository.AddMemberToConversationAsync(unitOfWork.ClientSession, request.ConversationId, [userId], cancellationToken);
             if (dupResult.Value is null)
             {
-                var participant = MapToParticipant(request.ConversationId, permissionResult.Value.UserId, userId);
+                var participant = MapToParticipant(request.ConversationId, userId, user.Value.UserId);
                 await participantRepository.CreateAsync(unitOfWork.ClientSession, participant, cancellationToken);
             }
             else
@@ -59,63 +68,73 @@ public sealed class AddDoctorToGroupCommandHandler(
             ConversationMessage.AddDoctorToGroupSuccessfully.GetMessage().Message));
     }
     
-    private async Task<Result<Participant>> GetParticipantWithPermissionAsync(ObjectId? conversationId, string adminId,
+    private async Task<Result<User>> GetUserWithPermissionAsync(string staffId, CancellationToken cancellationToken)
+    {
+        var userId = UserId.Of(staffId);
+        var user = await userRepository.FindSingleAsync(
+            u => u.UserId == userId && u.IsDeleted == false,
+            cancellationToken: cancellationToken);
+
+        if (user is null)
+        {
+            return Result.Failure<User>(UserErrors.NotFound);
+        }
+
+        return user.HospitalId is not null
+            ? Result.Success(user)
+            : Result.Failure<User>(HospitalErrors.HospitalNotFound);
+    }
+    
+    private async Task<Result> CheckConversationPermissionAsync(ObjectId conversationId, User staff,
         CancellationToken cancellationToken)
     {
-        var isConversationExisted = await conversationRepository.ExistsAsync(
-            c => c.Id == conversationId
+        var exists = await conversationRepository.ExistsAsync(
+            c => c.Id == conversationId 
+                 && c.HospitalId == staff.HospitalId 
                  && c.ConversationType == ConversationType.Group,
             cancellationToken);
 
-        if (!isConversationExisted)
-        {
-            return Result.Failure<Participant>(ConversationErrors.NotFound);
-        }
-
-        var projection = Builders<Participant>.Projection
-            .Include(p => p.UserId);
-        var participant = await participantRepository.FindSingleAsync(
-            p => p.UserId.Id == adminId
-                 && p.ConversationId == conversationId
-                 && (p.Role == MemberRole.Owner || p.Role == MemberRole.Admin),
-            projection,
-            cancellationToken);
-        
-        return participant is null
-            ? Result.Failure<Participant>(ConversationErrors.Forbidden)
-            : Result.Success(participant);
+        return exists
+            ? Result.Success()
+            : Result.Failure(ConversationErrors.Forbidden);
     }
     
-    private async Task<Result<Domain.Models.User>> GetUserExistsAsync(string userId, CancellationToken cancellationToken)
+    private async Task<Result<User>> GetUserExistsAsync(string doctorId, User staff, CancellationToken cancellationToken)
     {
-        var projection = Builders<Domain.Models.User>.Projection
+        var userId = UserId.Of(doctorId);
+        var projection = Builders<User>.Projection
             .Include(user => user.UserId)
             .Include(user => user.Role);
         
         var user = await userRepository.FindSingleAsync(
-            user => user.UserId.Id == userId
+            user => user.UserId == userId
                     && user.IsDeleted == false,
             projection,
             cancellationToken);
 
         if (user is null)
         {
-            return Result.Failure<Domain.Models.User>(UserErrors.NotFound);
+            return Result.Failure<User>(UserErrors.NotFound);
+        }
+
+        if (user.HospitalId is null || !user.HospitalId.Equals(staff.HospitalId))
+        {
+            return Result.Failure<User>(UserErrors.DoctorNotBelongToHospital);
         }
         
         return user.Role is not Role.Doctor
-            ? Result.Failure<Domain.Models.User>(UserErrors.MustHaveThisRole(nameof(Role.Doctor)))
+            ? Result.Failure<User>(UserErrors.MustHaveThisRole(nameof(Role.Doctor)))
             : Result.Success(user);
     }
     
-    private async Task<Result<Participant?>> CheckDuplicatedParticipantAsync(ObjectId? conversationId, string userId, CancellationToken cancellationToken)
+    private async Task<Result<Participant?>> CheckDuplicatedParticipantAsync(ObjectId conversationId, UserId userId, CancellationToken cancellationToken)
     {
         var projection = Builders<Participant>.Projection
             .Include(p => p.UserId)
             .Include(p => p.Status);
         
         var participant = await participantRepository.FindSingleAsync(
-            p => p.UserId.Id == userId && p.ConversationId == conversationId,
+            p => p.UserId == userId && p.ConversationId == conversationId,
             projection,
             cancellationToken);
 
@@ -129,17 +148,17 @@ public sealed class AddDoctorToGroupCommandHandler(
             : Result.Success(participant);
     }
     
-    private Participant MapToParticipant(ObjectId? conversationId, UserId invitedBy, UserId userId)
+    private Participant MapToParticipant(ObjectId conversationId, UserId userId, UserId invitedBy)
     {
         return Participant.CreateDoctor(
             id: ObjectId.GenerateNewId(),
             userId: userId,
-            conversationId: (ObjectId) conversationId!,
+            conversationId: conversationId,
             invitedBy: invitedBy);
     }
     
     private GroupMembersAddedEvent MapToDomainEvent(AddDoctorToGroupCommand command)
     {
-        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, [command.DoctorId]);
+        return new GroupMembersAddedEvent(command.ConversationId.ToString(), [command.DoctorId]);
     }    
 }

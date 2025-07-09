@@ -6,14 +6,20 @@ public sealed class UpdateGroupConversationCommandHandler(
     IUnitOfWork unitOfWork,
     IPublisher publisher,
     IMediaRepository mediaRepository,
+    IUserRepository userRepository,
     IParticipantRepository participantRepository,
     IConversationRepository conversationRepository)
     : ICommandHandler<UpdateGroupConversationCommand, Response>
 {
     public async Task<Result<Response>> Handle(UpdateGroupConversationCommand request, CancellationToken cancellationToken)
     {
-        var conversation = await GetConversationWithPermissionAsync(request.ConversationId, request.AdminId!, cancellationToken);
-
+        var user = await GetUserWithPermissionAsync(request.StaffId, cancellationToken);
+        if (user.IsFailure)
+        {
+            return Result.Failure<Response>(user.Error);
+        }
+        
+        var conversation = await GetConversationWithPermissionAsync(request.ConversationId, user.Value, cancellationToken);
         if (conversation.IsFailure)
         {
             return Result.Failure<Response>(conversation.Error);
@@ -63,33 +69,40 @@ public sealed class UpdateGroupConversationCommandHandler(
             ConversationMessage.UpdatedGroupSuccessfully.GetMessage().Message));
     }
 
-    private async Task<Result<Domain.Models.Conversation>> GetConversationWithPermissionAsync(ObjectId? conversationId,
-        string ownerId,
+    private async Task<Result<User>> GetUserWithPermissionAsync(string staffId, CancellationToken cancellationToken)
+    {
+        var userId = UserId.Of(staffId);
+        var user = await userRepository.FindSingleAsync(
+            u => u.UserId == userId && u.IsDeleted == false,
+            cancellationToken: cancellationToken);
+
+        if (user is null)
+        {
+            return Result.Failure<User>(UserErrors.NotFound);
+        }
+
+        return user.HospitalId is not null
+            ? Result.Success(user)
+            : Result.Failure<User>(HospitalErrors.HospitalNotFound);
+    }
+    
+    private async Task<Result<Domain.Models.Conversation>> GetConversationWithPermissionAsync(ObjectId conversationId,
+        User staff,
         CancellationToken cancellationToken)
     {
         var conversationProjection = Builders<Domain.Models.Conversation>.Projection
             .Include(conversation => conversation.Avatar)
             .Include(conversation => conversation.Name);
         var conversation = await conversationRepository.FindSingleAsync(
-            c => c.Id == conversationId
-                     && c.ConversationType == ConversationType.Group,
+            c => c.Id == conversationId 
+                 && c.HospitalId == staff.HospitalId 
+                 && c.ConversationType == ConversationType.Group,
             conversationProjection,
             cancellationToken);
 
-        if (conversation is null)
-        {
-            return Result.Failure<Domain.Models.Conversation>(ConversationErrors.NotFound);
-        }
-
-        var isParticipantOwner = await participantRepository.ExistsAsync(
-            participant => participant.UserId.Id == ownerId
-                           && participant.ConversationId == conversationId
-                           && participant.Role == MemberRole.Owner,
-            cancellationToken);
-
-        return isParticipantOwner is false
-            ? Result.Failure<Domain.Models.Conversation>(ConversationErrors.Forbidden)
-            : Result.Success(conversation);
+        return conversation is not null
+            ? Result.Success(conversation)
+            : Result.Failure<Domain.Models.Conversation>(ConversationErrors.NotFound);
     }  
     
     private ConversationUpdatedEvent MapToDomainEvent(ObjectId? conversationId, string? name, Image? oldAvatar)

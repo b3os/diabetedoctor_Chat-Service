@@ -49,7 +49,7 @@ public static class ServiceCollectionExtensions
             options.Topic = kafkaSettings.UserTopic;
             options.IntegrationEventFactory = IntegrationEventFactory.Instance;
             options.ServiceName = nameof(ChatService);
-            options.AcceptEvent = e => e.IsEvent<UserCreatedIntegrationEvent>();
+            options.AcceptEvent = e => e.IsEvent<UserInfoCreatedProfileIntegrationEvent>();
         }, kafkaSettings.UserConnectionName);
         
         builder.AddKafkaEventConsumer<ChatSubscriber>(kafkaSettings, options =>

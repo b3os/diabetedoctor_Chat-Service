@@ -1,6 +1,7 @@
 ﻿using ChatService.Contract.Services.User.Commands;
+using Mapper = ChatService.Application.Mapping.Mapper;
 
-namespace ChatService.Application.UseCase.V1.Commands.User;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.User;
 
 public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWork unitOfWork)
     : ICommandHandler<CreateUserCommand>
@@ -18,7 +19,10 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IUnitOfWo
         
         var id = ObjectId.GenerateNewId();
         var userId = UserId.Of(command.Id);
+        var hospitalId = !string.IsNullOrWhiteSpace(command.HospitalId) ? HospitalId.Of(command.HospitalId) : null;
+        var fullName = Mapper.MapFullName(command.FullName);
         var avatar = Image.Of("default-avatar", command.Avatar);
-        return Domain.Models.User.Create(id: id, userId, command.FullName, avatar);
+        var role = Mapper.MapRoleFromInt(command.Role);
+        return Domain.Models.User.Create(id, userId, hospitalId, fullName, avatar, command.PhoneNumber, role);
     }
 }

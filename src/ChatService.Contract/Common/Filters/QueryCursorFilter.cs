@@ -1,6 +1,6 @@
-﻿namespace ChatService.Contract.Services;
+﻿namespace ChatService.Contract.Common.Filters;
 
-public class QueryFilter
+public class QueryCursorFilter
 {
     public string? Cursor { get; set; } = null;
     public int? PageSize { get; set; } = null;

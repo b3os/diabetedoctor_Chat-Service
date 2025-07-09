@@ -8,4 +8,10 @@ public enum UserMessage
     
     [Message("Role không phù hợp", "user02")]
     MustHaveThisRole,
+    
+    [Message("Bác sĩ không trực thuộc bệnh viện", "user02")]
+    DoctorNotBelongToHospital,
+    
+    [Message("Nhân viên không trực thuộc bệnh viện", "user03")]
+    StaffNotBelongToHospital
 }

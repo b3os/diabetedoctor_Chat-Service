@@ -15,10 +15,16 @@ public sealed class AddMembersToGroupCommandHandler(
 {
     public async Task<Result<Response>> Handle(AddMembersToGroupCommand request, CancellationToken cancellationToken)
     {
-        var permissionResult = await GetParticipantWithPermissionAsync(request.ConversationId, request.AdminId!, cancellationToken);
-        if (permissionResult.IsFailure)
+        var user = await GetUserWithPermissionAsync(request.StaffId, cancellationToken);
+        if (user.IsFailure)
         {
-            return Result.Failure<Response>(permissionResult.Error);
+            return Result.Failure<Response>(user.Error);
+        }
+        
+        var checkResult = await CheckConversationPermissionAsync(request.ConversationId, user.Value, cancellationToken);
+        if (checkResult.IsFailure)
+        {
+            return Result.Failure<Response>(checkResult.Error);
         }
         
         var usersExistsResult = await GetUsersExistsAsync(request.UserIds, cancellationToken);
@@ -26,8 +32,99 @@ public sealed class AddMembersToGroupCommandHandler(
         {
             return Result.Failure<Response>(usersExistsResult.Error);
         }
+
+        var checkDupResult = await CheckRejoinerOrDuplicatedParticipantsAsync(request.ConversationId, request.UserIds, cancellationToken);
+        if (checkDupResult.IsFailure)
+        {
+            return Result.Failure<Response>(checkDupResult.Error);
+        }
         
-        var documents = await participantRepository.CheckDuplicatedParticipantsAsync(request.ConversationId, request.UserIds, cancellationToken);
+        var rejoiners = checkDupResult.Value;
+        var allUserIds = usersExistsResult.Value.Select(u => u.UserId).ToList();
+        var userToAdd = rejoiners.Count > 0 
+            ? allUserIds.Where(userId => !rejoiners.Contains(userId))
+            : allUserIds;
+        
+        try
+        {
+            await unitOfWork.StartTransactionAsync(cancellationToken);
+            
+            // add new participants
+            await conversationRepository.AddMemberToConversationAsync(unitOfWork.ClientSession, request.ConversationId, allUserIds, cancellationToken);
+            var addParticipants = MapToListParticipant(request.ConversationId, userToAdd, user.Value.UserId);
+            await participantRepository.CreateManyAsync(unitOfWork.ClientSession, addParticipants, cancellationToken);
+            
+            // rejoiners
+            if (rejoiners.Count > 0)
+            {
+                await participantRepository.RejoinToConversationAsync(unitOfWork.ClientSession, request.ConversationId, rejoiners, cancellationToken);
+            }
+            
+            var domainEvent = MapToDomainEvent(request);
+            await publisher.Publish(domainEvent, cancellationToken);
+            await unitOfWork.CommitTransactionAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            await unitOfWork.AbortTransactionAsync(cancellationToken);
+            throw;
+        }
+
+        return Result.Success(new Response(
+            ConversationMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
+            ConversationMessage.AddMemberToGroupSuccessfully.GetMessage().Message));
+    }
+    
+    private async Task<Result<User>> GetUserWithPermissionAsync(string staffId, CancellationToken cancellationToken)
+    {
+        var userId = UserId.Of(staffId);
+        var user = await userRepository.FindSingleAsync(
+            u => u.UserId == userId && u.IsDeleted == false,
+            cancellationToken: cancellationToken);
+
+        if (user is null)
+        {
+            return Result.Failure<User>(UserErrors.NotFound);
+        }
+
+        return user.HospitalId is not null
+            ? Result.Success(user)
+            : Result.Failure<User>(HospitalErrors.HospitalNotFound);
+    }
+    
+    private async Task<Result> CheckConversationPermissionAsync(ObjectId conversationId, User staff,
+        CancellationToken cancellationToken)
+    {
+        var exists = await conversationRepository.ExistsAsync(
+            c => c.Id == conversationId 
+                 && c.HospitalId == staff.HospitalId 
+                 && c.ConversationType == ConversationType.Group,
+            cancellationToken);
+
+        return exists
+            ? Result.Success()
+            : Result.Failure(ConversationErrors.Forbidden);
+    }
+    
+    private async Task<Result<List<User>>> GetUsersExistsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken)
+    {
+        var projection = Builders<User>.Projection
+            .Include(user => user.UserId)
+            .Include(user => user.DisplayName)
+            .Include(user => user.Avatar);
+        
+        var users = await userRepository.FindListAsync(
+            user => userIds.Contains(user.UserId.Id)
+                    && user.Role == Role.Patient
+                    && user.IsDeleted == false,
+            projection,
+            cancellationToken);
+        return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<User>>(UserErrors.NotFound);
+    }
+    
+    private async Task<Result<List<UserId>>> CheckRejoinerOrDuplicatedParticipantsAsync(ObjectId conversationId, HashSet<string> userIds, CancellationToken cancellationToken)
+    {
+        var documents = await participantRepository.CheckDuplicatedParticipantsAsync(conversationId, userIds, cancellationToken);
         var participants = documents.Select(doc => BsonSerializer.Deserialize<ParticipantWithUserDto>(doc)).ToList();
         
         var rejoiners = new List<UserId>();
@@ -39,7 +136,7 @@ public sealed class AddMembersToGroupCommandHandler(
             {
                 if (participant.IsDeleted is true && participant.Status is (int)Status.Active)
                 {
-                    var userId = Mapper.MapUserId(participant.User.UserId);
+                    var userId = Mapper.MapUserId(participant.UserId);
                     rejoiners.Add(userId);
                 }
                 else
@@ -57,102 +154,35 @@ public sealed class AddMembersToGroupCommandHandler(
             }
         }
 
-        if (dupParticipants.Count != 0 || banParticipants.Count != 0)
+        if (dupParticipants.Count == 0 && banParticipants.Count == 0) return Result.Success(rejoiners);
+        
+        var dupResult = new AddMemberToGroupResponse
         {
-            var dupResult = new AddMemberToGroupResponse
+            MatchCount = participants.Count,
+            DuplicatedUser = dupParticipants.Select(dupUser => new UserResponseDto
             {
-                MatchCount = participants.Count,
-                DuplicatedUser = dupParticipants.Select(dupUser => new UserResponseDto
-                {
-                    Id = dupUser.User.UserId.Id,
-                    FullName = dupUser.User.FullName,
-                    Avatar = dupUser.User.Avatar.PublicUrl
-                }).ToList(),
-                BannedUser = banParticipants.Select(banUser => new UserResponseDto
-                {
-                    Id = banUser.User.UserId.Id,
-                    FullName = banUser.User.FullName,
-                    Avatar = banUser.User.Avatar.PublicUrl
-                }).ToList()
-            };
-            return Result.Failure<Response>(ConversationErrors.GroupMembersAlreadyExistedOrBanned(dupResult));
-        }
-        
-        var allUserIds = usersExistsResult.Value.Select(u => u.UserId).ToList();
-        // var userToAdd = usersExistsResult.Value.Where(u => !rejoiners.Contains(u.UserId.Id)).ToList();
+                Id = dupUser.UserId.Id,
+                FullName = dupUser.FullName,
+                Avatar = dupUser.Avatar
+            }).ToList(),
+            BannedUser = banParticipants.Select(banUser => new UserResponseDto
+            {
+                Id = banUser.UserId.Id,
+                FullName = banUser.FullName,
+                Avatar = banUser.Avatar
+            }).ToList()
+        };
+        return Result.Failure<List<UserId>>(ConversationErrors.GroupMembersAlreadyExistedOrBanned(dupResult));
 
-        await unitOfWork.StartTransactionAsync(cancellationToken);
-        try
-        {
-            var userToAdd = allUserIds.Where(userId => !rejoiners.Contains(userId));
-            await conversationRepository.AddMemberToConversationAsync(unitOfWork.ClientSession, request.ConversationId, allUserIds, cancellationToken);
-            var addParticipants = MapToListParticipant(request.ConversationId, permissionResult.Value.UserId, userToAdd);
-            await participantRepository.CreateManyAsync(unitOfWork.ClientSession, addParticipants, cancellationToken);
-            await participantRepository.RejoinToConversationAsync(unitOfWork.ClientSession, request.ConversationId, rejoiners, cancellationToken);
-            var domainEvent = MapToDomainEvent(request);
-            await publisher.Publish(domainEvent, cancellationToken);
-            await unitOfWork.CommitTransactionAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            await unitOfWork.AbortTransactionAsync(cancellationToken);
-            throw;
-        }
-
-        return Result.Success(new Response(
-            ConversationMessage.AddMemberToGroupSuccessfully.GetMessage().Code,
-            ConversationMessage.AddMemberToGroupSuccessfully.GetMessage().Message));
     }
     
-    private async Task<Result<Participant>> GetParticipantWithPermissionAsync(ObjectId? conversationId, string adminId,
-        CancellationToken cancellationToken)
-    {
-        var isConversationExisted = await conversationRepository.ExistsAsync(
-            c => c.Id == conversationId
-                            && c.ConversationType == ConversationType.Group,
-            cancellationToken);
-
-        if (!isConversationExisted)
-        {
-            return Result.Failure<Participant>(ConversationErrors.NotFound);
-        }
-        
-        var projection = Builders<Participant>.Projection.Include(p => p.UserId).Include(p => p.Role);
-        var participant = await participantRepository.FindSingleAsync(
-            p => p.UserId.Id == adminId
-                           && p.ConversationId == conversationId
-                           && (p.Role == MemberRole.Owner || p.Role == MemberRole.Admin),
-            projection,
-            cancellationToken);
-        
-        return participant is null
-            ? Result.Failure<Participant>(ConversationErrors.Forbidden)
-            : Result.Success(participant);
-    }
-    
-    private async Task<Result<List<Domain.Models.User>>> GetUsersExistsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken)
-    {
-        var projection = Builders<Domain.Models.User>.Projection
-            .Include(user => user.UserId)
-            .Include(user => user.FullName)
-            .Include(user => user.Avatar);
-        
-        var users = await userRepository.FindListAsync(
-            user => userIds.Contains(user.UserId.Id)
-                    && user.Role != Role.Doctor
-                    && user.IsDeleted == false,
-            projection,
-            cancellationToken);
-        return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<Domain.Models.User>>(UserErrors.NotFound);
-    }
-    
-    private IEnumerable<Participant> MapToListParticipant(ObjectId? conversationId, UserId invitedBy, IEnumerable<UserId> userIds)
+    private IEnumerable<Participant> MapToListParticipant(ObjectId conversationId, IEnumerable<UserId> userIds, UserId invitedBy)
     {
         var participants = userIds.Select(id =>
             Participant.CreateMember(
                 id: ObjectId.GenerateNewId(),
                 userId: id,
-                conversationId: (ObjectId) conversationId!,
+                conversationId: conversationId,
                 invitedBy: invitedBy)
         );
         return participants;
@@ -160,6 +190,6 @@ public sealed class AddMembersToGroupCommandHandler(
     
     private GroupMembersAddedEvent MapToDomainEvent(AddMembersToGroupCommand command)
     {
-        return new GroupMembersAddedEvent(command.ConversationId.ToString()!, command.UserIds);
+        return new GroupMembersAddedEvent(command.ConversationId.ToString(), command.UserIds);
     }
 }

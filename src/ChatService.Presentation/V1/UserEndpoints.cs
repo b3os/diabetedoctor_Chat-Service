@@ -21,7 +21,7 @@ public static class UserEndpoints
     {
         var users = builder.MapGroup(BaseUrl).HasApiVersion(1);
 
-        users.MapGet("", GetAvailableUsers);
+        users.MapGet("", GetAvailableUsers).RequireAuthorization();
         // users.MapPost("", CreateUser);
         // group.MapPatch("", UpdateUser);
         // users.MapPost("/user/{objectId}", Test);

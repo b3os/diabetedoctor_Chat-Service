@@ -1,9 +1,6 @@
 ﻿using System.Globalization;
-using ChatService.Contract.DTOs.ConversationDtos;
 using ChatService.Contract.DTOs.ConversationDtos.Responses;
 using ChatService.Contract.Services.Conversation.Queries;
-using ChatService.Contract.Settings;
-using Microsoft.Extensions.Options;
 
 namespace ChatService.Application.UseCase.V1.Queries.Conversation;
 
@@ -97,7 +94,7 @@ public sealed class GetUserConversationByUserIdQueryHandler(
                         }),
                         new BsonDocument("$project", new BsonDocument
                         {
-                            { "full_name", 1 },
+                            { "full_name", "$display_name" },
                             { "avatar", 1 }
                         })
                     }

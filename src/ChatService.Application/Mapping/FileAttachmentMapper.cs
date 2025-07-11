@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs;
-using ChatService.Contract.DTOs.ValueObjectDtos;
+﻿using ChatService.Contract.DTOs.ValueObjectDtos;
 using ChatService.Contract.Enums;
 
 namespace ChatService.Application.Mapping;

@@ -1,11 +1,6 @@
 ﻿using ChatService.Contract.DTOs.MessageDtos;
 using ChatService.Contract.Services.Message.Queries;
 using ChatService.Contract.Services.Message.Responses;
-using ChatService.Contract.Settings;
-using ChatService.Domain.Abstractions;
-using ChatService.Domain.Models;
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 
 namespace ChatService.Application.UseCase.V1.Queries.Message;
 

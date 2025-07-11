@@ -3,4 +3,4 @@
 public record ConversationDeletedIntegrationEvent : IntegrationEvent
 {
     public string ConversationId { get; init; } = null!;
-};
+}

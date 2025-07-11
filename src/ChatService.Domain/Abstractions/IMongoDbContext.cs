@@ -1,6 +1,4 @@
-﻿using ChatService.Contract.Common.Messages;
-
-namespace ChatService.Domain.Abstractions;
+﻿namespace ChatService.Domain.Abstractions;
 
 public interface IMongoDbContext
 {

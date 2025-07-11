@@ -1,6 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using ChatService.Domain.Enums;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Domain.Enums;
 
 namespace ChatService.Domain.Models;
 
@@ -26,7 +24,7 @@ public class Participant : DomainEntity<ObjectId>
     
     public static Participant CreateOwner(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
-        return new Participant()
+        return new Participant
         {
             Id = id,
             UserId = userId,
@@ -42,7 +40,7 @@ public class Participant : DomainEntity<ObjectId>
     
     public static Participant CreateAdmin(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
-        return new Participant()
+        return new Participant
         {
             Id = id,
             UserId = userId,
@@ -58,7 +56,7 @@ public class Participant : DomainEntity<ObjectId>
     
     public static Participant CreateDoctor(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
-        return new Participant()
+        return new Participant
         {
             Id = id,
             UserId = userId,
@@ -74,7 +72,7 @@ public class Participant : DomainEntity<ObjectId>
     
     public static Participant CreateMember(ObjectId id, UserId userId, ObjectId conversationId, UserId invitedBy)
     {
-        return new Participant()
+        return new Participant
         {
             Id = id,
             UserId = userId,

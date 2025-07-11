@@ -1,8 +1,6 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.DTOs.ValueObjectDtos;
 using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
-using ChatService.Contract.Settings;
-using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
 
 namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;

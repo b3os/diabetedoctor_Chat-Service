@@ -3,9 +3,7 @@ using ChatService.Contract.DTOs.ConversationDtos;
 using ChatService.Contract.Enums;
 using ChatService.Contract.EventBus.Abstractions;
 using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
-using ChatService.Contract.Infrastructure.Services;
 using ChatService.Contract.Services.Message.Commands;
-using CloudinaryDotNet.Actions;
 using MongoDB.Bson.Serialization;
 
 namespace ChatService.Application.UseCase.V1.Commands.Message;
@@ -31,7 +29,7 @@ public class CreateMessageCommandHandler(
         var id = ObjectId.GenerateNewId();
         var userId = Mapper.MapUserId(conversation.Value.Member!.UserId);
 
-        Domain.Models.Media? media = null;
+        Media? media = null;
         Domain.Models.Message message;
         switch (request.MessageType)
         {

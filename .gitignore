@@ -6,3 +6,5 @@ riderModule.iml
 .idea
 /src/ChatService.Web/appsettings.json
 /src/ChatService.Web/appsettings.Development.json
+/src/ChatService.AppHost/appsettings.json
+/src/ChatService.AppHost/appsettings.Development.json

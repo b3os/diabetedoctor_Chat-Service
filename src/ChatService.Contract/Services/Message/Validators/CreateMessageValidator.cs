@@ -1,6 +1,5 @@
 ﻿using ChatService.Contract.Enums;
 using ChatService.Contract.Services.Message.Commands;
-using FluentValidation;
 
 namespace ChatService.Contract.Services.Message.Validators;
 

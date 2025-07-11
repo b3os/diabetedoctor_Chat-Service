@@ -1,10 +1,7 @@
-﻿using ChatService.Contract.Common.Constraint;
-using ChatService.Contract.EventBus.Events.ConversationIntegrationEvents;
-using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
+﻿using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
 using ChatService.Contract.EventBus.Events.UserIntegrationEvents;
 using ChatService.Contract.Infrastructure.Services;
 using ChatService.Infrastructure.EventBus.Ably;
-using ChatService.Infrastructure.EventBus.Kafka.EventHandlers;
 using ChatService.Infrastructure.EventBus.Kafka.EventSubscribers;
 using ChatService.Infrastructure.Idempotence;
 using ChatService.Infrastructure.Outbox;

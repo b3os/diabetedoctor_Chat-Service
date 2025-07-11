@@ -41,7 +41,7 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
             .As<UserResponseDto>()
             .ToListAsync(cancellationToken);
         
-        return Result.Success(new GetAvailableUsersResponse()
+        return Result.Success(new GetAvailableUsersResponse
         {
             Users = PagedResult<UserResponseDto>.Create(result, pageIndex, pageSize, result.Count)
         });

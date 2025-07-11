@@ -10,7 +10,7 @@ public class Hospital : DomainEntity<ObjectId>
 
     public static Hospital Create(ObjectId id, HospitalId hospitalId, string name)
     {
-        return new Hospital()
+        return new Hospital
         {
             Id = id,
             HospitalId = hospitalId,

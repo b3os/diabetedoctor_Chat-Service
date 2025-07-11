@@ -1,6 +1,6 @@
 ﻿namespace ChatService.Contract.Helpers;
 
-[AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Field)]
 sealed class MessageAttribute(string message, string code) : Attribute
 {
     public string Message { get; } = message;

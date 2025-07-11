@@ -14,4 +14,4 @@ public record FileAttachmentDto
     
     [BsonElement("file_type")]
     public MediaTypeEnum Type { get; init; }
-};
+}

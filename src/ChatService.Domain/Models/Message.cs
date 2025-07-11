@@ -1,6 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using ChatService.Domain.Enums;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Domain.Enums;
 
 namespace ChatService.Domain.Models;
 
@@ -10,20 +8,20 @@ public class Message : DomainEntity<ObjectId>
     public ObjectId ConversationId { get; private set; }
     
     [BsonElement("sender_id")]
-    public UserId? SenderId { get; private set; } = null!;
+    public UserId? SenderId { get; private set; }
     
     [BsonElement("content")]
-    public string? Content { get; private set; } = null!;
+    public string? Content { get; private set; }
     
     [BsonElement("type")]
     public MessageType Type { get; private set; }
     
     [BsonElement("file_attachment")]
-    public FileAttachment? File { get; private set; } = null!;
+    public FileAttachment? File { get; private set; }
     
     public static Message CreateText(ObjectId id, ObjectId conversationId, UserId? senderId, string content)
     {
-        return new Message()
+        return new Message
         {
             Id = id,
             ConversationId = conversationId,
@@ -38,7 +36,7 @@ public class Message : DomainEntity<ObjectId>
     
     public static Message CreateFile(ObjectId id, ObjectId conversationId, UserId? senderId, string originalFileName, FileAttachment file)
     {
-        return new Message()
+        return new Message
         {
             Id = id,
             ConversationId = conversationId,
@@ -55,7 +53,7 @@ public class Message : DomainEntity<ObjectId>
     
     public static Message CreateFromEvent(ObjectId id, ObjectId conversationId, UserId? senderId, string? content, DateTime? createdDate, MessageType type, FileAttachment? file)
     {
-        return new Message()
+        return new Message
         {
             Id = id,
             ConversationId = conversationId,

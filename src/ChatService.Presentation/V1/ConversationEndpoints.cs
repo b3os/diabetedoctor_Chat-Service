@@ -1,6 +1,5 @@
 ﻿using ChatService.Contract.Common.Filters;
 using ChatService.Contract.DTOs.ConversationDtos.Requests;
-using ChatService.Contract.Services;
 using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 using ChatService.Contract.Services.Conversation.Queries;
 
@@ -131,7 +130,7 @@ public static class ConversationEndpoints
         [AsParameters] QueryCursorFilter cursorFilter)
     {
         var userId = claimsService.GetCurrentUserId;
-        var result = await sender.Send(new GetUserConversationsByUserIdQuery() { UserId = userId, CursorFilter = cursorFilter });
+        var result = await sender.Send(new GetUserConversationsByUserIdQuery { UserId = userId, CursorFilter = cursorFilter });
         return Results.Ok(result.Value);
     }
 }

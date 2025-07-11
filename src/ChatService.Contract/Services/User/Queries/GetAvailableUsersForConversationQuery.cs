@@ -11,4 +11,4 @@ public record GetAvailableUsersForConversationQuery
     public ObjectId ConversationId { get; init; }
     public RoleEnum Role { get; init; }
     public QueryOffsetFilter OffsetFilter { get; init; } = new();
-};
+}

@@ -32,7 +32,7 @@ public sealed class UpdateGroupConversationCommandHandler(
             return ValidationResult<Response>.WithErrors(validationResult.Errors);
         }
         
-        Domain.Models.Media? media = null;
+        Media? media = null;
         Image? avatar = null;
         if (request.AvatarId is not null)
         {

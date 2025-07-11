@@ -8,4 +8,4 @@ public record GetMessageByConversationIdQuery : IQuery<GetMessagesResponse>
     public ObjectId ConversationId { get; init; }
     public string UserId { get; init; } = string.Empty;
     public QueryCursorFilter CursorFilter { get; init; } = new();
-};
+}

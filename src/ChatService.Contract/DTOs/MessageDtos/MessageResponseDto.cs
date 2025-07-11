@@ -24,4 +24,4 @@ public class MessageResponseDto
     
     [BsonElement("participant_info")]
     public ParticipantResponseDto Participant { get; set; } = null!;
-};
+}

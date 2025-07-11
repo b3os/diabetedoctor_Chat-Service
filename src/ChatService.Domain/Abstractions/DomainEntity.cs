@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace ChatService.Domain.Abstractions;
+﻿namespace ChatService.Domain.Abstractions;
 
 public abstract class DomainEntity<TKey>
 {

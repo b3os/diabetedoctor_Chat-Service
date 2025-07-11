@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.MessageDtos;
-using ChatService.Contract.DTOs.ParticipantDtos;
+﻿using ChatService.Contract.DTOs.ParticipantDtos;
 using ChatService.Contract.DTOs.ValueObjectDtos;
 using ChatService.Contract.Enums;
 using MongoDB.Bson.Serialization.Attributes;
@@ -25,4 +24,4 @@ public record ConversationWithParticipantDto
     
     [BsonElement("member")]
     public ParticipantWithUserDto? Member { get; init; }
-};
+}

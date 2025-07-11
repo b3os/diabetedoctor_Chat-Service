@@ -1,7 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using MongoDB.Bson.Serialization.Attributes;
-
-namespace ChatService.Domain.ValueObjects;
+﻿namespace ChatService.Domain.ValueObjects;
 
 public sealed class Image : ValueObject
 {

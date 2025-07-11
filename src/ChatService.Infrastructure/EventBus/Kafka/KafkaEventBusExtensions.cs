@@ -1,5 +1,4 @@
 ﻿using ChatService.Infrastructure.Options;
-using Microsoft.Extensions.Configuration;
 
 namespace ChatService.Infrastructure.EventBus.Kafka;
 
@@ -8,7 +7,7 @@ public static class KafkaEventBusExtensions
     public static IHostApplicationBuilder AddKafkaProducer(this IHostApplicationBuilder builder, KafkaSettings kafkaSettings, string connectionName = "Kafka")
     {
         builder.AddKafkaProducer<string, EventEnvelope>(connectionName,
-            configureSettings: (settings) =>
+            configureSettings: settings =>
             {
                 settings.Config.BootstrapServers = kafkaSettings.BootstrapServer;
                 settings.Config.Acks = Acks.All;
@@ -22,7 +21,7 @@ public static class KafkaEventBusExtensions
                 settings.Config.SecurityProtocol = SecurityProtocol.SaslPlaintext;
                 settings.Config.SaslMechanism = SaslMechanism.Plain;
             },
-            configureBuilder: (producerBuilder) => { producerBuilder.SetValueSerializer(new EventEnvelopeSerializer()); }
+            configureBuilder: producerBuilder => { producerBuilder.SetValueSerializer(new EventEnvelopeSerializer()); }
         );
 
         return builder;
@@ -39,7 +38,7 @@ public static class KafkaEventBusExtensions
     private static IHostApplicationBuilder AddKafkaMessageEnvelopConsumer(this IHostApplicationBuilder builder, KafkaSettings kafkaSettings,
         string groupId, string connectionName = "kafka")
     {
-        builder.AddKeyedKafkaConsumer<string, EventEnvelope>(connectionName, configureSettings: (settings) =>
+        builder.AddKeyedKafkaConsumer<string, EventEnvelope>(connectionName, configureSettings: settings =>
             {
                 settings.Config.BootstrapServers = kafkaSettings.BootstrapServer;
                 settings.Config.GroupId = groupId;
@@ -50,7 +49,7 @@ public static class KafkaEventBusExtensions
                 settings.Config.SaslUsername = kafkaSettings.SaslUsername;
                 settings.Config.SaslPassword = kafkaSettings.SaslPassword;
             },
-            configureBuilder: (consumerBuilder) => { consumerBuilder.SetValueDeserializer(new EventEnvelopeDeserializer()); }
+            configureBuilder: consumerBuilder => { consumerBuilder.SetValueDeserializer(new EventEnvelopeDeserializer()); }
         );
 
         return builder;

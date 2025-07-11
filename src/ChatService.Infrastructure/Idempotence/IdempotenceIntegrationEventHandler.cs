@@ -1,7 +1,4 @@
-﻿using ChatService.Application.Helpers;
-using ChatService.Contract.Common.Constraint;
-using ChatService.Contract.Exceptions;
-using ChatService.Domain.Abstractions;
+﻿using ChatService.Domain.Abstractions;
 using ChatService.Domain.Abstractions.Repositories;
 using ChatService.Domain.Models;
 
@@ -11,7 +8,6 @@ public sealed class IdempotenceIntegrationEventHandler<TIntegrationEvent>(
     ILogger<IdempotenceIntegrationEventHandler<TIntegrationEvent>> logger,
     IIntegrationEventHandler<TIntegrationEvent> decorated,
     IUnitOfWork unitOfWork,
-    IOutboxEventRepository eventRepository,
     IOutBoxEventConsumerRepository consumerRepository)
     : IIntegrationEventHandler<TIntegrationEvent>
     where TIntegrationEvent : IntegrationEvent

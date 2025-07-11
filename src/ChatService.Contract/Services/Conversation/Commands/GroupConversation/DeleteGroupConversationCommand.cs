@@ -4,4 +4,4 @@ public record DeleteGroupConversationCommand : ICommand<Response>
 {
     public string StaffId { get; init; } = null!;
     public ObjectId ConversationId {get; init;}
-};
+}

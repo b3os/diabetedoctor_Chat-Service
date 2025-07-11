@@ -1,24 +1,25 @@
 ﻿namespace ChatService.Application.UseCase.V1.DomainEvents.Conversation;
 
-public sealed class GroupMemberRemovedEventHandler(
+public class ConversationUpdatedEventHandler(
     IUnitOfWork unitOfWork,
     IOptions<KafkaSettings> kafkaSettings,
     IOutboxEventRepository outboxEventRepository)
-    : INotificationHandler<GroupMemberRemovedEvent>
+    : IDomainEventHandler<ConversationUpdatedEvent>
 {
-    public async Task Handle(GroupMemberRemovedEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ConversationUpdatedEvent notification, CancellationToken cancellationToken)
     {
         var integrationEvent = MapToIntegrationEvent(notification);
         var @event = OutboxEventExtension.ToOutboxEvent(kafkaSettings.Value.ConversationTopic, integrationEvent);
         await outboxEventRepository.CreateAsync(unitOfWork.ClientSession, @event, cancellationToken);
     }
     
-    private GroupMemberRemovedIntegrationEvent MapToIntegrationEvent(GroupMemberRemovedEvent notification)
+    private ConversationUpdatedIntegrationEvent MapToIntegrationEvent(ConversationUpdatedEvent notification)
     {
-        return new GroupMemberRemovedIntegrationEvent()
+        return new ConversationUpdatedIntegrationEvent
         {
             ConversationId = notification.ConversationId,
-            MemberId = notification.MemberId
+            ConversationName = notification.Name,
+            OldAvatar = notification.OldAvatar,
         };
     }
 }

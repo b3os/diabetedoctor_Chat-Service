@@ -1,8 +1,6 @@
 ﻿using ChatService.Contract.Abstractions.Shared;
 using ChatService.Contract.Common.DomainErrors;
-using ChatService.Domain.Abstractions;
 using ChatService.Domain.Enums;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Domain.Models;
 
@@ -31,7 +29,7 @@ public class Conversation : DomainEntity<ObjectId>
 
     public static Conversation CreateGroup(ObjectId id, string name, Image avatar, List<UserId> members, HospitalId hospitalId)
     {
-        return new Conversation()
+        return new Conversation
         {
             Id = id,
             Name = name,
@@ -48,7 +46,7 @@ public class Conversation : DomainEntity<ObjectId>
     
     public static Conversation CreatePersonal(ObjectId id, string name, Image avatar, List<UserId> members)
     {
-        return new Conversation()
+        return new Conversation
         {
             Id = id,
             Name = name,

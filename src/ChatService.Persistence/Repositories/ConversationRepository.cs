@@ -1,5 +1,4 @@
-﻿
-using ChatService.Contract.Helpers;
+﻿using ChatService.Contract.Helpers;
 using ChatService.Domain.Enums;
 using ChatService.Domain.ValueObjects;
 using MongoDB.Bson;

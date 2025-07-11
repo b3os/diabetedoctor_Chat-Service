@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace ChatService.Domain.Models;
+﻿namespace ChatService.Domain.Models;
 
 public class OutboxEventConsumer
 {

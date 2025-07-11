@@ -10,4 +10,4 @@ public record FileAttachmentResponseDto
     
     [BsonElement("file_type")]
     public int Type { get; init; }
-};
+}

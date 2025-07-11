@@ -1,6 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using ChatService.Domain.Enums;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Domain.Enums;
 
 namespace ChatService.Domain.Models;
 
@@ -26,7 +24,7 @@ public class User : DomainEntity<ObjectId>
 
     public static User Create(ObjectId id, UserId userId, HospitalId? hospitalId, FullName fullname, Image avatar, string? phoneNumber, Role role)
     {
-        return new User()
+        return new User
         {
             Id = id,
             UserId = userId,

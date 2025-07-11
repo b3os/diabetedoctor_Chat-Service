@@ -4,7 +4,7 @@ using ChatService.Contract.Services.Media.Commands;
 using ChatService.Contract.Services.Media.Responses;
 using CloudinaryDotNet.Actions;
 
-namespace ChatService.Application.UseCase.V1.Commands.Media;
+namespace ChatService.Application.UseCase.V1.Commands.Medias;
 
 public sealed class UploadMediaCommandHandler(
     IUnitOfWork unitOfWork,
@@ -14,7 +14,7 @@ public sealed class UploadMediaCommandHandler(
 {
     public async Task<Result<Response<UploadMediaResponse>>> Handle(UploadMediaCommand request, CancellationToken cancellationToken)
     {
-        var mediaList = new List<Domain.Models.Media>();
+        var mediaList = new List<Media>();
         try
         {
             foreach (var file in request.Files)
@@ -53,11 +53,11 @@ public sealed class UploadMediaCommandHandler(
             new UploadMediaResponse{MediaIds = mediaIds}));
     }
 
-    private Domain.Models.Media MapToMedia(ObjectId id, RawUploadResult uploadResult, MediaTypeEnum type, string uploadBy)
+    private Media MapToMedia(ObjectId id, RawUploadResult uploadResult, MediaTypeEnum type, string uploadBy)
     {
         var userId = UserId.Of(uploadBy);
         var mediaType = type.ToEnum<MediaTypeEnum, MediaType>();
-        return Domain.Models.Media.Create(
+        return Media.Create(
             id: id,
             publicId: uploadResult.FullyQualifiedPublicId,
             publicUrl: uploadResult.SecureUrl.AbsoluteUri,

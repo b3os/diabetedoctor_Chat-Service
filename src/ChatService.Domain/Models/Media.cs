@@ -1,6 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using ChatService.Domain.Enums;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using ChatService.Domain.Enums;
 
 namespace ChatService.Domain.Models;
 

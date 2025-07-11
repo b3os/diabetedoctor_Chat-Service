@@ -1,6 +1,4 @@
-﻿using ChatService.Contract.Services.Conversation.Commands;
-using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
-using FluentValidation;
+﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 
 namespace ChatService.Contract.Services.Conversation.Validators;
 

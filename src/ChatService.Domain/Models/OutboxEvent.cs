@@ -1,7 +1,4 @@
-﻿using ChatService.Domain.Abstractions;
-using MongoDB.Bson.Serialization.Attributes;
-
-namespace ChatService.Domain.Models;
+﻿namespace ChatService.Domain.Models;
 
 public class OutboxEvent : DomainEntity<ObjectId>
 {

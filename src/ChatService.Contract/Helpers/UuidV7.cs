@@ -35,7 +35,7 @@ public readonly struct UuidV7
     public DateTimeOffset GetDateTimeOffset() 
     {
         var bytes = new byte[8];
-        Value.ToByteArray(true)[0..6].CopyTo(bytes, 2);
+        Value.ToByteArray(true)[..6].CopyTo(bytes, 2);
         if (BitConverter.IsLittleEndian) 
         {
             Array.Reverse(bytes);

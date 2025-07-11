@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs;
-using ChatService.Contract.DTOs.ValueObjectDtos;
+﻿using ChatService.Contract.DTOs.ValueObjectDtos;
 
 namespace ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 

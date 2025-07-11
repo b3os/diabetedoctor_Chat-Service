@@ -14,7 +14,7 @@ public sealed class ConversationIntegrationEventHandler(ISender sender, ILogger<
             return;
         }
 
-        await sender.Send(new DeleteOldGroupAvatarCommand()
+        await sender.Send(new DeleteOldGroupAvatarCommand
         {
             ImagePublicId = notification.OldAvatar
         }, cancellationToken);

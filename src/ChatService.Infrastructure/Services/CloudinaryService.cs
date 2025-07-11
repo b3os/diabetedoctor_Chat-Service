@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.ConversationDtos;
-using ChatService.Contract.Enums;
+﻿using ChatService.Contract.Enums;
 using ChatService.Contract.Infrastructure.Services;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;

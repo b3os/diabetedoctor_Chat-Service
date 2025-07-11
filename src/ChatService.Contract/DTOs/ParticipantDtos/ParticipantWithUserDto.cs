@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.UserDTOs;
-using ChatService.Contract.DTOs.ValueObjectDtos;
+﻿using ChatService.Contract.DTOs.ValueObjectDtos;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatService.Contract.DTOs.ParticipantDtos;
@@ -21,4 +20,4 @@ public record ParticipantWithUserDto
     
     [BsonElement("is_deleted"), BsonRepresentation(BsonType.Boolean)]
     public bool? IsDeleted { get; init; }
-};
+}

@@ -12,4 +12,4 @@ public record UserWithHospitalDto
     [BsonElement("hospital_id")]
     public HospitalIdDto? HospitalId { get; init; }
     public RoleEnum Role { get; init; }
-};
+}

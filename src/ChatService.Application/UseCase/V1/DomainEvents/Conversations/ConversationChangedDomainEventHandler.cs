@@ -11,7 +11,7 @@ public sealed class ConversationChangedDomainEventHandler(
 {
     public async Task Handle(ConversationCreatedEvent notification, CancellationToken cancellationToken)
     {
-        var integrationEvent = new ConversationCreatedIntegrationEvent()
+        var integrationEvent = new ConversationCreatedIntegrationEvent
         {
             ConversationId = notification.ConversationId,
             ConversationName = notification.ConversationName,
@@ -23,7 +23,7 @@ public sealed class ConversationChangedDomainEventHandler(
     
     public async Task Handle(ConversationUpdatedEvent notification, CancellationToken cancellationToken)
     {
-        var integrationEvent = new ConversationUpdatedIntegrationEvent()
+        var integrationEvent = new ConversationUpdatedIntegrationEvent
         {
             ConversationId = notification.ConversationId,
             ConversationName = notification.Name,

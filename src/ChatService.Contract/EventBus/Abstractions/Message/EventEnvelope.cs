@@ -21,7 +21,7 @@ public class EventEnvelope
 public class EventEnvelope<T>
 {
     public string EventTypeName { get; init; } = null!;
-    public T? Message { get; init; } = default!;
+    public T? Message { get; init; }
 
     public EventEnvelope() {}
     

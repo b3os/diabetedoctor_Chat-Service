@@ -21,4 +21,4 @@ public record ParticipantDto
     
     [BsonElement("user")]
     public UserDto User { get; init; } = null!;
-};
+}

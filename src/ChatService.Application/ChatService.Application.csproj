@@ -17,7 +17,7 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Folder Include="UseCase\V1\Commands\Participant\" />
+      <Folder Include="UseCase\V1\Commands\Participants\" />
     </ItemGroup>
     
     <ItemGroup>

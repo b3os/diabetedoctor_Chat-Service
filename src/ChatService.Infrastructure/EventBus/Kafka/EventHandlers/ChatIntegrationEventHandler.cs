@@ -1,5 +1,4 @@
 ﻿using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
-using ChatService.Contract.Services.Conversation.Commands;
 using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 using MongoDB.Bson;
 
@@ -20,7 +19,7 @@ public sealed class ChatIntegrationEventHandler(ISender sender, ILogger<ChatInte
                 notification.Conversation!.ConversationId);
             return;
         }
-        await sender.Send(new UpdateLastMessageInConversationCommand()
+        await sender.Send(new UpdateLastMessageInConversationCommand
         {
             ConversationId = conversationId,
             SenderId = notification.Sender?.SenderId,

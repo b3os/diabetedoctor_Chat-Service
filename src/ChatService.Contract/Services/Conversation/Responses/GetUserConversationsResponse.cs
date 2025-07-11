@@ -1,5 +1,4 @@
-﻿using ChatService.Contract.DTOs.ConversationDtos;
-using ChatService.Contract.DTOs.ConversationDtos.Responses;
+﻿using ChatService.Contract.DTOs.ConversationDtos.Responses;
 
 namespace ChatService.Contract.Services.Conversation.Responses;
 

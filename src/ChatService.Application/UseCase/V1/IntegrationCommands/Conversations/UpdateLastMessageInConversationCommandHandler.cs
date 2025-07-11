@@ -1,7 +1,7 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.Services.Conversation.Commands.IntegrationCommand;
 
-namespace ChatService.Application.UseCase.V1.IntegrationCommands.Conversation;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.Conversations;
 
 public sealed class UpdateLastMessageInConversationCommandHandler(
     IUnitOfWork unitOfWork,

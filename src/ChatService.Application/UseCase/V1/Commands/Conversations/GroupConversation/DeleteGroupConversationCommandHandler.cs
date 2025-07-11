@@ -1,6 +1,6 @@
 ﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
+namespace ChatService.Application.UseCase.V1.Commands.Conversations.GroupConversation;
 
 public sealed class DeleteGroupConversationCommandHandler(
     IUnitOfWork unitOfWork,
@@ -28,13 +28,13 @@ public sealed class DeleteGroupConversationCommandHandler(
         await unitOfWork.StartTransactionAsync(cancellationToken);
         try
         {
-            var filter = Builders<Domain.Models.Conversation>.Filter.Eq(c => c.Id, request.ConversationId);
+            var filter = Builders<Conversation>.Filter.Eq(c => c.Id, request.ConversationId);
             await conversationRepository.DeleteOneAsync(unitOfWork.ClientSession, filter, cancellationToken);
             
             var participantFilter = Builders<Participant>.Filter.Eq(participant => participant.ConversationId, request.ConversationId);
             await participantRepository.DeleteManyAsync(unitOfWork.ClientSession, participantFilter, cancellationToken);
             
-            var messageFilter = Builders<Domain.Models.Message>.Filter.Eq(message => message.ConversationId, request.ConversationId);
+            var messageFilter = Builders<Message>.Filter.Eq(message => message.ConversationId, request.ConversationId);
             await messageRepository.DeleteManyAsync(unitOfWork.ClientSession, messageFilter, cancellationToken);
             
             var domainEvent = MapToDomainEvent(request.ConversationId);

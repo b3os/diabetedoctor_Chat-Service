@@ -2,7 +2,7 @@
 using ChatService.Contract.Services.Message.Queries;
 using ChatService.Contract.Services.Message.Responses;
 
-namespace ChatService.Application.UseCase.V1.Queries.Message;
+namespace ChatService.Application.UseCase.V1.Queries.Messages;
 
 public sealed class GetMessageByConversationIdQueryHandler(
     IMongoDbContext mongoDbContext,
@@ -21,10 +21,10 @@ public sealed class GetMessageByConversationIdQueryHandler(
             return Result.Failure<GetMessagesResponse>(checkPermissionResult.Error);
         }
 
-        var builder = Builders<Domain.Models.Message>.Filter;
-        var sorter = Builders<Domain.Models.Message>.Sort;
+        var builder = Builders<Message>.Filter;
+        var sorter = Builders<Message>.Sort;
 
-        var filters = new List<FilterDefinition<Domain.Models.Message>>
+        var filters = new List<FilterDefinition<Message>>
         {
             builder.Eq(m => m.ConversationId, request.ConversationId)
         };

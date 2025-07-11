@@ -1,4 +1,4 @@
-﻿namespace ChatService.Application.UseCase.V1.Commands.Conversation.PersonalConversation;
+﻿namespace ChatService.Application.UseCase.V1.Commands.Conversations.PersonalConversation;
 
 public sealed class CreatePersonalConversationCommandHandler
 {

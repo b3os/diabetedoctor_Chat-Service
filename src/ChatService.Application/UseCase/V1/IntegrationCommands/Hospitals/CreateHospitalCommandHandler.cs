@@ -1,6 +1,6 @@
 ﻿using ChatService.Contract.Services.Hospital.Commands;
 
-namespace ChatService.Application.UseCase.V1.IntegrationCommands.Hospital;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.Hospitals;
 
 public sealed class CreateHospitalCommandHandler(IHospitalRepository hospitalRepository, IUnitOfWork unitOfWork)
     : ICommandHandler<CreateHospitalCommand>
@@ -12,12 +12,12 @@ public sealed class CreateHospitalCommandHandler(IHospitalRepository hospitalRep
         return Result.Success();
     }
     
-    private Domain.Models.Hospital MapToHospital(CreateHospitalCommand command)
+    private Hospital MapToHospital(CreateHospitalCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
         
         var id = ObjectId.GenerateNewId();
-        var hospitalId = HospitalId.Of(command.Id);
-        return Domain.Models.Hospital.Create(id, hospitalId, command.Name);
+        var hospitalId = HospitalId.Of(command.HospitalId);
+        return Hospital.Create(id, hospitalId, command.Name);
     }
 }

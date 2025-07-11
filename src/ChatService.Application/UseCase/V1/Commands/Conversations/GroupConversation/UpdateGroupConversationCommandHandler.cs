@@ -1,6 +1,6 @@
 ﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
+namespace ChatService.Application.UseCase.V1.Commands.Conversations.GroupConversation;
 
 public sealed class UpdateGroupConversationCommandHandler(
     IUnitOfWork unitOfWork,
@@ -86,11 +86,11 @@ public sealed class UpdateGroupConversationCommandHandler(
             : Result.Failure<User>(HospitalErrors.HospitalNotFound);
     }
     
-    private async Task<Result<Domain.Models.Conversation>> GetConversationWithPermissionAsync(ObjectId conversationId,
+    private async Task<Result<Conversation>> GetConversationWithPermissionAsync(ObjectId conversationId,
         User staff,
         CancellationToken cancellationToken)
     {
-        var conversationProjection = Builders<Domain.Models.Conversation>.Projection
+        var conversationProjection = Builders<Conversation>.Projection
             .Include(conversation => conversation.Avatar)
             .Include(conversation => conversation.Name);
         var conversation = await conversationRepository.FindSingleAsync(
@@ -102,7 +102,7 @@ public sealed class UpdateGroupConversationCommandHandler(
 
         return conversation is not null
             ? Result.Success(conversation)
-            : Result.Failure<Domain.Models.Conversation>(ConversationErrors.NotFound);
+            : Result.Failure<Conversation>(ConversationErrors.NotFound);
     }  
     
     private ConversationUpdatedEvent MapToDomainEvent(ObjectId? conversationId, string? name, Image? oldAvatar)

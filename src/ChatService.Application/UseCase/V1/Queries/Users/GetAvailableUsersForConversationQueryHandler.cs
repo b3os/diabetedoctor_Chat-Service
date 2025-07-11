@@ -3,7 +3,7 @@ using ChatService.Contract.Enums;
 using ChatService.Contract.Services.User.Queries;
 using ChatService.Contract.Services.User.Responses;
 
-namespace ChatService.Application.UseCase.V1.Queries.User;
+namespace ChatService.Application.UseCase.V1.Queries.Users;
 
 public sealed class GetAvailableUsersForConversationQueryHandler(
     IMongoDbContext mongoDbContext)
@@ -27,12 +27,12 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
             .Sort(sorter)
             .Skip((pageIndex - 1) * pageSize)
             .Limit(pageSize)
-            .Lookup<Participant, Participant, IEnumerable<Participant>, Domain.Models.User>(
+            .Lookup<Participant, Participant, IEnumerable<Participant>, User>(
                 foreignCollection: mongoDbContext.Participants,
                 let: new BsonDocument("userId", "$user_id"),
                 lookupPipeline: participantLookup,
                 @as: "participant")
-            .Unwind("participant", new AggregateUnwindOptions<Domain.Models.User>
+            .Unwind("participant", new AggregateUnwindOptions<User>
             {
                 PreserveNullAndEmptyArrays = true
             })
@@ -47,13 +47,13 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
         });
     }
 
-    private async Task<FilterDefinition<Domain.Models.User>> BuildFilter(QueryOffsetFilter offsetFilter, RoleEnum roleEnum, 
+    private async Task<FilterDefinition<User>> BuildFilter(QueryOffsetFilter offsetFilter, RoleEnum roleEnum, 
         string staffId, CancellationToken cancellationToken = default)
     {
         var role = roleEnum.ToEnum<RoleEnum, Role>();
-        var builder = Builders<Domain.Models.User>.Filter;
+        var builder = Builders<User>.Filter;
         
-        var filters = new List<FilterDefinition<Domain.Models.User>> { builder.Eq(u => u.Role, role) };
+        var filters = new List<FilterDefinition<User>> { builder.Eq(u => u.Role, role) };
         
         if (role is Role.HospitalStaff or Role.Doctor)
         {
@@ -73,9 +73,9 @@ public sealed class GetAvailableUsersForConversationQueryHandler(
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
     }
 
-    private static SortDefinition<Domain.Models.User> BuildUserSort()
+    private static SortDefinition<User> BuildUserSort()
     {
-        var builder = Builders<Domain.Models.User>.Sort;
+        var builder = Builders<User>.Sort;
         return builder.Combine(
             builder.Ascending(u => u.FullName.FirstName),
             builder.Ascending(u => u.FullName.MiddleName),

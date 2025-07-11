@@ -1,6 +1,6 @@
 ﻿using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
+namespace ChatService.Application.UseCase.V1.Commands.Conversations.GroupConversation;
 
 public sealed class RemoveGroupMemberCommandHandler(
     IUnitOfWork unitOfWork,

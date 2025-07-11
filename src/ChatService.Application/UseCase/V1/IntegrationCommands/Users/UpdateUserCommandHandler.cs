@@ -1,9 +1,9 @@
 ﻿using ChatService.Application.Mapping;
 using ChatService.Contract.Services.User.Commands;
 
-namespace ChatService.Application.UseCase.V1.IntegrationCommands.User;
+namespace ChatService.Application.UseCase.V1.IntegrationCommands.Users;
 
-public class UpdateUserCommandHandler (IUserRepository userRepository, IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
+public class UpdateUserCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork) : ICommandHandler<UpdateUserCommand>
 {
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {

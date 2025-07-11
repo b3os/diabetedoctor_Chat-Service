@@ -6,7 +6,7 @@ using ChatService.Contract.EventBus.Events.MessageIntegrationEvents;
 using ChatService.Contract.Services.Message.Commands;
 using MongoDB.Bson.Serialization;
 
-namespace ChatService.Application.UseCase.V1.Commands.Message;
+namespace ChatService.Application.UseCase.V1.Commands.Messages;
 
 public class CreateMessageCommandHandler(
     IMessageRepository messageRepository,
@@ -30,11 +30,11 @@ public class CreateMessageCommandHandler(
         var userId = Mapper.MapUserId(conversation.Value.Member!.UserId);
 
         Media? media = null;
-        Domain.Models.Message message;
+        Message message;
         switch (request.MessageType)
         {
             case MessageTypeEnum.Text:
-                message = Domain.Models.Message.CreateText(id, request.ConversationId, userId, request.Content!);
+                message = Message.CreateText(id, request.ConversationId, userId, request.Content!);
                 break;
             case MessageTypeEnum.File:
                 var mediaId = ObjectId.Parse(request.MediaId);
@@ -45,7 +45,7 @@ public class CreateMessageCommandHandler(
                 }
 
                 var file = FileAttachment.Of(media.PublicId, media.PublicUrl, media.MediaType);
-                message = Domain.Models.Message.CreateFile(id, request.ConversationId, userId, media.OriginalFileName,
+                message = Message.CreateFile(id, request.ConversationId, userId, media.OriginalFileName,
                     file);
                 media.Use();
                 break;
@@ -105,7 +105,7 @@ public class CreateMessageCommandHandler(
     }
 
     private MessageCreatedIntegrationEvent MapToIntegrationEvent(ConversationWithParticipantDto conversation,
-        Domain.Models.Message message)
+        Message message)
     {
         return new MessageCreatedIntegrationEvent
         {

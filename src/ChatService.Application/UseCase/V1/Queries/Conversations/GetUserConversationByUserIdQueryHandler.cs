@@ -2,7 +2,7 @@
 using ChatService.Contract.DTOs.ConversationDtos.Responses;
 using ChatService.Contract.Services.Conversation.Queries;
 
-namespace ChatService.Application.UseCase.V1.Queries.Conversation;
+namespace ChatService.Application.UseCase.V1.Queries.Conversations;
 
 public sealed class GetUserConversationByUserIdQueryHandler(
     IMongoDbContext mongoDbContext,
@@ -14,10 +14,10 @@ public sealed class GetUserConversationByUserIdQueryHandler(
     {
         var pageSize = request.CursorFilter.PageSize is > 0 ? request.CursorFilter.PageSize.Value : 10;
 
-        var builder = Builders<Domain.Models.Conversation>.Filter;
-        var sorter = Builders<Domain.Models.Conversation>.Sort;
+        var builder = Builders<Conversation>.Filter;
+        var sorter = Builders<Conversation>.Sort;
 
-        var filters = new List<FilterDefinition<Domain.Models.Conversation>>
+        var filters = new List<FilterDefinition<Conversation>>
         {
             builder.ElemMatch(c => c.Members, userId => userId.Id == request.UserId),
             builder.Eq(c => c.ConversationType, ConversationType.Group)

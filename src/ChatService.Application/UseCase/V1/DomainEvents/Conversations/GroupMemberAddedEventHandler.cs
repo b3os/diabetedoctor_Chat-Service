@@ -1,4 +1,4 @@
-﻿namespace ChatService.Application.UseCase.V1.DomainEvents.Conversation;
+﻿namespace ChatService.Application.UseCase.V1.DomainEvents.Conversations;
 
 public sealed class GroupMemberAddedEventHandler(
     IUnitOfWork unitOfWork,

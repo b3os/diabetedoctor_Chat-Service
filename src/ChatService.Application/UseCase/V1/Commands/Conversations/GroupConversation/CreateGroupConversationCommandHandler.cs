@@ -3,7 +3,7 @@ using ChatService.Contract.DTOs.ValueObjectDtos;
 using ChatService.Contract.Services.Conversation.Commands.GroupConversation;
 using MongoDB.Bson.Serialization;
 
-namespace ChatService.Application.UseCase.V1.Commands.Conversation.GroupConversation;
+namespace ChatService.Application.UseCase.V1.Commands.Conversations.GroupConversation;
 
 public sealed class CreateGroupConversationCommandHandler(
     IUnitOfWork unitOfWork,
@@ -81,12 +81,12 @@ public sealed class CreateGroupConversationCommandHandler(
         return users.Count == userIds.Count() ? Result.Success(users) : Result.Failure<List<User>>(UserErrors.NotFound);
     }
     
-    private Domain.Models.Conversation MapToConversation(CreateGroupConversationCommand command, List<UserId> userIds, HospitalIdDto hospitalIdDto)
+    private Conversation MapToConversation(CreateGroupConversationCommand command, List<UserId> userIds, HospitalIdDto hospitalIdDto)
     {
         var id = ObjectId.GenerateNewId();
         var avatar = Image.Of("default-avatar", settings.Value.GroupAvatarDefault);
         var hospitalId = Mapper.MapHospitalId(hospitalIdDto);
-        return Domain.Models.Conversation.CreateGroup(id, command.Name, avatar, userIds, hospitalId);
+        return Conversation.CreateGroup(id, command.Name, avatar, userIds, hospitalId);
     }
     
     private IEnumerable<Participant> MapToConversationParticipants(ObjectId conversationId, UserId ownerId, List<User> users)

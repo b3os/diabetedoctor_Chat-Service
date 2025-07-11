@@ -11,5 +11,6 @@ public record UserWithHospitalDto
     public UserIdDto UserId { get; init; } = null!;
     [BsonElement("hospital_id")]
     public HospitalIdDto? HospitalId { get; init; }
+    [BsonElement("role")]
     public RoleEnum Role { get; init; }
 }

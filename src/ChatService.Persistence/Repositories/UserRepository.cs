@@ -12,14 +12,23 @@ public class UserRepository(IMongoDbContext context) : RepositoryBase<User>(cont
             .Match(new BsonDocument
             {
                 {
-                    "$expr", new BsonDocument("$eq", new BsonArray { "$user_id", "$$hospitalId" })
+                    "$expr", new BsonDocument
+                    {
+                        {
+                            "$and", new BsonArray
+                            {
+                                new BsonDocument("$eq", new BsonArray { "$hospital_id", "$$hospitalId" }),
+                                new BsonDocument("$eq", new BsonArray{ "$is_deleted", false})
+                            }
+                        }
+                    }
                 }
             })
             .Limit(1);
         
         var projection = new BsonDocument
         {
-            { "user_id", "$user.user_id"},
+            { "user_id", 1 },
             { "hospital_id", "$hospital.hospital_id"},
             { "role", 1},
         };
